@@ -3,6 +3,7 @@ import List from '@/components/List'
 import Theme from '@/components/Theme'
 import { getEpicFreeGames } from '@/lib/getGames'
 import { Metadata } from 'next'
+import Link from 'next/link'
 
 export async function generateMetadata(): Promise<Metadata> {
 	const games = await getEpicFreeGames()
@@ -32,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
 		twitter: {
 			card: 'summary_large_image',
 			title: 'Epic Games Free Games',
-			description: `Current free games: ${currentTitles}. Upcoming free games: ${upcomingTitles}.`,
+			description: `Current: ${currentTitles}. Upcoming: ${upcomingTitles}.`,
 			images: ['/opengraph-image'],
 		},
 	}
@@ -46,7 +47,9 @@ export default async function Home() {
 			<div className="container mx-auto px-4 py-8">
 				<header className="flex flex-col sm:flex-row sm:items-center justify-between mb-8">
 					<div className="flex items-start sm:items-center flex-col sm:flex-row gap-4 mb-4 sm:mb-0">
-						<h1 className="text-4xl font-bold text-epic-blue">Epic Games</h1>
+						<Link href="https://store.epicgames.com/en-US/free-games" target="_blank">
+							<h1 className="text-4xl font-bold text-epic-blue">Epic Games</h1>
+						</Link>
 						<p className="text-xl text-epic-gray dark:text-epic-lightGray">
 							Free Games
 						</p>

@@ -37,7 +37,7 @@ export default function List({ games }: { games: any }) {
 				}
 			})
 			setTimeLeft(newTimeLeft)
-		}, 1000)
+		}, 500)
 
 		return () => clearInterval(timer)
 	}, [games.currentGames])
@@ -74,8 +74,10 @@ export default function List({ games }: { games: any }) {
 							/>
 							<Badge
 								variant={isCurrentGame ? 'default' : 'secondary'}
-								className={`absolute top-1 right-3 text-white ${
-									isCurrentGame ? 'bg-epic-blue' : ''
+								className={`absolute top-1 right-3 text-white dark:hover:text-black ${
+									isCurrentGame
+										? 'bg-epic-blue'
+										: 'dark:hover:text-white text-black dark:text-white'
 								}`}
 							>
 								{isCurrentGame

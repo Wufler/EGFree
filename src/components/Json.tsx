@@ -5,7 +5,6 @@ import { ClipboardCopy, FileJson2, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import {
 	Dialog,
@@ -15,40 +14,8 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import Loading from './Loading'
-
-interface Game {
-	id: string
-	title: string
-	description: string
-	keyImages: Array<{ type: string; url: string }>
-	price: {
-		totalPrice: {
-			fmtPrice: {
-				originalPrice: string
-				discountPrice: string
-			}
-		}
-	}
-	promotions: {
-		promotionalOffers: Array<{
-			promotionalOffers: Array<{
-				startDate: string
-				endDate: string
-			}>
-		}>
-		upcomingPromotionalOffers: Array<{
-			promotionalOffers: Array<{
-				startDate: string
-				endDate: string
-			}>
-		}>
-	}
-	catalogNs: {
-		mappings: Array<{ pageSlug: string }>
-	}
-	urlSlug: string
-	categories: Array<{ path: string }>
-}
+import { HexColorPicker } from 'react-colorful'
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 
 export default function Json({ games }: { games: any }) {
 	const [jsonData, setJsonData] = useState<any>({})
@@ -58,6 +25,8 @@ export default function Json({ games }: { games: any }) {
 	const [webhookUrl, setWebhookUrl] = useState('')
 	const [content, setContent] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
+	const [isVisible, setIsVisible] = useState(false)
+	const [embedColor, setEmbedColor] = useState('#85ce4b')
 	const defaultContent = '<@&847939354978811924>'
 
 	useEffect(() => {
@@ -79,12 +48,19 @@ export default function Json({ games }: { games: any }) {
 				)
 				const linkPrefix = isBundleGame ? '/bundles/' : '/p/'
 
+				const fieldValue = isCurrent
+					? `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **Free**\n[Claim ${
+							isBundleGame ? 'Bundle' : 'Game'
+					  }](https://store.epicgames.com/en-US${linkPrefix}${pageSlug})`
+					: `${game.price.totalPrice.fmtPrice.originalPrice}
+					[Game Link](https://store.epicgames.com/en-US${linkPrefix}${pageSlug})`
+
 				return {
-					color: 8769099,
+					color: parseInt(embedColor.replace('#', ''), 16),
 					fields: [
 						{
 							name: game.title,
-							value: `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **Free**\n[Claim Game](https://store.epicgames.com/en-US${linkPrefix}${pageSlug})`,
+							value: fieldValue,
 							inline: true,
 						},
 					],
@@ -94,7 +70,7 @@ export default function Json({ games }: { games: any }) {
 						icon_url: 'https://i.imgur.com/ANplrW5.png',
 					},
 					footer: {
-						text: 'Offer ends',
+						text: isCurrent ? 'Offer ends' : 'Offer starts',
 					},
 					timestamp: endDate.toISOString(),
 					image: {
@@ -112,7 +88,7 @@ export default function Json({ games }: { games: any }) {
 		}
 
 		generateJson()
-	}, [games, includeCurrent, includeUpcoming, content])
+	}, [games, includeCurrent, includeUpcoming, content, embedColor])
 
 	const copyToClipboard = async () => {
 		try {
@@ -197,40 +173,67 @@ export default function Json({ games }: { games: any }) {
 							</div>
 						</div>
 					</div>
-					<div className="flex flex-col gap-4">
-						<Textarea
+					<div className="flex flex-col gap-3">
+						<Input
 							placeholder={defaultContent}
 							value={content}
 							onChange={e => setContent(e.target.value)}
-							rows={3}
 						/>
 						<div className="flex sm:flex-row flex-col items-center gap-4">
-							<Input
-								type="text"
-								placeholder="Discord Webhook URL"
-								value={webhookUrl}
-								onChange={e => setWebhookUrl(e.target.value)}
-								className="flex-grow"
-							/>
-							<Button
-								onClick={sendToDiscord}
-								disabled={isLoading}
-								size="sm"
-								className="flex items-center w-full sm:w-auto gap-2"
-							>
-								<span className="sr-only">Send to Discord</span>
-								{isLoading ? (
-									<>
-										<Loading size={16} />
-										<p>Send to Discord</p>
-									</>
-								) : (
-									<>
-										<Send className="size-4" />
-										<p>Send to Discord</p>
-									</>
-								)}
-							</Button>
+							<div className="flex items-center sm:flex-row flex-col gap-3 w-full">
+								<div className="flex w-full gap-3 items-center">
+									<Popover>
+										<PopoverTrigger asChild>
+											<Button
+												className="w-10"
+												style={{
+													backgroundColor: `${embedColor}`,
+												}}
+											/>
+										</PopoverTrigger>
+										<PopoverContent className="w-full">
+											<Input
+												maxLength={7}
+												value={embedColor}
+												onChange={e => setEmbedColor(e.target.value)}
+												className="mb-2"
+											/>
+											<HexColorPicker
+												color={embedColor}
+												onChange={setEmbedColor}
+												className="!w-full"
+											/>
+										</PopoverContent>
+									</Popover>
+									<Input
+										type={isVisible ? 'text' : 'password'}
+										onFocus={() => setIsVisible(true)}
+										onBlur={() => setIsVisible(false)}
+										placeholder="Webhook URL"
+										value={webhookUrl}
+										onChange={e => setWebhookUrl(e.target.value)}
+									/>
+								</div>
+								<Button
+									onClick={sendToDiscord}
+									disabled={isLoading}
+									size="sm"
+									className="flex items-center w-full sm:w-auto gap-2"
+								>
+									<span className="sr-only">Send</span>
+									{isLoading ? (
+										<>
+											<Loading size={16} />
+											<p>Send</p>
+										</>
+									) : (
+										<>
+											<Send className="size-4" />
+											<p>Send </p>
+										</>
+									)}
+								</Button>
+							</div>
 						</div>
 					</div>
 					<pre className="dark:bg-gray-900 bg-gray-800 text-gray-200 p-4 rounded overflow-auto flex-grow text-sm">
