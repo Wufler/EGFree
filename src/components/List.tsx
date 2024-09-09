@@ -132,14 +132,14 @@ export default function List({ games }: { games: any }) {
 	}
 
 	const renderGameList = (games: any[], isCurrentGames: boolean) => (
-		<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+		<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 			{games.map((game: any) => renderGameCard(game, isCurrentGames))}
 		</div>
 	)
 
 	return (
-		<div className="sm:space-y-0 space-y-12 p-4 md:p-8 bg-gray-100 dark:bg-epic-darkBlue rounded-lg">
-			<Tabs defaultValue="current" className="w-full md:hidden">
+		<div className="sm:space-y-0 space-y-12 p-4 lg:p-8 bg-gray-100 dark:bg-epic-darkBlue rounded-lg">
+			<Tabs defaultValue="current" className="w-full lg:hidden">
 				<TabsList className="grid w-full grid-cols-2 mb-4">
 					<TabsTrigger value="current">Current</TabsTrigger>
 					<TabsTrigger value="upcoming">Upcoming</TabsTrigger>
@@ -152,15 +152,15 @@ export default function List({ games }: { games: any }) {
 				</TabsContent>
 			</Tabs>
 
-			<div className="hidden md:block">
+			<div className="hidden lg:block">
 				<section>
-					<h2 className="text-3xl font-bold mb-6 text-epic-blue dark:text-epic-blue">
+					<h2 className="text-3xl font-bold mb-5 text-epic-blue dark:text-epic-blue">
 						Current
 					</h2>
 					{renderGameList(games.currentGames, true)}
 				</section>
-				<section className="mt-12">
-					<h2 className="text-3xl font-bold mb-6 text-epic-lightBlue dark:text-epic-white">
+				<section className="mt-8">
+					<h2 className="text-3xl font-bold mb-5 text-epic-lightBlue dark:text-epic-white">
 						Upcoming
 					</h2>
 					{renderGameList(games.nextGames, false)}

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 		siteName: 'Epic Games Free Games',
 		images: [
 			{
-				url: 'https://wolfey.s-ul.eu/FF1Ll4jo',
+				url: 'https://wolfey.s-ul.eu/MdoL9N34',
 				width: 1280,
 				height: 720,
 				alt: 'Thumbnail',

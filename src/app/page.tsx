@@ -44,17 +44,21 @@ export default async function Home() {
 
 	return (
 		<main className="min-h-screen bg-white dark:bg-epic-black text-epic-black dark:text-white">
-			<div className="container mx-auto px-4 py-8">
-				<header className="flex flex-col sm:flex-row sm:items-center justify-between mb-8">
-					<div className="flex items-start sm:items-center flex-col sm:flex-row gap-4 mb-4 sm:mb-0">
-						<Link href="https://store.epicgames.com/en-US/free-games" target="_blank">
+			<div className="container mx-auto px-4 lg:py-8 py-6">
+				<header className="flex flex-col sm:flex-row sm:items-center justify-between lg:mb-8 mb-6">
+					<div className="mb-4 sm:mb-0">
+						<Link
+							href="https://store.epicgames.com/en-US/free-games"
+							target="_blank"
+							className="flex items-start sm:items-center flex-col sm:flex-row gap-4"
+						>
 							<h1 className="text-4xl font-bold text-epic-blue">Epic Games</h1>
+							<p className="text-xl text-epic-gray dark:text-epic-lightGray">
+								Free Games
+							</p>
 						</Link>
-						<p className="text-xl text-epic-gray dark:text-epic-lightGray">
-							Free Games
-						</p>
 					</div>
-					<div className="flex items-center gap-4">
+					<div className="flex items-center gap-2">
 						<Json games={games} />
 						<Theme />
 					</div>

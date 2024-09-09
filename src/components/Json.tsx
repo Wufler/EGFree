@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ClipboardCopy, FileJson2, Send } from 'lucide-react'
+import { ClipboardCopy, FileJson2, Send, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -26,8 +27,34 @@ export default function Json({ games }: { games: any }) {
 	const [content, setContent] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
 	const [isVisible, setIsVisible] = useState(false)
-	const [embedColor, setEmbedColor] = useState('#85ce4b')
+	const [embedColor, setEmbedColor] = useState('')
+	const defaultColor = '#85ce4b'
 	const defaultContent = '<@&847939354978811924>'
+
+	useEffect(() => {
+		const savedIncludeCurrent = localStorage.getItem('includeCurrent')
+		const savedIncludeUpcoming = localStorage.getItem('includeUpcoming')
+		const savedContent = localStorage.getItem('embedContent')
+		const savedColor = localStorage.getItem('embedColor')
+
+		if (savedIncludeCurrent !== null)
+			setIncludeCurrent(JSON.parse(savedIncludeCurrent))
+		if (savedIncludeUpcoming !== null)
+			setIncludeUpcoming(JSON.parse(savedIncludeUpcoming))
+		if (savedContent) setContent(savedContent)
+		if (savedColor) setEmbedColor(savedColor)
+	}, [])
+
+	useEffect(() => {
+		localStorage.setItem('embedContent', content)
+		localStorage.setItem('includeCurrent', JSON.stringify(includeCurrent))
+		localStorage.setItem('includeUpcoming', JSON.stringify(includeUpcoming))
+		if (embedColor !== defaultColor) {
+			localStorage.setItem('embedColor', embedColor)
+		} else {
+			localStorage.removeItem('embedColor')
+		}
+	}, [content, embedColor, includeCurrent, includeUpcoming])
 
 	useEffect(() => {
 		const generateJson = () => {
@@ -52,11 +79,10 @@ export default function Json({ games }: { games: any }) {
 					? `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **Free**\n[Claim ${
 							isBundleGame ? 'Bundle' : 'Game'
 					  }](https://store.epicgames.com/en-US${linkPrefix}${pageSlug})`
-					: `${game.price.totalPrice.fmtPrice.originalPrice}
-					[Game Link](https://store.epicgames.com/en-US${linkPrefix}${pageSlug})`
+					: `${game.price.totalPrice.fmtPrice.originalPrice}\n[Game Link](https://store.epicgames.com/en-US${linkPrefix}${pageSlug})`
 
 				return {
-					color: parseInt(embedColor.replace('#', ''), 16),
+					color: parseInt((embedColor || defaultColor).replace('#', ''), 16),
 					fields: [
 						{
 							name: game.title,
@@ -66,7 +92,7 @@ export default function Json({ games }: { games: any }) {
 					],
 					author: {
 						name: 'Epic Games Store',
-						url: 'https://store.epicgames.com/en-US/free-games',
+						url: 'https://egfreegames.vercel.app/',
 						icon_url: 'https://i.imgur.com/ANplrW5.png',
 					},
 					footer: {
@@ -131,6 +157,10 @@ export default function Json({ games }: { games: any }) {
 		setIsLoading(false)
 	}
 
+	const handleColorChange = (color: string) => {
+		setEmbedColor(color === defaultColor ? '' : color)
+	}
+
 	return (
 		<div>
 			<Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -139,9 +169,16 @@ export default function Json({ games }: { games: any }) {
 						<FileJson2 />
 					</Button>
 				</DialogTrigger>
-				<DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
+				<DialogContent
+					className="max-w-3xl max-h-[80vh] flex flex-col"
+					style={{ borderLeft: `3px solid ${embedColor || defaultColor}` }}
+				>
 					<DialogHeader>
 						<DialogTitle>JSON Data for Discord</DialogTitle>
+						<DialogDescription>
+							Automatically saves your options locally, not webhook for security
+							reasons.
+						</DialogDescription>
 					</DialogHeader>
 					<div className="flex sm:flex-row flex-col items-center gap-4 p-1">
 						<div className="flex gap-4">
@@ -149,7 +186,7 @@ export default function Json({ games }: { games: any }) {
 								<Switch
 									id="current-popup"
 									checked={includeCurrent}
-									onCheckedChange={checked => setIncludeCurrent(checked as boolean)}
+									onCheckedChange={checked => setIncludeCurrent(checked)}
 								/>
 								<label
 									htmlFor="current-popup"
@@ -162,7 +199,7 @@ export default function Json({ games }: { games: any }) {
 								<Switch
 									id="upcoming-popup"
 									checked={includeUpcoming}
-									onCheckedChange={checked => setIncludeUpcoming(checked as boolean)}
+									onCheckedChange={checked => setIncludeUpcoming(checked)}
 								/>
 								<label
 									htmlFor="upcoming-popup"
@@ -187,22 +224,35 @@ export default function Json({ games }: { games: any }) {
 											<Button
 												className="w-10"
 												style={{
-													backgroundColor: `${embedColor}`,
+													backgroundColor: embedColor || defaultColor,
 												}}
 											/>
 										</PopoverTrigger>
-										<PopoverContent className="w-full">
+										<PopoverContent
+											className="w-full"
+											onOpenAutoFocus={e => e.preventDefault()}
+										>
 											<Input
 												maxLength={7}
-												value={embedColor}
-												onChange={e => setEmbedColor(e.target.value)}
+												value={embedColor || defaultColor}
+												onChange={e => handleColorChange(e.target.value)}
 												className="mb-2"
 											/>
 											<HexColorPicker
-												color={embedColor}
-												onChange={setEmbedColor}
+												color={embedColor || defaultColor}
+												onChange={handleColorChange}
 												className="!w-full"
 											/>
+											<Button
+												onClick={() => setEmbedColor(defaultColor)}
+												variant="outline"
+												size="sm"
+												className="mt-2 flex items-center gap-2 w-full"
+											>
+												<Undo2 className="size-4" />
+												<span className="sr-only ">Revert to default</span>
+												Revert to default
+											</Button>
 										</PopoverContent>
 									</Popover>
 									<Input
