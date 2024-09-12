@@ -23,7 +23,6 @@ export default function Json({ games }: { games: any }) {
 	const [jsonData, setJsonData] = useState<any>({})
 	const [includeCurrent, setIncludeCurrent] = useState(true)
 	const [includeUpcoming, setIncludeUpcoming] = useState(false)
-	const [isOpen, setIsOpen] = useState(false)
 	const [webhookUrl, setWebhookUrl] = useState('')
 	const [content, setContent] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
@@ -208,191 +207,190 @@ export default function Json({ games }: { games: any }) {
 	}
 
 	return (
-		<div>
-			<Dialog open={isOpen} onOpenChange={setIsOpen}>
-				<DialogTrigger asChild>
-					<Button variant="ghost" className="px-2 rounded-full">
-						<FileJson2 />
-					</Button>
-				</DialogTrigger>
-				<DialogContent
-					className="max-w-3xl max-h-[80vh] flex flex-col"
-					style={{ borderLeft: `3px solid ${embedColor || defaultColor}` }}
-				>
-					<DialogHeader>
-						<DialogTitle>JSON Data</DialogTitle>
-						<DialogDescription>
-							This tool is designed to create Discord embeds. Your preferences are
-							stored locally, except your webhook.
-						</DialogDescription>
-					</DialogHeader>
-					<div className="flex flex-col gap-3">
-						<Input
-							placeholder={defaultContent}
-							value={content}
-							onChange={e => setContent(e.target.value)}
-						/>
-						<div className="flex sm:flex-row flex-col items-center gap-4">
-							<div className="flex items-center sm:flex-row flex-col gap-3 w-full">
-								<div className="flex w-full gap-3 items-center">
-									<Popover>
-										<PopoverTrigger asChild>
-											<Button
-												className="w-10"
-												style={{
-													backgroundColor: embedColor || defaultColor,
-												}}
-											/>
-										</PopoverTrigger>
-										<PopoverContent
-											className="w-full"
-											onOpenAutoFocus={e => e.preventDefault()}
+		<Dialog>
+			<DialogTrigger asChild>
+				<Button variant="ghost" className="px-2 rounded-full">
+					<FileJson2 />
+				</Button>
+			</DialogTrigger>
+			<DialogContent
+				className="max-w-3xl max-h-[85vh] flex flex-col"
+				style={{ borderLeft: `3px solid ${embedColor || defaultColor}` }}
+			>
+				<DialogHeader>
+					<DialogTitle>JSON Data</DialogTitle>
+					<DialogDescription>
+						This tool is designed to create Discord embeds. Your preferences are
+						stored locally, except your webhook.
+					</DialogDescription>
+				</DialogHeader>
+				<div className="flex flex-col gap-3">
+					<Input
+						placeholder={defaultContent}
+						value={content}
+						onChange={e => setContent(e.target.value)}
+					/>
+					<div className="flex sm:flex-row flex-col items-center gap-4">
+						<div className="flex items-center sm:flex-row flex-col gap-3 w-full">
+							<div className="flex w-full gap-3 items-center">
+								<Popover>
+									<PopoverTrigger asChild>
+										<Button
+											className="w-10"
+											style={{
+												backgroundColor: embedColor || defaultColor,
+											}}
+										/>
+									</PopoverTrigger>
+									<PopoverContent
+										className="w-full"
+										onOpenAutoFocus={e => e.preventDefault()}
+									>
+										<Input
+											maxLength={7}
+											value={embedColor || defaultColor}
+											onChange={e => handleColorChange(e.target.value)}
+											className="mb-2"
+										/>
+										<HexColorPicker
+											color={embedColor || defaultColor}
+											onChange={handleColorChange}
+											className="!w-full"
+										/>
+										<Button
+											onClick={() => setEmbedColor(defaultColor)}
+											variant="outline"
+											size="sm"
+											className="mt-2 flex items-center gap-2 w-full"
 										>
-											<Input
-												maxLength={7}
-												value={embedColor || defaultColor}
-												onChange={e => handleColorChange(e.target.value)}
-												className="mb-2"
-											/>
-											<HexColorPicker
-												color={embedColor || defaultColor}
-												onChange={handleColorChange}
-												className="!w-full"
-											/>
-											<Button
-												onClick={() => setEmbedColor(defaultColor)}
-												variant="outline"
-												size="sm"
-												className="mt-2 flex items-center gap-2 w-full"
-											>
-												<Undo2 className="size-4" />
-												<span className="sr-only ">Revert to default</span>
-												Revert to default
-											</Button>
-										</PopoverContent>
-									</Popover>
-									<Input
-										type={isVisible ? 'text' : 'password'}
-										onFocus={() => setIsVisible(true)}
-										onBlur={() => setIsVisible(false)}
-										placeholder="Webhook URL"
-										value={webhookUrl}
-										onChange={e => setWebhookUrl(e.target.value)}
-									/>
-								</div>
-								<Button
-									onClick={handleWebhook}
-									disabled={isLoading}
-									size="sm"
-									className="flex items-center w-full sm:w-auto gap-2"
-								>
-									<span className="sr-only">Send</span>
-									{isLoading ? (
-										<>
-											<Loading size={16} />
-											<p>Send</p>
-										</>
-									) : (
-										<>
-											<Send className="size-4" />
-											<p>Send </p>
-										</>
-									)}
-								</Button>
-							</div>
-						</div>
-						<div className="flex flex-wrap gap-4 mt-1">
-							<div className="flex items-center space-x-2">
-								<Switch
-									id="current-games"
-									checked={includeCurrent}
-									onCheckedChange={checked => setIncludeCurrent(checked)}
+											<Undo2 className="size-4" />
+											<span className="sr-only ">Revert to default</span>
+											Revert to default
+										</Button>
+									</PopoverContent>
+								</Popover>
+								<Input
+									type={isVisible ? 'text' : 'password'}
+									onFocus={() => setIsVisible(true)}
+									onBlur={() => setIsVisible(false)}
+									placeholder="Webhook URL"
+									value={webhookUrl}
+									onChange={e => setWebhookUrl(e.target.value)}
+									autoFocus
 								/>
-								<Label
-									htmlFor="current-games"
-									className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-								>
-									Current
-								</Label>
 							</div>
-							<div className="flex items-center space-x-2">
-								<Switch
-									id="upcoming-games"
-									checked={includeUpcoming}
-									onCheckedChange={checked => setIncludeUpcoming(checked)}
-								/>
-								<Label
-									htmlFor="upcoming-games"
-									className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-								>
-									Upcoming
-								</Label>
-							</div>
-							<div className="flex items-center space-x-2">
-								<Switch
-									id="include-footer"
-									checked={includeFooter}
-									onCheckedChange={checked => setIncludeFooter(checked)}
-									disabled={allDisabled}
-								/>
-								<Label
-									htmlFor="include-footer"
-									className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
-										allDisabled ? 'opacity-50' : ''
-									}`}
-								>
-									Footer
-								</Label>
-							</div>
-							<div className="flex items-center space-x-2">
-								<Switch
-									id="include-price"
-									checked={includePrice}
-									onCheckedChange={checked => setIncludePrice(checked)}
-									disabled={allDisabled}
-								/>
-								<Label
-									htmlFor="include-price"
-									className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
-										allDisabled ? 'opacity-50' : ''
-									}`}
-								>
-									Price
-								</Label>
-							</div>
-							<div className="flex items-center space-x-2">
-								<Switch
-									id="include-image"
-									checked={includeImage}
-									onCheckedChange={checked => setIncludeImage(checked)}
-									disabled={allDisabled}
-								/>
-								<Label
-									htmlFor="include-image"
-									className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
-										allDisabled ? 'opacity-50' : ''
-									}`}
-								>
-									Image
-								</Label>
-							</div>
+							<Button
+								onClick={handleWebhook}
+								disabled={isLoading}
+								size="sm"
+								className="flex items-center w-full sm:w-auto gap-2"
+							>
+								<span className="sr-only">Send</span>
+								{isLoading ? (
+									<>
+										<Loading size={16} />
+										<p>Send</p>
+									</>
+								) : (
+									<>
+										<Send className="size-4" />
+										<p>Send </p>
+									</>
+								)}
+							</Button>
 						</div>
 					</div>
-					<pre className="dark:bg-gray-900 bg-gray-800 text-gray-200 p-4 rounded overflow-auto flex-grow text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">
-						{JSON.stringify(jsonData, null, 2)}
-					</pre>
-					<Button
-						onClick={copyToClipboard}
-						variant="outline"
-						size="sm"
-						className="flex items-center w-full sm:w-auto p-4 gap-2"
-					>
-						<ClipboardCopy className="size-4" />
-						<span className="sr-only ">Copy to clipboard</span>
-						Copy JSON
-					</Button>
-				</DialogContent>
-			</Dialog>
-		</div>
+					<div className="flex flex-wrap gap-4 mt-1">
+						<div className="flex items-center space-x-2">
+							<Switch
+								id="current-games"
+								checked={includeCurrent}
+								onCheckedChange={checked => setIncludeCurrent(checked)}
+							/>
+							<Label
+								htmlFor="current-games"
+								className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+							>
+								Current
+							</Label>
+						</div>
+						<div className="flex items-center space-x-2">
+							<Switch
+								id="upcoming-games"
+								checked={includeUpcoming}
+								onCheckedChange={checked => setIncludeUpcoming(checked)}
+							/>
+							<Label
+								htmlFor="upcoming-games"
+								className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+							>
+								Upcoming
+							</Label>
+						</div>
+						<div className="flex items-center space-x-2">
+							<Switch
+								id="include-footer"
+								checked={includeFooter}
+								onCheckedChange={checked => setIncludeFooter(checked)}
+								disabled={allDisabled}
+							/>
+							<Label
+								htmlFor="include-footer"
+								className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
+									allDisabled ? 'opacity-50' : ''
+								}`}
+							>
+								Footer
+							</Label>
+						</div>
+						<div className="flex items-center space-x-2">
+							<Switch
+								id="include-price"
+								checked={includePrice}
+								onCheckedChange={checked => setIncludePrice(checked)}
+								disabled={allDisabled}
+							/>
+							<Label
+								htmlFor="include-price"
+								className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
+									allDisabled ? 'opacity-50' : ''
+								}`}
+							>
+								Price
+							</Label>
+						</div>
+						<div className="flex items-center space-x-2">
+							<Switch
+								id="include-image"
+								checked={includeImage}
+								onCheckedChange={checked => setIncludeImage(checked)}
+								disabled={allDisabled}
+							/>
+							<Label
+								htmlFor="include-image"
+								className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
+									allDisabled ? 'opacity-50' : ''
+								}`}
+							>
+								Image
+							</Label>
+						</div>
+					</div>
+				</div>
+				<pre className="dark:bg-gray-900 bg-gray-800 text-gray-200 p-4 rounded overflow-auto flex-grow text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">
+					{JSON.stringify(jsonData, null, 2)}
+				</pre>
+				<Button
+					onClick={copyToClipboard}
+					variant="outline"
+					size="sm"
+					className="flex items-center w-full sm:w-auto p-4 gap-2"
+				>
+					<ClipboardCopy className="size-4" />
+					<span className="sr-only ">Copy to clipboard</span>
+					Copy JSON
+				</Button>
+			</DialogContent>
+		</Dialog>
 	)
 }
