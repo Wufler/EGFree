@@ -14,8 +14,10 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { unstable_noStore as noStore } from 'next/cache'
 
 export default function List({ games }: { games: any }) {
+	noStore()
 	const [timeLeft, setTimeLeft] = useState<{ [key: string]: string }>({})
 
 	useEffect(() => {
