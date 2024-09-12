@@ -1,11 +1,12 @@
 import { ImageResponse } from 'next/og'
 import { getEpicFreeGames } from '@/lib/getGames'
 import { unstable_noStore as noStore } from 'next/cache'
+import { format } from 'date-fns'
 
 export const alt = 'Epic Games Free Games'
 export const size = {
-	width: 1200,
-	height: 630,
+	width: 1280,
+	height: 720,
 }
 
 export const contentType = 'image/png'
@@ -16,6 +17,7 @@ export default async function Image() {
 
 	const renderGameCard = (game: any, isCurrentGame: boolean) => (
 		<div
+			key={game.id}
 			style={{
 				display: 'flex',
 				flexDirection: 'column',
@@ -25,7 +27,6 @@ export default async function Image() {
 				height: '80%',
 				backgroundColor: 'white',
 				borderRadius: '8px',
-				padding: '16px',
 				margin: '0 8px',
 			}}
 		>
@@ -34,9 +35,10 @@ export default async function Image() {
 				alt={game.title}
 				style={{
 					width: '100%',
-					height: '150px',
+					height: '180px',
 					objectFit: 'cover',
-					borderRadius: '4px',
+					borderTopLeftRadius: '4px',
+					borderTopRightRadius: '4px',
 					marginTop: '16px',
 				}}
 			/>
@@ -57,8 +59,9 @@ export default async function Image() {
 					justifyContent: 'space-between',
 					alignItems: 'center',
 					width: '100%',
-					marginTop: '12px',
 					marginBottom: '16px',
+					padding: '16px',
+					paddingTop: '0px',
 				}}
 			>
 				<span
@@ -71,7 +74,14 @@ export default async function Image() {
 						borderRadius: '4px',
 					}}
 				>
-					{isCurrentGame ? 'Free Now' : 'Coming Soon'}
+					{isCurrentGame
+						? 'Free Now'
+						: `${format(
+								new Date(
+									game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0].startDate
+								),
+								'MMM d'
+						  )}`}
 				</span>
 				<span
 					style={{ fontSize: '12px', color: '#666', textDecoration: 'line-through' }}
@@ -87,7 +97,8 @@ export default async function Image() {
 			<div
 				style={{
 					fontSize: 32,
-					background: 'black',
+					background:
+						'linear-gradient(135deg, #0E1E45 0%, #1A2A5E 25%, #2C3875 50%, #3E468C 75%, #5054A3 100%)',
 					width: '100%',
 					height: '100%',
 					display: 'flex',
@@ -103,6 +114,30 @@ export default async function Image() {
 				</div>
 				<div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
 					{games.nextGames.map((game: any) => renderGameCard(game, false))}
+				</div>
+				<div
+					style={{
+						display: 'flex',
+						position: 'absolute',
+						bottom: 10,
+						right: 10,
+						fontSize: 12,
+						opacity: 0.5,
+					}}
+				>
+					Updated: {new Date().toLocaleDateString()}
+				</div>
+				<div
+					style={{
+						display: 'flex',
+						position: 'absolute',
+						bottom: 10,
+						left: 10,
+						fontSize: 12,
+						opacity: 0.5,
+					}}
+				>
+					Epic Games Free Games
 				</div>
 			</div>
 		),

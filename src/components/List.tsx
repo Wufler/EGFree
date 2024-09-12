@@ -70,9 +70,9 @@ export default function List({ games }: { games: any }) {
 										?.url || '/placeholder.svg'
 								}
 								alt={game.title}
-								width={468}
-								height={263}
-								className="w-full h-48 object-cover rounded-t-lg"
+								width={640}
+								height={360}
+								className="w-full h-48 lg:h-60 object-cover rounded-t-lg"
 							/>
 							<Badge
 								variant={isCurrentGame ? 'default' : 'secondary'}

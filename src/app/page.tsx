@@ -17,24 +17,18 @@ export async function generateMetadata(): Promise<Metadata> {
 
 	return {
 		title: 'Epic Games Free Games',
-		description: `Current: ${currentTitles}. Upcoming: ${upcomingTitles}.`,
+		description: `Current: ${currentTitles}. \n Upcoming: ${upcomingTitles}.`,
 		openGraph: {
 			title: 'Epic Games Free Games',
-			description: `Current: ${currentTitles}. Upcoming: ${upcomingTitles}.`,
+			description: `Current: ${currentTitles}. \n Upcoming: ${upcomingTitles}.`,
 			images: [
 				{
 					url: '/opengraph-image',
-					width: 1200,
-					height: 630,
+					width: 1280,
+					height: 720,
 					alt: 'Epic Games Free Games',
 				},
 			],
-		},
-		twitter: {
-			card: 'summary_large_image',
-			title: 'Epic Games Free Games',
-			description: `Current: ${currentTitles}. Upcoming: ${upcomingTitles}.`,
-			images: ['/opengraph-image'],
 		},
 	}
 }
@@ -50,7 +44,7 @@ export default async function Home() {
 						<Link
 							href="https://store.epicgames.com/en-US/free-games"
 							target="_blank"
-							className="flex items-start sm:items-center flex-col sm:flex-row gap-4"
+							className="flex items-start sm:items-end flex-col sm:flex-row gap-4"
 						>
 							<h1 className="text-4xl font-bold text-epic-blue">Epic Games</h1>
 							<p className="text-xl text-epic-gray dark:text-epic-lightGray">
