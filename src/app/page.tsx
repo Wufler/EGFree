@@ -23,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
 			description: `Current: ${currentTitles}. \n Upcoming: ${upcomingTitles}.`,
 			images: [
 				{
-					url: '/opengraph-image',
+					url: `/opengraph-image?time=${new Date().toLocaleTimeString()}`,
 					width: 1280,
 					height: 720,
 					alt: 'Epic Games Free Games',

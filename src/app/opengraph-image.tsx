@@ -125,7 +125,7 @@ export default async function Image() {
 						opacity: 0.5,
 					}}
 				>
-					Updated: {new Date().toLocaleDateString()}
+					{new Date().toLocaleString()}
 				</div>
 				<div
 					style={{
