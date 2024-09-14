@@ -27,7 +27,7 @@ export default async function Image() {
 				height: '80%',
 				backgroundColor: 'white',
 				borderRadius: '8px',
-				margin: '0 8px',
+				margin: '0 16px',
 			}}
 		>
 			<img
@@ -35,11 +35,12 @@ export default async function Image() {
 				alt={game.title}
 				style={{
 					width: '100%',
-					height: '180px',
+					height: '200px',
 					objectFit: 'cover',
 					borderTopLeftRadius: '4px',
 					borderTopRightRadius: '4px',
 					marginTop: '16px',
+					filter: isCurrentGame ? 'none' : 'grayscale(100%)',
 				}}
 			/>
 			<h3

@@ -17,10 +17,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 	return {
 		title: 'Epic Games Free Games',
-		description: `💵 Current: ${currentTitles}. \n ⌛ Upcoming: ${upcomingTitles}.`,
+		description: `💵 Current: ${currentTitles} \n ⌛ Upcoming: ${upcomingTitles}`,
 		openGraph: {
 			title: 'Epic Games Free Games',
-			description: `💵 Current: ${currentTitles}. \n ⌛ Upcoming: ${upcomingTitles}.`,
+			description: `💵 Current: ${currentTitles} \n ⌛ Upcoming: ${upcomingTitles}`,
 			images: [
 				{
 					url: `/opengraph-image?date=${Date.now()}`,

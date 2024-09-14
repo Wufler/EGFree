@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { format, differenceInSeconds } from 'date-fns'
+import { format } from 'date-fns'
 import {
 	Card,
 	CardContent,
@@ -15,6 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { unstable_noStore as noStore } from 'next/cache'
+import { calculateTimeLeft } from '@/lib/calculateTime'
 
 export default function List({ games }: { games: any }) {
 	noStore()
@@ -25,18 +26,9 @@ export default function List({ games }: { games: any }) {
 			const newTimeLeft: { [key: string]: string } = {}
 			games.currentGames.forEach((game: any) => {
 				const endDate = new Date(
-					game.promotions.promotionalOffers[0].promotionalOffers[0].endDate
+					game.promotions.promotionalOffers[0]?.promotionalOffers[0]?.endDate ?? ''
 				)
-				const secondsLeft = differenceInSeconds(endDate, new Date())
-				if (secondsLeft > 0) {
-					const days = Math.floor(secondsLeft / 86400)
-					const hours = Math.floor((secondsLeft % 86400) / 3600)
-					const minutes = Math.floor((secondsLeft % 3600) / 60)
-					const seconds = secondsLeft % 60
-					newTimeLeft[game.id] = `${days}d ${hours}h ${minutes}m ${seconds}s`
-				} else {
-					newTimeLeft[game.id] = 'Expired'
-				}
+				newTimeLeft[game.id] = calculateTimeLeft(endDate)
 			})
 			setTimeLeft(newTimeLeft)
 		}, 500)
@@ -66,17 +58,20 @@ export default function List({ games }: { games: any }) {
 						<CardHeader className="p-0 relative">
 							<Image
 								src={
-									game.keyImages.find((img: any) => img.type === 'OfferImageWide')
-										?.url || '/placeholder.svg'
+									game.keyImages.find((img: any) => img.type === 'OfferImageWide')?.url
 								}
 								alt={game.title}
 								width={640}
 								height={360}
-								className="w-full h-48 lg:h-60 object-cover rounded-t-lg"
+								className={`w-full h-48 lg:h-60 object-cover rounded-t-lg ${
+									timeLeft[game.id] === 'Expired' ? 'grayscale' : ''
+								}`}
 							/>
 							<Badge
 								variant={isCurrentGame ? 'default' : 'secondary'}
 								className={`absolute top-1 right-3 text-white dark:hover:text-black ${
+									timeLeft[game.id] === 'Expired' ? 'hidden' : ''
+								} ${
 									isCurrentGame
 										? 'bg-epic-blue'
 										: 'dark:hover:text-white text-black dark:text-white'
@@ -117,7 +112,11 @@ export default function List({ games }: { games: any }) {
 							)}
 							<span className="text-epic-gray dark:text-epic-lightGray text-sm">
 								{isCurrentGame ? (
-									<span className="font-semibold line-through">
+									<span
+										className={`font-semibold ${
+											timeLeft[game.id] === 'Expired' ? '' : 'line-through'
+										}`}
+									>
 										{game.price.totalPrice.fmtPrice.originalPrice}
 									</span>
 								) : (
