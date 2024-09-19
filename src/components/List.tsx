@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -16,25 +16,57 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { unstable_noStore as noStore } from 'next/cache'
 import { calculateTimeLeft } from '@/lib/calculateTime'
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 export default function List({ games }: { games: any }) {
 	noStore()
 	const [timeLeft, setTimeLeft] = useState<{ [key: string]: string }>({})
+	const router = useRouter()
+	const hasToastShown = useRef(false)
 
 	useEffect(() => {
 		const timer = setInterval(() => {
 			const newTimeLeft: { [key: string]: string } = {}
+			let hasExpired = false
+
 			games.currentGames.forEach((game: any) => {
 				const endDate = new Date(
 					game.promotions.promotionalOffers[0]?.promotionalOffers[0]?.endDate ?? ''
 				)
-				newTimeLeft[game.id] = calculateTimeLeft(endDate)
+				const timeLeftForGame = calculateTimeLeft(endDate)
+				newTimeLeft[game.id] = timeLeftForGame
+
+				if (
+					timeLeftForGame === 'Expired' &&
+					!hasExpired &&
+					!hasToastShown.current
+				) {
+					hasExpired = true
+					hasToastShown.current = true
+
+					toast.promise(
+						new Promise(resolve => {
+							setTimeout(() => {
+								router.refresh()
+								resolve(true)
+							}, 3000)
+						}),
+						{
+							loading: 'Game offers has expired, refreshing...',
+							success: 'Game offers updated successfully!',
+							error: 'Failed to update game offers. Please refresh manually.',
+							position: 'bottom-center',
+						}
+					)
+				}
 			})
+
 			setTimeLeft(newTimeLeft)
 		}, 500)
 
 		return () => clearInterval(timer)
-	}, [games.currentGames])
+	}, [games.currentGames, router])
 
 	const renderGameCard = (game: any, isCurrentGame: boolean) => {
 		const pageSlug = game.catalogNs?.mappings?.[0]?.pageSlug || game.urlSlug

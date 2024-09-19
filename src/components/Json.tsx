@@ -237,7 +237,7 @@ export default function Json({ games }: { games: any }) {
 					<DialogTitle>JSON Data</DialogTitle>
 					<DialogDescription>
 						This tool is designed to create Discord embeds. Your preferences are
-						stored locally, except for your webhook.
+						stored locally, except your webhook.
 					</DialogDescription>
 				</DialogHeader>
 				<Tabs defaultValue="settings" className="flex-grow overflow-hidden">
@@ -246,7 +246,7 @@ export default function Json({ games }: { games: any }) {
 						<TabsTrigger value="preview">JSON Preview</TabsTrigger>
 					</TabsList>
 					<TabsContent value="settings" className="overflow-y-auto">
-						<div className="flex items-center gap-2 mt-2">
+						<div className="flex items-center gap-2 mt-2 px-2">
 							<Input
 								type={isVisible ? 'text' : 'password'}
 								onFocus={() => setIsVisible(true)}
@@ -258,13 +258,13 @@ export default function Json({ games }: { games: any }) {
 							/>
 							<Button onClick={handleWebhook} disabled={isLoading}>
 								{isLoading ? (
-									<div className="mr-2">
+									<div className="sm:mr-2">
 										<Loading size={16} />
 									</div>
 								) : (
-									<Send className="size-4 mr-2" />
+									<Send className="size-4 sm:mr-2" />
 								)}
-								Send
+								<p className="sm:block hidden">Send</p>
 							</Button>
 						</div>
 						<Card className="mt-4">

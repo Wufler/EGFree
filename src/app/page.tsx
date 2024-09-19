@@ -37,7 +37,7 @@ export default async function Home() {
 	const games = await getEpicFreeGames()
 
 	return (
-		<main className="min-h-screen bg-white dark:bg-epic-black text-epic-black dark:text-white">
+		<main className="min-h-dvh bg-white dark:bg-epic-black text-epic-black dark:text-white">
 			<div className="container mx-auto px-4 lg:py-8 py-6">
 				<header className="flex flex-col sm:flex-row sm:items-center justify-between lg:mb-8 mb-6">
 					<div className="mb-4 sm:mb-0">
