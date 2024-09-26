@@ -12,19 +12,6 @@ const nextConfig = {
             }
         ]
     },
-    async headers() {
-        return [
-            {
-                source: '/api/og',
-                headers: [
-                    {
-                        key: 'Cache-Control',
-                        value: 'no-cache, no-store, must-revalidate',
-                    },
-                ],
-            },
-        ]
-    },
 };
 
 export default nextConfig;

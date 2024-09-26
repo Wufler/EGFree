@@ -1,6 +1,5 @@
 'use client'
-
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -25,48 +24,47 @@ export default function List({ games }: { games: any }) {
 	const router = useRouter()
 	const hasToastShown = useRef(false)
 
-	useEffect(() => {
-		const timer = setInterval(() => {
-			const newTimeLeft: { [key: string]: string } = {}
-			let hasExpired = false
+	const updateTimeLeft = useCallback(() => {
+		const newTimeLeft: { [key: string]: string } = {}
+		let hasExpired = false
 
-			games.currentGames.forEach((game: any) => {
-				const endDate = new Date(
-					game.promotions.promotionalOffers[0]?.promotionalOffers[0]?.endDate ?? ''
+		games.currentGames.forEach((game: any) => {
+			const endDate = new Date(
+				game.promotions.promotionalOffers[0]?.promotionalOffers[0]?.endDate ?? ''
+			)
+			const timeLeftForGame = calculateTimeLeft(endDate)
+			newTimeLeft[game.id] = timeLeftForGame
+
+			if (timeLeftForGame === 'Expired' && !hasExpired && !hasToastShown.current) {
+				hasExpired = true
+				hasToastShown.current = true
+
+				toast.promise(
+					new Promise(resolve => {
+						setTimeout(() => {
+							router.refresh()
+							resolve(true)
+						}, 5000)
+					}),
+					{
+						loading: 'Game offers expired, refreshing...',
+						success: 'Game offers updated successfully!',
+						error: 'Failed to update game offers. Please refresh manually.',
+						position: 'bottom-center',
+					}
 				)
-				const timeLeftForGame = calculateTimeLeft(endDate)
-				newTimeLeft[game.id] = timeLeftForGame
+			}
+		})
 
-				if (
-					timeLeftForGame === 'Expired' &&
-					!hasExpired &&
-					!hasToastShown.current
-				) {
-					hasExpired = true
-					hasToastShown.current = true
+		setTimeLeft(newTimeLeft)
+	}, [games.currentGames, router])
 
-					toast.promise(
-						new Promise(resolve => {
-							setTimeout(() => {
-								router.refresh()
-								resolve(true)
-							}, 3000)
-						}),
-						{
-							loading: 'Game offers has expired, refreshing...',
-							success: 'Game offers updated successfully!',
-							error: 'Failed to update game offers. Please refresh manually.',
-							position: 'bottom-center',
-						}
-					)
-				}
-			})
-
-			setTimeLeft(newTimeLeft)
-		}, 500)
+	useEffect(() => {
+		updateTimeLeft()
+		const timer = setInterval(updateTimeLeft, 1000)
 
 		return () => clearInterval(timer)
-	}, [games.currentGames, router])
+	}, [updateTimeLeft])
 
 	const renderGameCard = (game: any, isCurrentGame: boolean) => {
 		const pageSlug = game.catalogNs?.mappings?.[0]?.pageSlug || game.urlSlug

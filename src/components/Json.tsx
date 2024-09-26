@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ClipboardCopy, FileJson2, Send, Undo2 } from 'lucide-react'
+import { ClipboardCopy, FileJson2, Send, Undo2, Clipboard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
@@ -19,13 +19,7 @@ import { HexColorPicker } from 'react-colorful'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Label } from './ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
@@ -152,7 +146,6 @@ export default function Json({ games }: { games: any }) {
 			setJsonData({
 				content: content || defaultContent,
 				embeds: embeds,
-				attachments: [],
 			})
 		}
 
@@ -222,6 +215,15 @@ export default function Json({ games }: { games: any }) {
 		setEmbedColor(color === defaultColor ? '' : color)
 	}
 
+	const handlePaste = async () => {
+		try {
+			const text = await navigator.clipboard.readText()
+			setWebhookUrl(text)
+		} catch (err) {
+			console.error('Failed to paste text')
+		}
+	}
+
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
@@ -246,16 +248,26 @@ export default function Json({ games }: { games: any }) {
 						<TabsTrigger value="preview">JSON Preview</TabsTrigger>
 					</TabsList>
 					<TabsContent value="settings" className="overflow-y-auto">
-						<div className="flex items-center gap-2 mt-2 px-2">
-							<Input
-								type={isVisible ? 'text' : 'password'}
-								onFocus={() => setIsVisible(true)}
-								onBlur={() => setIsVisible(false)}
-								placeholder="Webhook URL"
-								value={webhookUrl}
-								onChange={e => setWebhookUrl(e.target.value)}
-								autoFocus
-							/>
+						<div className="flex items-center gap-2 mt-2">
+							<div className="relative flex-grow">
+								<Input
+									type={isVisible ? 'text' : 'password'}
+									onFocus={() => setIsVisible(true)}
+									onBlur={() => setIsVisible(false)}
+									placeholder="Webhook URL"
+									value={webhookUrl}
+									onChange={e => setWebhookUrl(e.target.value)}
+									style={{ boxShadow: 'none' }}
+								/>
+								<Button
+									variant="outline"
+									size="icon"
+									className="absolute right-0 top-0 h-full rounded-l-none"
+									onClick={handlePaste}
+								>
+									<Clipboard className="size-4" />
+								</Button>
+							</div>
 							<Button onClick={handleWebhook} disabled={isLoading}>
 								{isLoading ? (
 									<div className="sm:mr-2">
@@ -367,23 +379,23 @@ export default function Json({ games }: { games: any }) {
 							</CardContent>
 						</Card>
 					</TabsContent>
-					<TabsContent value="preview" className="overflow-y-auto">
+					<TabsContent value="preview" className="overflow-y-auto pt-3">
 						<Card>
-							<CardContent className="mt-6">
-								<ScrollArea className="h-[50vh] w-full rounded-md">
-									<pre className="bg-secondary text-secondary-foreground p-4 rounded-md overflow-auto text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">
-										{JSON.stringify(jsonData, null, 2)}
-									</pre>
-								</ScrollArea>
+							<CardContent className="p-4">
 								<Button
 									onClick={copyToClipboard}
 									variant="outline"
 									size="sm"
-									className="mt-4 w-full"
+									className="mb-4 w-full"
 								>
 									<ClipboardCopy className="size-4 mr-2" />
 									Copy JSON
 								</Button>
+								<ScrollArea className="w-full rounded-md">
+									<pre className="max-h-[50vh] bg-secondary text-secondary-foreground p-4 rounded-md overflow-auto text-sm whitespace-pre-wrap break-all">
+										{JSON.stringify(jsonData, null, 2)}
+									</pre>
+								</ScrollArea>
 							</CardContent>
 						</Card>
 					</TabsContent>
