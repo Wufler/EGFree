@@ -84,7 +84,7 @@ export default function List({ games }: { games: any }) {
 					href={`https://store.epicgames.com/en-US${linkPrefix}${pageSlug}`}
 					target="_blank"
 				>
-					<Card className="h-full flex flex-col transition-all duration-300 hover:shadow-lg hover:scale-105 bg-white dark:bg-epic-darkBlue border-epic-lightGray dark:border-epic-gray">
+					<Card className="h-full flex flex-col sm:transition-all sm:duration-300 sm:hover:scale-105 bg-white dark:bg-epic-darkBlue border-epic-lightGray dark:border-epic-gray">
 						<CardHeader className="p-0 relative">
 							<Image
 								src={

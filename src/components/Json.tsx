@@ -249,7 +249,7 @@ export default function Json({ games }: { games: any }) {
 					</TabsList>
 					<TabsContent value="settings" className="overflow-y-auto">
 						<div className="flex items-center gap-2 mt-2">
-							<div className="relative flex-grow">
+							<div className="flex-grow flex">
 								<Input
 									type={isVisible ? 'text' : 'password'}
 									onFocus={() => setIsVisible(true)}
@@ -258,11 +258,12 @@ export default function Json({ games }: { games: any }) {
 									value={webhookUrl}
 									onChange={e => setWebhookUrl(e.target.value)}
 									style={{ boxShadow: 'none' }}
+									className="rounded-r-none border-r-0"
 								/>
 								<Button
 									variant="outline"
 									size="icon"
-									className="absolute right-0 top-0 h-full rounded-l-none"
+									className="px-2 rounded-l-none"
 									onClick={handlePaste}
 								>
 									<Clipboard className="size-4" />

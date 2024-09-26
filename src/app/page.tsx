@@ -40,9 +40,9 @@ export default async function Home() {
 
 	return (
 		<main className="min-h-dvh bg-white dark:bg-epic-black text-epic-black dark:text-white">
-			<div className="container mx-auto px-4 lg:py-8 py-6">
+			<div className="container mx-auto sm:px-4 py-8">
 				<header className="flex flex-col sm:flex-row items-center justify-between lg:mb-8 mb-6">
-					<div className="mb-4 sm:mb-0">
+					<div className="mb-4 sm:mb-0 text-center">
 						<Link
 							href="https://store.epicgames.com/en-US/free-games"
 							target="_blank"
