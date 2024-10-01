@@ -1,10 +1,12 @@
-import { OneEightyRing } from 'react-svg-spinners'
+'use client'
+import { NinetyRing } from 'react-svg-spinners'
 interface LoadingProps {
 	text?: string
 	textSize?: string
 	fullscreen?: boolean
 	background?: boolean
 	size: number
+	color: string
 }
 
 export default function Loading(loading: LoadingProps) {
@@ -14,7 +16,11 @@ export default function Loading(loading: LoadingProps) {
 				loading.fullscreen ? 'min-h-dvh' : ''
 			} ${loading.background ? 'bg-primary-white dark:bg-primary-black' : ''}`}
 		>
-			<OneEightyRing width={loading.size} height={loading.size} color="#4195D1" />
+			<NinetyRing
+				width={loading.size}
+				height={loading.size}
+				color={loading.color}
+			/>
 			{loading?.text && (
 				<div className={`text-black dark:text-white ${loading?.textSize || ''}`}>
 					<span className="sr-only">{loading?.text}</span>

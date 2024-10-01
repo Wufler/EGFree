@@ -1,7 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ClipboardCopy, FileJson2, Send, Undo2, Clipboard } from 'lucide-react'
+import {
+	ClipboardCopy,
+	FileJson2,
+	Send,
+	Undo2,
+	Clipboard,
+	Check,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
@@ -36,6 +43,7 @@ export default function Json({ games }: { games: any }) {
 	const [includePrice, setIncludePrice] = useState(true)
 	const [includeImage, setIncludeImage] = useState(true)
 	const [allDisabled, setAllDisabled] = useState(false)
+	const [isCopied, setIsCopied] = useState(false)
 	const defaultColor = '#85ce4b'
 	const defaultContent = '<@&847939354978811924>'
 
@@ -131,7 +139,7 @@ export default function Json({ games }: { games: any }) {
 					author: {
 						name: 'Epic Games Store',
 						url: 'https://egfreegames.vercel.app/',
-						icon_url: 'https://i.imgur.com/ANplrW5.png',
+						icon_url: 'https://wolfey.s-ul.eu/YcyMXrI1',
 					},
 					...(includeFooter && {
 						footer: {
@@ -164,9 +172,8 @@ export default function Json({ games }: { games: any }) {
 	const copyToClipboard = async () => {
 		try {
 			await navigator.clipboard.writeText(JSON.stringify(jsonData, null, 2))
-			toast.success('Copied JSON Data to clipboard.', {
-				position: 'bottom-center',
-			})
+			setIsCopied(true)
+			setTimeout(() => setIsCopied(false), 1000)
 		} catch (err) {
 			console.error('Failed to copy text: ', err)
 			toast.error('Failed to copy JSON Data.', {
@@ -271,8 +278,8 @@ export default function Json({ games }: { games: any }) {
 							</div>
 							<Button onClick={handleWebhook} disabled={isLoading}>
 								{isLoading ? (
-									<div className="sm:mr-2">
-										<Loading size={16} />
+									<div className="sm:mr-2 mt-0.5">
+										<Loading size={16} color={embedColor || defaultColor} />
 									</div>
 								) : (
 									<Send className="size-4 sm:mr-2" />
@@ -389,7 +396,11 @@ export default function Json({ games }: { games: any }) {
 									size="sm"
 									className="mb-4 w-full"
 								>
-									<ClipboardCopy className="size-4 mr-2" />
+									{isCopied ? (
+										<Check className="size-4 mr-2" />
+									) : (
+										<ClipboardCopy className="size-4 mr-2" />
+									)}
 									Copy JSON
 								</Button>
 								<ScrollArea className="w-full rounded-md">

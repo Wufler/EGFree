@@ -169,7 +169,7 @@ export default function List({ games }: { games: any }) {
 	)
 
 	return (
-		<div className="sm:space-y-0 space-y-12 p-4 lg:p-8 bg-gray-100 dark:bg-epic-darkBlue rounded-lg">
+		<div className="sm:space-y-0 space-y-12 p-4 lg:p-8 bg-gray-100 dark:bg-epic-darkBlue sm:rounded-lg rounded-none">
 			<Tabs defaultValue="current" className="w-full lg:hidden">
 				<TabsList className="grid w-full grid-cols-2 mb-4">
 					<TabsTrigger value="current">Current</TabsTrigger>
