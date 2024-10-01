@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'Epic Games Free Games',
+        name: 'EG Free Games',
         short_name: 'EGFree',
         description: 'Claimable free games for the Epic Games Store',
         start_url: '/',
@@ -14,6 +14,12 @@ export default function manifest(): MetadataRoute.Manifest {
                 src: '/icon-512x512.png',
                 sizes: '512x512',
                 type: 'image/png',
+            },
+            {
+                src: "/icon-192x192.png",
+                sizes: "192x192",
+                type: "image/png",
+                purpose: "maskable"
             },
         ],
     }
