@@ -32,10 +32,10 @@ export default function Theme() {
 					<span className="sr-only">Toggle theme</span>
 				</Button>
 			</DropdownMenuTrigger>
-			<DropdownMenuContent className="bg-epic-white dark:bg-epic-darkBlue">
+			<DropdownMenuContent className="bg-white dark:bg-epic-darkBlue">
 				<DropdownMenuItem
 					onClick={() => setTheme('light')}
-					className="text-epic-black dark:text-epic-white"
+					className="text-epic-black dark:text-white"
 				>
 					<Sun className="mr-2 size-4" />
 					<span>Light</span>
@@ -43,7 +43,7 @@ export default function Theme() {
 				</DropdownMenuItem>
 				<DropdownMenuItem
 					onClick={() => setTheme('dark')}
-					className="text-epic-black dark:text-epic-white"
+					className="text-epic-black dark:text-white"
 				>
 					<Moon className="mr-2 size-4" />
 					<span>Dark</span>
@@ -51,7 +51,7 @@ export default function Theme() {
 				</DropdownMenuItem>
 				<DropdownMenuItem
 					onClick={() => setTheme('system')}
-					className="text-epic-black dark:text-epic-white"
+					className="text-epic-black dark:text-white"
 				>
 					<Monitor className="mr-2 size-4" />
 					<span>System</span>

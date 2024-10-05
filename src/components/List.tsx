@@ -187,7 +187,7 @@ export default function List({ games }: { games: any }) {
 					{renderGameList(games.currentGames, true)}
 				</section>
 				<section className="mt-8">
-					<h2 className="text-3xl font-bold mb-4 text-epic-lightBlue dark:text-epic-white">
+					<h2 className="text-3xl font-bold mb-4 text-epic-lightBlue dark:text-white">
 						Upcoming
 					</h2>
 					{renderGameList(games.nextGames, false)}

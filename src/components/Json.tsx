@@ -240,7 +240,7 @@ export default function Json({ games }: { games: any }) {
 			</DialogTrigger>
 			<DialogContent
 				style={{ borderLeft: `6px solid ${embedColor || defaultColor}` }}
-				className="max-w-3xl max-h-[90vh] flex flex-col"
+				className="bg-white dark:bg-epic-black max-w-3xl max-h-[90vh] flex flex-col"
 			>
 				<DialogHeader>
 					<DialogTitle>JSON Data</DialogTitle>

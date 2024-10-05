@@ -37,8 +37,8 @@ export default async function Image() {
 					width: '100%',
 					height: '200px',
 					objectFit: 'cover',
-					borderTopLeftRadius: '4px',
-					borderTopRightRadius: '4px',
+					borderTopLeftRadius: '8px',
+					borderTopRightRadius: '8px',
 					marginTop: '16px',
 					filter: isCurrentGame ? 'none' : 'grayscale(100%)',
 				}}
@@ -72,7 +72,7 @@ export default async function Image() {
 						backgroundColor: isCurrentGame ? '#0070f3' : 'transparent',
 						border: isCurrentGame ? 'none' : '1px solid #666',
 						padding: '4px 8px',
-						borderRadius: '4px',
+						borderRadius: '8px',
 					}}
 				>
 					{isCurrentGame
@@ -85,7 +85,11 @@ export default async function Image() {
 						  )}`}
 				</span>
 				<span
-					style={{ fontSize: '12px', color: '#666', textDecoration: 'line-through' }}
+					style={{
+						fontSize: '12px',
+						color: '#666',
+						textDecoration: isCurrentGame ? 'line-through' : 'none',
+					}}
 				>
 					{game.price.totalPrice.fmtPrice.originalPrice}
 				</span>
