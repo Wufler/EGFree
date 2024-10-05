@@ -7,16 +7,16 @@ import { format } from 'date-fns'
 import {
 	Card,
 	CardContent,
+	CardDescription,
 	CardFooter,
-	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { unstable_noStore as noStore } from 'next/cache'
 import { calculateTimeLeft } from '@/lib/calculateTime'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { Calendar, Clock } from 'lucide-react'
 
 export default function List({ games }: { games: any }) {
 	noStore()
@@ -75,17 +75,19 @@ export default function List({ games }: { games: any }) {
 
 		return (
 			<motion.div
+				layout
 				key={game.id}
-				initial={{ opacity: 0, y: 20 }}
-				animate={{ opacity: 1, y: 0 }}
-				transition={{ duration: 0.5 }}
+				initial={{ opacity: 0, scale: 0.9 }}
+				animate={{ opacity: 1, scale: 1 }}
+				exit={{ opacity: 0, scale: 0.9 }}
+				transition={{ duration: 0.4 }}
 			>
 				<Link
 					href={`https://store.epicgames.com/en-US${linkPrefix}${pageSlug}`}
 					target="_blank"
 				>
-					<Card className="h-full flex flex-col sm:transition-all sm:duration-300 sm:hover:scale-105 bg-white dark:bg-epic-darkBlue border-epic-lightGray dark:border-epic-gray">
-						<CardHeader className="p-0 relative">
+					<Card className="h-full overflow-hidden group hover:shadow-lg transition-all duration-300 bg-white dark:bg-epic-darkBlue flex flex-col">
+						<div className="relative overflow-hidden">
 							<Image
 								src={
 									game.keyImages.find((img: any) => img.type === 'OfferImageWide')?.url
@@ -93,52 +95,46 @@ export default function List({ games }: { games: any }) {
 								alt={game.title}
 								width={640}
 								height={360}
-								className={`w-full h-48 lg:h-60 object-cover rounded-t-lg ${
+								className={`w-full h-48 lg:h-60 object-cover transition-all duration-300 group-hover:scale-105 ${
 									timeLeft[game.id] === 'Expired' ? 'grayscale' : ''
 								}`}
 							/>
-							<Badge
-								variant={isCurrentGame ? 'default' : 'secondary'}
-								className={`absolute top-1 right-3 text-white dark:hover:text-black ${
-									timeLeft[game.id] === 'Expired' ? 'hidden' : ''
-								} ${
-									isCurrentGame
-										? 'bg-epic-blue'
-										: 'dark:hover:text-white text-black dark:text-white'
-								}`}
-							>
-								{isCurrentGame
-									? 'FREE NOW'
-									: `Coming ${format(
+						</div>
+						<CardContent className="p-4 py-3 flex-grow">
+							<CardTitle className="text-xl mb-2 text-epic-black dark:text-white">
+								<div className="flex flex-col">
+									<p className="text-lg font-bold line-clamp-1 text-gray-900 dark:text-white group-hover:text-epic-blue transition-colors">
+										{game.title}
+									</p>
+									<p className="text-xs text-epic-gray dark:text-epic-lightGray line-clamp-1">
+										{game.seller.name}
+									</p>
+								</div>
+							</CardTitle>
+							<CardDescription className="line-clamp-3">
+								{game.description}
+							</CardDescription>
+						</CardContent>
+						<CardFooter className="p-4 py-3 flex justify-between items-center bg-gray-50 dark:bg-gray-950/20">
+							{isCurrentGame ? (
+								<div className="flex items-center text-epic-blue">
+									<Clock className="size-4 mr-1" />
+									<span className="text-sm font-medium">
+										{timeLeft[game.id] || 'Loading...'}
+									</span>
+								</div>
+							) : (
+								<div className="flex items-center text-gray-600 dark:text-gray-400">
+									<Calendar className="size-4 mr-1" />
+									<span className="text-sm">
+										{format(
 											new Date(
 												game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0].startDate
 											),
 											'MMM d'
-									  )}`}
-							</Badge>
-						</CardHeader>
-						<CardContent className="p-4 pb-1">
-							<CardTitle className="text-xl mb-2 text-epic-black dark:text-white line-clamp-1">
-								{game.title}
-							</CardTitle>
-							<p className="text-sm text-epic-gray dark:text-epic-lightGray mb-2 line-clamp-3">
-								{game.description}
-							</p>
-						</CardContent>
-						<CardFooter className="p-4 pt-0 flex justify-between items-center mt-auto">
-							{isCurrentGame ? (
-								<span className="text-epic-blue font-semibold">
-									{timeLeft[game.id] || 'Loading...'}
-								</span>
-							) : (
-								<span className="text-epic-gray dark:text-epic-lightGray text-sm">
-									{format(
-										new Date(
-											game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0].startDate
-										),
-										'MMM d'
-									)}
-								</span>
+										)}
+									</span>
+								</div>
 							)}
 							<span className="text-epic-gray dark:text-epic-lightGray text-sm">
 								{isCurrentGame ? (
@@ -163,13 +159,13 @@ export default function List({ games }: { games: any }) {
 	}
 
 	const renderGameList = (games: any[], isCurrentGames: boolean) => (
-		<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+		<div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 			{games.map((game: any) => renderGameCard(game, isCurrentGames))}
 		</div>
 	)
 
 	return (
-		<div className="sm:space-y-0 space-y-12 p-4 lg:p-8 bg-gray-100 dark:bg-epic-darkBlue sm:rounded-lg rounded-none">
+		<div className="p-4 lg:p-8 bg-gray-100 dark:bg-epic-darkBlue sm:rounded-lg rounded-none">
 			<Tabs defaultValue="current" className="w-full lg:hidden">
 				<TabsList className="grid w-full grid-cols-2 mb-4">
 					<TabsTrigger value="current">Current</TabsTrigger>
@@ -185,13 +181,13 @@ export default function List({ games }: { games: any }) {
 
 			<div className="hidden lg:block">
 				<section>
-					<h2 className="text-3xl font-bold mb-5 text-epic-blue dark:text-epic-blue">
+					<h2 className="text-3xl font-bold mb-4 text-epic-blue dark:text-epic-blue">
 						Current
 					</h2>
 					{renderGameList(games.currentGames, true)}
 				</section>
 				<section className="mt-8">
-					<h2 className="text-3xl font-bold mb-5 text-epic-lightBlue dark:text-epic-white">
+					<h2 className="text-3xl font-bold mb-4 text-epic-lightBlue dark:text-epic-white">
 						Upcoming
 					</h2>
 					{renderGameList(games.nextGames, false)}

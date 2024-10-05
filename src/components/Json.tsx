@@ -153,7 +153,7 @@ export default function Json({ games }: { games: any }) {
 
 			setJsonData({
 				content: content || defaultContent,
-				embeds: embeds,
+				embeds: embeds.length > 0 ? embeds : undefined,
 			})
 		}
 
@@ -300,7 +300,7 @@ export default function Json({ games }: { games: any }) {
 										<PopoverContent
 											className="w-full p-3"
 											align="start"
-											onOpenAutoFocus={e => e.preventDefault()}
+											onOpenAutoFocus={(e: React.SyntheticEvent) => e.preventDefault()}
 										>
 											<Input
 												maxLength={7}
@@ -340,7 +340,7 @@ export default function Json({ games }: { games: any }) {
 											<Switch
 												id="current-games"
 												checked={includeCurrent}
-												onCheckedChange={checked => setIncludeCurrent(checked)}
+												onCheckedChange={(checked: boolean) => setIncludeCurrent(checked)}
 											/>
 											<Label htmlFor="current-games">Current</Label>
 										</div>
@@ -348,7 +348,7 @@ export default function Json({ games }: { games: any }) {
 											<Switch
 												id="upcoming-games"
 												checked={includeUpcoming}
-												onCheckedChange={checked => setIncludeUpcoming(checked)}
+												onCheckedChange={(checked: boolean) => setIncludeUpcoming(checked)}
 											/>
 											<Label htmlFor="upcoming-games">Upcoming</Label>
 										</div>
@@ -359,7 +359,7 @@ export default function Json({ games }: { games: any }) {
 											<Switch
 												id="include-price"
 												checked={includePrice}
-												onCheckedChange={checked => setIncludePrice(checked)}
+												onCheckedChange={(checked: boolean) => setIncludePrice(checked)}
 												disabled={allDisabled}
 											/>
 											<Label htmlFor="include-price">Price</Label>
@@ -368,7 +368,7 @@ export default function Json({ games }: { games: any }) {
 											<Switch
 												id="include-image"
 												checked={includeImage}
-												onCheckedChange={checked => setIncludeImage(checked)}
+												onCheckedChange={(checked: boolean) => setIncludeImage(checked)}
 												disabled={allDisabled}
 											/>
 											<Label htmlFor="include-image">Image</Label>
@@ -377,7 +377,7 @@ export default function Json({ games }: { games: any }) {
 											<Switch
 												id="include-footer"
 												checked={includeFooter}
-												onCheckedChange={checked => setIncludeFooter(checked)}
+												onCheckedChange={(checked: boolean) => setIncludeFooter(checked)}
 												disabled={allDisabled}
 											/>
 											<Label htmlFor="include-footer">Footer</Label>
