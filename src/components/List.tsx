@@ -119,7 +119,7 @@ export default function List({ games }: { games: any }) {
 							{isCurrentGame ? (
 								<div className="flex items-center text-epic-blue">
 									<Clock className="size-4 mr-1" />
-									<span className="text-sm font-medium">
+									<span className="font-semibold">
 										{timeLeft[game.id] || 'Loading...'}
 									</span>
 								</div>

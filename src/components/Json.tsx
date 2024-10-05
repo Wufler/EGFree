@@ -300,7 +300,7 @@ export default function Json({ games }: { games: any }) {
 										<PopoverContent
 											className="w-full p-3"
 											align="start"
-											onOpenAutoFocus={(e: React.SyntheticEvent) => e.preventDefault()}
+											onOpenAutoFocus={(e: any) => e.preventDefault()}
 										>
 											<Input
 												maxLength={7}
