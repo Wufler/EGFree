@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import {
 	ClipboardCopy,
@@ -30,73 +29,99 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
-export default function Json({ games }: { games: any }) {
-	const [jsonData, setJsonData] = useState<any>({})
-	const [includeCurrent, setIncludeCurrent] = useState(true)
-	const [includeUpcoming, setIncludeUpcoming] = useState(false)
+function Switches({
+	id,
+	checked,
+	onCheckedChange,
+	disabled,
+	label,
+}: {
+	id: string
+	checked: boolean
+	onCheckedChange: (checked: boolean) => void
+	disabled?: boolean
+	label: string
+}) {
+	return (
+		<div className="relative flex w-full items-start gap-2 rounded-lg border border-input p-4 shadow-sm shadow-black/5 has-[[data-state=checked]]:border-ring">
+			<Switch
+				id={id}
+				checked={checked}
+				onCheckedChange={onCheckedChange}
+				disabled={disabled}
+				className="order-1 h-4 w-6 after:absolute after:inset-0 [&_span]:size-3 [&_span]:data-[state=checked]:translate-x-2 rtl:[&_span]:data-[state=checked]:-translate-x-2"
+			/>
+			<div className="grid grow gap-2">
+				<Label htmlFor={id}>{label}</Label>
+			</div>
+		</div>
+	)
+}
+
+interface EgFreeSettings {
+	includeCurrent: boolean
+	includeUpcoming: boolean
+	embedContent: string
+	embedColor: string
+	includeFooter: boolean
+	includePrice: boolean
+	includeImage: boolean
+}
+
+const defaultColor = '#85ce4b'
+const defaultContent = '<@&847939354978811924>'
+
+export default function Json({ games }: any) {
+	const [jsonData, setJsonData] = useState({})
 	const [webhookUrl, setWebhookUrl] = useState('')
-	const [content, setContent] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
 	const [isVisible, setIsVisible] = useState(false)
-	const [embedColor, setEmbedColor] = useState('')
-	const [includeFooter, setIncludeFooter] = useState(true)
-	const [includePrice, setIncludePrice] = useState(true)
-	const [includeImage, setIncludeImage] = useState(true)
-	const [allDisabled, setAllDisabled] = useState(false)
 	const [isCopied, setIsCopied] = useState(false)
-	const defaultColor = '#85ce4b'
-	const defaultContent = '<@&847939354978811924>'
-
-	useEffect(() => {
-		const savedIncludeCurrent = localStorage.getItem('includeCurrent')
-		const savedIncludeUpcoming = localStorage.getItem('includeUpcoming')
-		const savedContent = localStorage.getItem('embedContent')
-		const savedColor = localStorage.getItem('embedColor')
-		const savedIncludeFooter = localStorage.getItem('includeFooter')
-		const savedIncludePrice = localStorage.getItem('includePrice')
-		const savedIncludeImage = localStorage.getItem('includeImage')
-
-		if (savedIncludeCurrent !== null)
-			setIncludeCurrent(JSON.parse(savedIncludeCurrent))
-		if (savedIncludeUpcoming !== null)
-			setIncludeUpcoming(JSON.parse(savedIncludeUpcoming))
-		if (savedContent) setContent(savedContent)
-		if (savedColor) setEmbedColor(savedColor)
-		if (savedIncludeFooter !== null)
-			setIncludeFooter(JSON.parse(savedIncludeFooter))
-		if (savedIncludePrice !== null) setIncludePrice(JSON.parse(savedIncludePrice))
-		if (savedIncludeImage !== null) setIncludeImage(JSON.parse(savedIncludeImage))
-	}, [])
-
-	useEffect(() => {
-		setAllDisabled(!includeCurrent && !includeUpcoming)
-
-		localStorage.setItem('embedContent', content)
-		localStorage.setItem('includeCurrent', JSON.stringify(includeCurrent))
-		localStorage.setItem('includeUpcoming', JSON.stringify(includeUpcoming))
-		localStorage.setItem('includeFooter', JSON.stringify(includeFooter))
-		localStorage.setItem('includePrice', JSON.stringify(includePrice))
-		localStorage.setItem('includeImage', JSON.stringify(includeImage))
-		if (embedColor !== defaultColor) {
-			localStorage.setItem('embedColor', embedColor)
-		} else {
-			localStorage.removeItem('embedColor')
+	const [settings, setSettings] = useState<EgFreeSettings>(() => {
+		if (typeof window !== 'undefined') {
+			const savedSettings = localStorage.getItem('egFreeSettings')
+			return savedSettings
+				? JSON.parse(savedSettings)
+				: {
+						includeCurrent: true,
+						includeUpcoming: false,
+						embedContent: '',
+						embedColor: defaultColor,
+						includeFooter: true,
+						includePrice: true,
+						includeImage: true,
+				  }
 		}
-	}, [
-		content,
-		embedColor,
-		includeCurrent,
-		includeUpcoming,
-		includeFooter,
-		includePrice,
-		includeImage,
-	])
+		return {
+			includeCurrent: true,
+			includeUpcoming: false,
+			embedContent: '',
+			embedColor: defaultColor,
+			includeFooter: true,
+			includePrice: true,
+			includeImage: true,
+		}
+	})
+
+	useEffect(() => {
+		if (typeof window !== 'undefined') {
+			localStorage.setItem('egFreeSettings', JSON.stringify(settings))
+		}
+	}, [settings])
+
+	const updateSetting = (key: keyof EgFreeSettings, value: any) => {
+		setSettings(prev => ({ ...prev, [key]: value }))
+	}
+
+	const handleColorChange = (color: string) => {
+		updateSetting('embedColor', color === defaultColor ? defaultColor : color)
+	}
 
 	useEffect(() => {
 		const generateJson = () => {
 			const selectedGames = [
-				...(includeCurrent ? games.currentGames : []),
-				...(includeUpcoming ? games.nextGames : []),
+				...(settings.includeCurrent ? games.currentGames : []),
+				...(settings.includeUpcoming ? games.nextGames : []),
 			]
 
 			const embeds = selectedGames.map((game: any) => {
@@ -114,14 +139,20 @@ export default function Json({ games }: { games: any }) {
 
 				let fieldValue = isCurrent
 					? `${
-							includePrice
-								? `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **Free**\n`
+							settings.includePrice
+								? game.price.totalPrice.originalPrice === 0
+									? '**Free**\n'
+									: `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **Free**\n`
 								: ''
 					  }[Claim ${
 							isBundleGame ? 'Bundle' : 'Game'
 					  }](https://store.epicgames.com/en-US${linkPrefix}${pageSlug})`
 					: `${
-							includePrice ? `${game.price.totalPrice.fmtPrice.originalPrice}\n` : ''
+							settings.includePrice
+								? game.price.totalPrice.originalPrice === 0
+									? 'Free\n'
+									: `${game.price.totalPrice.fmtPrice.originalPrice}\n`
+								: ''
 					  }[Game Link](https://store.epicgames.com/en-US${linkPrefix}${pageSlug})`
 
 				const imageUrl = game.keyImages.find(
@@ -129,7 +160,7 @@ export default function Json({ games }: { games: any }) {
 				)?.url
 
 				return {
-					color: parseInt((embedColor || defaultColor).replace('#', ''), 16),
+					color: parseInt(settings.embedColor.replace('#', ''), 16),
 					fields: [
 						{
 							name: game.title,
@@ -141,33 +172,24 @@ export default function Json({ games }: { games: any }) {
 						url: 'https://egfreegames.vercel.app/',
 						icon_url: 'https://wolfey.s-ul.eu/YcyMXrI1',
 					},
-					...(includeFooter && {
+					...(settings.includeFooter && {
 						footer: {
 							text: isCurrent ? 'Offer ends' : 'Offer starts',
 						},
 						timestamp: endDate.toISOString(),
 					}),
-					...(includeImage && { image: { url: encodeURI(imageUrl) } }),
+					...(settings.includeImage && { image: { url: encodeURI(imageUrl) } }),
 				}
 			})
 
 			setJsonData({
-				content: content || defaultContent,
+				content: settings.embedContent || defaultContent,
 				embeds: embeds.length > 0 ? embeds : undefined,
 			})
 		}
 
 		generateJson()
-	}, [
-		games,
-		includeCurrent,
-		includeUpcoming,
-		content,
-		embedColor,
-		includeFooter,
-		includePrice,
-		includeImage,
-	])
+	}, [games, settings])
 
 	const copyToClipboard = async () => {
 		try {
@@ -201,7 +223,7 @@ export default function Json({ games }: { games: any }) {
 			})
 
 			if (response.ok) {
-				toast.success('Successfully sent embed.', { position: 'bottom-center' })
+				toast.success('Successfully sent data.', { position: 'bottom-center' })
 			} else {
 				const errorData = await response.json()
 				throw new Error(errorData.message || 'Failed to send JSON Data.')
@@ -216,10 +238,6 @@ export default function Json({ games }: { games: any }) {
 			})
 		}
 		setIsLoading(false)
-	}
-
-	const handleColorChange = (color: string) => {
-		setEmbedColor(color === defaultColor ? '' : color)
 	}
 
 	const handlePaste = async () => {
@@ -239,7 +257,7 @@ export default function Json({ games }: { games: any }) {
 				</Button>
 			</DialogTrigger>
 			<DialogContent
-				style={{ borderLeft: `6px solid ${embedColor || defaultColor}` }}
+				style={{ borderLeft: `6px solid ${settings.embedColor}` }}
 				className="bg-white dark:bg-epic-black max-w-3xl max-h-[90vh] flex flex-col"
 			>
 				<DialogHeader>
@@ -276,10 +294,10 @@ export default function Json({ games }: { games: any }) {
 									<Clipboard className="size-4" />
 								</Button>
 							</div>
-							<Button onClick={handleWebhook} disabled={isLoading}>
+							<Button size="sm" onClick={handleWebhook} disabled={isLoading}>
 								{isLoading ? (
 									<div className="sm:mr-2 mt-0.5">
-										<Loading size={16} color={embedColor || defaultColor} />
+										<Loading size={16} color={settings.embedColor} />
 									</div>
 								) : (
 									<Send className="size-4 sm:mr-2" />
@@ -294,7 +312,7 @@ export default function Json({ games }: { games: any }) {
 										<PopoverTrigger asChild>
 											<Button
 												className="size-10"
-												style={{ backgroundColor: embedColor || defaultColor }}
+												style={{ backgroundColor: settings.embedColor }}
 											/>
 										</PopoverTrigger>
 										<PopoverContent
@@ -304,17 +322,17 @@ export default function Json({ games }: { games: any }) {
 										>
 											<Input
 												maxLength={7}
-												value={embedColor || defaultColor}
+												value={settings.embedColor}
 												onChange={e => handleColorChange(e.target.value)}
 												className="mb-2"
 											/>
 											<HexColorPicker
-												color={embedColor || defaultColor}
+												color={settings.embedColor}
 												onChange={handleColorChange}
 												className="!w-full mb-2"
 											/>
 											<Button
-												onClick={() => setEmbedColor(defaultColor)}
+												onClick={() => handleColorChange(defaultColor)}
 												variant="outline"
 												size="sm"
 												className="w-full"
@@ -327,61 +345,53 @@ export default function Json({ games }: { games: any }) {
 									<div className="flex-grow">
 										<Input
 											placeholder={defaultContent}
-											value={content}
-											onChange={e => setContent(e.target.value)}
+											value={settings.embedContent}
+											onChange={e => updateSetting('embedContent', e.target.value)}
 										/>
 									</div>
 								</div>
 								<Separator />
-								<div className="grid grid-cols-2 gap-4">
+								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 									<div className="space-y-2">
 										<Label className="text-sm font-medium">Game Selection</Label>
-										<div className="flex items-center gap-2">
-											<Switch
-												id="current-games"
-												checked={includeCurrent}
-												onCheckedChange={(checked: boolean) => setIncludeCurrent(checked)}
-											/>
-											<Label htmlFor="current-games">Current</Label>
-										</div>
-										<div className="flex items-center gap-2">
-											<Switch
-												id="upcoming-games"
-												checked={includeUpcoming}
-												onCheckedChange={(checked: boolean) => setIncludeUpcoming(checked)}
-											/>
-											<Label htmlFor="upcoming-games">Upcoming</Label>
-										</div>
+										<Switches
+											id="current-games"
+											checked={settings.includeCurrent}
+											onCheckedChange={checked => updateSetting('includeCurrent', checked)}
+											label="Current"
+										/>
+										<Switches
+											id="upcoming-games"
+											checked={settings.includeUpcoming}
+											onCheckedChange={checked =>
+												updateSetting('includeUpcoming', checked)
+											}
+											label="Upcoming"
+										/>
 									</div>
 									<div className="space-y-2">
 										<Label className="text-sm font-medium">Embed Options</Label>
-										<div className="flex items-center gap-2">
-											<Switch
-												id="include-price"
-												checked={includePrice}
-												onCheckedChange={(checked: boolean) => setIncludePrice(checked)}
-												disabled={allDisabled}
-											/>
-											<Label htmlFor="include-price">Price</Label>
-										</div>
-										<div className="flex items-center gap-2">
-											<Switch
-												id="include-image"
-												checked={includeImage}
-												onCheckedChange={(checked: boolean) => setIncludeImage(checked)}
-												disabled={allDisabled}
-											/>
-											<Label htmlFor="include-image">Image</Label>
-										</div>
-										<div className="flex items-center gap-2">
-											<Switch
-												id="include-footer"
-												checked={includeFooter}
-												onCheckedChange={(checked: boolean) => setIncludeFooter(checked)}
-												disabled={allDisabled}
-											/>
-											<Label htmlFor="include-footer">Footer</Label>
-										</div>
+										<Switches
+											id="include-price"
+											checked={settings.includePrice}
+											onCheckedChange={checked => updateSetting('includePrice', checked)}
+											disabled={!settings.includeCurrent && !settings.includeUpcoming}
+											label="Price"
+										/>
+										<Switches
+											id="include-image"
+											checked={settings.includeImage}
+											onCheckedChange={checked => updateSetting('includeImage', checked)}
+											disabled={!settings.includeCurrent && !settings.includeUpcoming}
+											label="Image"
+										/>
+										<Switches
+											id="include-footer"
+											checked={settings.includeFooter}
+											onCheckedChange={checked => updateSetting('includeFooter', checked)}
+											disabled={!settings.includeCurrent && !settings.includeUpcoming}
+											label="Footer"
+										/>
 									</div>
 								</div>
 							</CardContent>

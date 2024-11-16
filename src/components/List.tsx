@@ -67,7 +67,7 @@ export default function List({ games }: { games: any }) {
 	}, [updateTimeLeft])
 
 	const renderGameCard = (game: any, isCurrentGame: boolean) => {
-		const pageSlug = game.catalogNs?.mappings?.[0]?.pageSlug || game.urlSlug
+		const pageSlug = game.offerMappings?.pageSlug || game.urlSlug
 		const isBundleGame = game.categories?.some(
 			(category: any) => category.path === 'bundles'
 		)
@@ -143,11 +143,15 @@ export default function List({ games }: { games: any }) {
 											timeLeft[game.id] === 'Expired' ? '' : 'line-through'
 										}`}
 									>
-										{game.price.totalPrice.fmtPrice.originalPrice}
+										{game.price.totalPrice.originalPrice === 0
+											? 'Free'
+											: game.price.totalPrice.fmtPrice.originalPrice}
 									</span>
 								) : (
-									<span className=" dark:text-epic-lightGray">
-										{game.price.totalPrice.fmtPrice.originalPrice}
+									<span className="dark:text-epic-lightGray">
+										{game.price.totalPrice.originalPrice === 0
+											? 'Free'
+											: game.price.totalPrice.fmtPrice.originalPrice}
 									</span>
 								)}
 							</span>
@@ -160,7 +164,13 @@ export default function List({ games }: { games: any }) {
 
 	const renderGameList = (games: any[], isCurrentGames: boolean) => (
 		<div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-			{games.map((game: any) => renderGameCard(game, isCurrentGames))}
+			{games.length > 0 ? (
+				games.map((game: any) => renderGameCard(game, isCurrentGames))
+			) : (
+				<p className="text-lg text-epic-gray dark:text-epic-lightGray lg:col-span-3 col-span-full text-center lg:text-left">
+					Failed to fetch offers. Check back later or check out the official site.
+				</p>
+			)}
 		</div>
 	)
 

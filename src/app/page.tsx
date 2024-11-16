@@ -63,12 +63,10 @@ export default async function Home() {
 							className="rounded-full size-10 bg-transparent border-none"
 						>
 							<Link href="https://github.com/WoIfey/epicfreegames" target="_blank">
-								<Image
-									src="/github.svg"
+								<img
+									src="https://wolfey.s-ul.eu/IHbGO2Mm"
 									alt="GitHub"
-									height={32}
-									width={32}
-									className="dark:invert p-1"
+									className="dark:invert p-1 size-8"
 								/>
 							</Link>
 						</Button>
