@@ -91,7 +91,9 @@ export default async function Image() {
 						textDecoration: isCurrentGame ? 'line-through' : 'none',
 					}}
 				>
-					{game.price.totalPrice.fmtPrice.originalPrice}
+					{game.price.totalPrice.originalPrice === 0
+						? ''
+						: game.price.totalPrice.fmtPrice.originalPrice}
 				</span>
 			</div>
 		</div>

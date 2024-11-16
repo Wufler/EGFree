@@ -67,7 +67,7 @@ export default function List({ games }: { games: any }) {
 	}, [updateTimeLeft])
 
 	const renderGameCard = (game: any, isCurrentGame: boolean) => {
-		const pageSlug = game.offerMappings?.pageSlug || game.urlSlug
+		const pageSlug = game.offerMappings[0]?.pageSlug || game.urlSlug
 		const isBundleGame = game.categories?.some(
 			(category: any) => category.path === 'bundles'
 		)
@@ -140,7 +140,10 @@ export default function List({ games }: { games: any }) {
 								{isCurrentGame ? (
 									<span
 										className={`font-semibold ${
-											timeLeft[game.id] === 'Expired' ? '' : 'line-through'
+											timeLeft[game.id] === 'Expired' ||
+											game.price.totalPrice.originalPrice === 0
+												? ''
+												: 'line-through'
 										}`}
 									>
 										{game.price.totalPrice.originalPrice === 0

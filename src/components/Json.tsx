@@ -131,7 +131,7 @@ export default function Json({ games }: any) {
 					: game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0]
 							.startDate
 				const endDate = new Date(dateInfo)
-				const pageSlug = game.catalogNs?.mappings?.[0]?.pageSlug || game.urlSlug
+				const pageSlug = game.offerMappings[0]?.pageSlug || game.urlSlug
 				const isBundleGame = game.categories?.some(
 					(category: any) => category.path === 'bundles'
 				)
