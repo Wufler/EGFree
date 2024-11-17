@@ -258,7 +258,7 @@ export default function Json({ games }: any) {
 			</DialogTrigger>
 			<DialogContent
 				style={{ borderLeft: `6px solid ${settings.embedColor}` }}
-				className="bg-white dark:bg-epic-black max-w-3xl max-h-[90vh] flex flex-col"
+				className="bg-white dark:bg-epic-black max-w-3xl max-h-[90vh] overflow-hidden"
 			>
 				<DialogHeader>
 					<DialogTitle>JSON Data</DialogTitle>
@@ -267,136 +267,140 @@ export default function Json({ games }: any) {
 						stored locally, except your webhook.
 					</DialogDescription>
 				</DialogHeader>
-				<Tabs defaultValue="settings" className="flex-grow overflow-hidden">
+				<Tabs defaultValue="settings" className="flex flex-col max-h-[60vh]">
 					<TabsList className="grid w-full grid-cols-2">
 						<TabsTrigger value="settings">Settings</TabsTrigger>
 						<TabsTrigger value="preview">JSON Preview</TabsTrigger>
 					</TabsList>
-					<TabsContent value="settings" className="overflow-y-auto">
-						<div className="flex items-center gap-2 mt-2">
-							<div className="flex-grow flex">
-								<Input
-									type={isVisible ? 'text' : 'password'}
-									onFocus={() => setIsVisible(true)}
-									onBlur={() => setIsVisible(false)}
-									placeholder="Webhook URL"
-									value={webhookUrl}
-									onChange={e => setWebhookUrl(e.target.value)}
-									style={{ boxShadow: 'none' }}
-									className="rounded-r-none border-r-0"
-								/>
-								<Button
-									variant="outline"
-									size="icon"
-									className="px-2 rounded-l-none"
-									onClick={handlePaste}
-								>
-									<Clipboard className="size-4" />
+					<ScrollArea className="flex-1 w-full">
+						<TabsContent value="settings" className="overflow-y-auto">
+							<div className="flex items-center gap-2 mt-2">
+								<div className="flex-grow flex">
+									<Input
+										type={isVisible ? 'text' : 'password'}
+										onFocus={() => setIsVisible(true)}
+										onBlur={() => setIsVisible(false)}
+										placeholder="Webhook URL"
+										value={webhookUrl}
+										onChange={e => setWebhookUrl(e.target.value)}
+										style={{ boxShadow: 'none' }}
+										className="rounded-r-none border-r-0"
+									/>
+									<Button
+										variant="outline"
+										size="icon"
+										className="px-2 rounded-l-none"
+										onClick={handlePaste}
+									>
+										<Clipboard className="size-4" />
+									</Button>
+								</div>
+								<Button size="sm" onClick={handleWebhook} disabled={isLoading}>
+									{isLoading ? (
+										<div className="sm:mr-2 mt-0.5">
+											<Loading size={16} color={settings.embedColor} />
+										</div>
+									) : (
+										<Send className="size-4 sm:mr-2" />
+									)}
+									<p className="sm:block hidden">Send</p>
 								</Button>
 							</div>
-							<Button size="sm" onClick={handleWebhook} disabled={isLoading}>
-								{isLoading ? (
-									<div className="sm:mr-2 mt-0.5">
-										<Loading size={16} color={settings.embedColor} />
-									</div>
-								) : (
-									<Send className="size-4 sm:mr-2" />
-								)}
-								<p className="sm:block hidden">Send</p>
-							</Button>
-						</div>
-						<Card className="mt-4">
-							<CardContent className="space-y-4 mt-6">
-								<div className="flex items-center gap-2">
-									<Popover>
-										<PopoverTrigger asChild>
-											<Button
-												className="size-10"
-												style={{ backgroundColor: settings.embedColor }}
-											/>
-										</PopoverTrigger>
-										<PopoverContent
-											className="w-full p-3"
-											align="start"
-											onOpenAutoFocus={(e: any) => e.preventDefault()}
-										>
-											<Input
-												maxLength={7}
-												value={settings.embedColor}
-												onChange={e => handleColorChange(e.target.value)}
-												className="mb-2"
-											/>
-											<HexColorPicker
-												color={settings.embedColor}
-												onChange={handleColorChange}
-												className="!w-full mb-2"
-											/>
-											<Button
-												onClick={() => handleColorChange(defaultColor)}
-												variant="outline"
-												size="sm"
-												className="w-full"
+							<Card className="mt-4">
+								<CardContent className="space-y-4 mt-6">
+									<div className="flex items-center gap-2">
+										<Popover>
+											<PopoverTrigger asChild>
+												<Button
+													className="size-10"
+													style={{ backgroundColor: settings.embedColor }}
+												/>
+											</PopoverTrigger>
+											<PopoverContent
+												className="w-full p-3"
+												align="start"
+												onOpenAutoFocus={(e: any) => e.preventDefault()}
 											>
-												<Undo2 className="size-4 mr-2" />
-												Reset to Default
-											</Button>
-										</PopoverContent>
-									</Popover>
-									<div className="flex-grow">
-										<Input
-											placeholder={defaultContent}
-											value={settings.embedContent}
-											onChange={e => updateSetting('embedContent', e.target.value)}
-										/>
+												<Input
+													maxLength={7}
+													value={settings.embedColor}
+													onChange={e => handleColorChange(e.target.value)}
+													className="mb-2"
+												/>
+												<HexColorPicker
+													color={settings.embedColor}
+													onChange={handleColorChange}
+													className="!w-full mb-2"
+												/>
+												<Button
+													onClick={() => handleColorChange(defaultColor)}
+													variant="outline"
+													size="sm"
+													className="w-full"
+												>
+													<Undo2 className="size-4 mr-2" />
+													Reset to Default
+												</Button>
+											</PopoverContent>
+										</Popover>
+										<div className="flex-grow">
+											<Input
+												placeholder={defaultContent}
+												value={settings.embedContent}
+												onChange={e => updateSetting('embedContent', e.target.value)}
+											/>
+										</div>
 									</div>
-								</div>
-								<Separator />
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<div className="space-y-2">
-										<Label className="text-sm font-medium">Game Selection</Label>
-										<Switches
-											id="current-games"
-											checked={settings.includeCurrent}
-											onCheckedChange={checked => updateSetting('includeCurrent', checked)}
-											label="Current"
-										/>
-										<Switches
-											id="upcoming-games"
-											checked={settings.includeUpcoming}
-											onCheckedChange={checked =>
-												updateSetting('includeUpcoming', checked)
-											}
-											label="Upcoming"
-										/>
+									<Separator />
+									<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+										<div className="space-y-2">
+											<Label className="text-sm font-medium">Game Selection</Label>
+											<Switches
+												id="current-games"
+												checked={settings.includeCurrent}
+												onCheckedChange={checked =>
+													updateSetting('includeCurrent', checked)
+												}
+												label="Current"
+											/>
+											<Switches
+												id="upcoming-games"
+												checked={settings.includeUpcoming}
+												onCheckedChange={checked =>
+													updateSetting('includeUpcoming', checked)
+												}
+												label="Upcoming"
+											/>
+										</div>
+										<div className="space-y-2">
+											<Label className="text-sm font-medium">Embed Options</Label>
+											<Switches
+												id="include-price"
+												checked={settings.includePrice}
+												onCheckedChange={checked => updateSetting('includePrice', checked)}
+												disabled={!settings.includeCurrent && !settings.includeUpcoming}
+												label="Price"
+											/>
+											<Switches
+												id="include-image"
+												checked={settings.includeImage}
+												onCheckedChange={checked => updateSetting('includeImage', checked)}
+												disabled={!settings.includeCurrent && !settings.includeUpcoming}
+												label="Image"
+											/>
+											<Switches
+												id="include-footer"
+												checked={settings.includeFooter}
+												onCheckedChange={checked => updateSetting('includeFooter', checked)}
+												disabled={!settings.includeCurrent && !settings.includeUpcoming}
+												label="Footer"
+											/>
+										</div>
 									</div>
-									<div className="space-y-2">
-										<Label className="text-sm font-medium">Embed Options</Label>
-										<Switches
-											id="include-price"
-											checked={settings.includePrice}
-											onCheckedChange={checked => updateSetting('includePrice', checked)}
-											disabled={!settings.includeCurrent && !settings.includeUpcoming}
-											label="Price"
-										/>
-										<Switches
-											id="include-image"
-											checked={settings.includeImage}
-											onCheckedChange={checked => updateSetting('includeImage', checked)}
-											disabled={!settings.includeCurrent && !settings.includeUpcoming}
-											label="Image"
-										/>
-										<Switches
-											id="include-footer"
-											checked={settings.includeFooter}
-											onCheckedChange={checked => updateSetting('includeFooter', checked)}
-											disabled={!settings.includeCurrent && !settings.includeUpcoming}
-											label="Footer"
-										/>
-									</div>
-								</div>
-							</CardContent>
-						</Card>
-					</TabsContent>
+								</CardContent>
+							</Card>
+						</TabsContent>
+					</ScrollArea>
 					<TabsContent value="preview" className="overflow-y-auto pt-3">
 						<Card>
 							<CardContent className="p-4">
@@ -413,11 +417,9 @@ export default function Json({ games }: any) {
 									)}
 									Copy JSON
 								</Button>
-								<ScrollArea className="w-full rounded-md">
-									<pre className="max-h-[50vh] bg-secondary text-secondary-foreground p-4 rounded-md overflow-auto text-sm whitespace-pre-wrap break-all">
-										{JSON.stringify(jsonData, null, 2)}
-									</pre>
-								</ScrollArea>
+								<pre className="bg-secondary text-secondary-foreground p-4 rounded-md overflow-auto text-sm whitespace-pre-wrap break-all">
+									{JSON.stringify(jsonData, null, 2)}
+								</pre>
 							</CardContent>
 						</Card>
 					</TabsContent>
