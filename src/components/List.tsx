@@ -12,12 +12,14 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { unstable_noStore as noStore } from 'next/cache'
 import { calculateTimeLeft } from '@/lib/calculateTime'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { Calendar, Clock } from 'lucide-react'
 
 export default function List({ games }: { games: any }) {
+	noStore()
 	const [timeLeft, setTimeLeft] = useState<{ [key: string]: string }>({})
 	const router = useRouter()
 	const hasToastShown = useRef(false)
