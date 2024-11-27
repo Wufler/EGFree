@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og'
 import { getEpicFreeGames } from '@/lib/getGames'
-import { unstable_noStore as noStore } from 'next/cache'
+import { connection } from 'next/server'
 import { format } from 'date-fns'
 
 export const alt = 'Epic Games Free Games'
@@ -12,7 +12,7 @@ export const size = {
 export const contentType = 'image/png'
 
 export default async function Image() {
-	noStore()
+	await connection()
 	const games = await getEpicFreeGames()
 
 	const renderGameCard = (game: any, isCurrentGame: boolean) => (

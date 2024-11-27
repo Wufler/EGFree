@@ -4,8 +4,8 @@ import Theme from '@/components/Theme'
 import { Button } from '@/components/ui/button'
 import { getEpicFreeGames } from '@/lib/getGames'
 import { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
+import { connection } from 'next/server'
 
 export async function generateMetadata(): Promise<Metadata> {
 	const games = await getEpicFreeGames()
@@ -36,6 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
+	await connection()
 	const games = await getEpicFreeGames()
 
 	return (

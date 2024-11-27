@@ -7,6 +7,7 @@ import {
 	Undo2,
 	Clipboard,
 	Check,
+	Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -20,7 +21,6 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
-import Loading from './Loading'
 import { HexColorPicker } from 'react-colorful'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Label } from './ui/label'
@@ -298,7 +298,10 @@ export default function Json({ games }: any) {
 								<Button size="sm" onClick={handleWebhook} disabled={isLoading}>
 									{isLoading ? (
 										<div className="sm:mr-2 mt-0.5">
-											<Loading size={16} color={settings.embedColor} />
+											<Loader2
+												className="size-4 animate-spin"
+												style={{ color: settings.embedColor }}
+											/>
 										</div>
 									) : (
 										<Send className="size-4 sm:mr-2" />
