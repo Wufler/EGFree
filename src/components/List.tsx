@@ -94,7 +94,7 @@ export default function List({ games }: { games: any }) {
 								width={640}
 								height={360}
 								className={`w-full ${
-									isSingleGame ? 'h-80' : 'h-48 lg:h-60'
+									isSingleGame ? 'h-48 lg:h-72 xl:h-96' : 'h-48 lg:h-60'
 								} object-cover transition-all duration-300 group-hover:scale-105 ${
 									timeLeft[game.id] === 'Expired' ? 'grayscale' : ''
 								}`}
