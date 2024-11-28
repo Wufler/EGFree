@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { format } from 'date-fns'
 import {
 	Card,
@@ -12,14 +12,12 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { unstable_noStore as noStore } from 'next/cache'
 import { calculateTimeLeft } from '@/lib/calculateTime'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { Calendar, Clock } from 'lucide-react'
 
 export default function List({ games }: { games: any }) {
-	noStore()
 	const [timeLeft, setTimeLeft] = useState<{ [key: string]: string }>({})
 	const router = useRouter()
 	const hasToastShown = useRef(false)
@@ -95,7 +93,9 @@ export default function List({ games }: { games: any }) {
 								alt={game.title}
 								width={640}
 								height={360}
-								className={`w-full h-48 lg:h-60 object-cover transition-all duration-300 group-hover:scale-105 ${
+								className={`w-full ${
+									isSingleGame ? 'h-48 lg:h-72 xl:h-96' : 'h-48 lg:h-60'
+								} object-cover transition-all duration-300 group-hover:scale-105 ${
 									timeLeft[game.id] === 'Expired' ? 'grayscale' : ''
 								}`}
 							/>
@@ -165,15 +165,38 @@ export default function List({ games }: { games: any }) {
 		)
 	}
 
+	const isSingleGame =
+		games.currentGames.length === 1 && games.nextGames.length === 1
+
 	const renderGameList = (games: any[], isCurrentGames: boolean) => (
-		<div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+		<div className={`grid grid-cols-1 xl:grid-cols-3 gap-6`}>
 			{games.length > 0 ? (
 				games.map((game: any) => renderGameCard(game, isCurrentGames))
 			) : (
 				<p className="text-lg text-epic-gray dark:text-epic-lightGray lg:col-span-3 col-span-full text-center lg:text-left">
-					Failed to fetch offers. Check back later or check out the official site.
+					Failed to fetch offers. Check back later or check out the{' '}
+					<Link href="https://store.epicgames.com/en-US/free-games" target="_blank">
+						<span className="underline text-epic-blue">official site.</span>
+					</Link>
 				</p>
 			)}
+		</div>
+	)
+
+	const combinedView = () => (
+		<div className="grid grid-cols-2 gap-6">
+			<div>
+				<h2 className="text-3xl font-bold mb-4 text-epic-blue dark:text-epic-blue">
+					Current
+				</h2>
+				{games.currentGames.map((game: any) => renderGameCard(game, true))}
+			</div>
+			<div>
+				<h2 className="text-3xl font-bold mb-4 text-epic-lightBlue dark:text-white">
+					Upcoming
+				</h2>
+				{games.nextGames.map((game: any) => renderGameCard(game, false))}
+			</div>
 		</div>
 	)
 
@@ -193,18 +216,24 @@ export default function List({ games }: { games: any }) {
 			</Tabs>
 
 			<div className="hidden lg:block">
-				<section>
-					<h2 className="text-3xl font-bold mb-4 text-epic-blue dark:text-epic-blue">
-						Current
-					</h2>
-					{renderGameList(games.currentGames, true)}
-				</section>
-				<section className="mt-8">
-					<h2 className="text-3xl font-bold mb-4 text-epic-lightBlue dark:text-white">
-						Upcoming
-					</h2>
-					{renderGameList(games.nextGames, false)}
-				</section>
+				{isSingleGame ? (
+					<section>{combinedView()}</section>
+				) : (
+					<>
+						<section>
+							<h2 className="text-3xl font-bold mb-4 text-epic-blue dark:text-epic-blue">
+								Current
+							</h2>
+							{renderGameList(games.currentGames, true)}
+						</section>
+						<section className="mt-8">
+							<h2 className="text-3xl font-bold mb-4 text-epic-lightBlue dark:text-white">
+								Upcoming
+							</h2>
+							{renderGameList(games.nextGames, false)}
+						</section>
+					</>
+				)}
 			</div>
 		</div>
 	)
