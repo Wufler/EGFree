@@ -174,7 +174,10 @@ export default function List({ games }: { games: any }) {
 				games.map((game: any) => renderGameCard(game, isCurrentGames))
 			) : (
 				<p className="text-lg text-epic-gray dark:text-epic-lightGray lg:col-span-3 col-span-full text-center lg:text-left">
-					Failed to fetch offers. Check back later or check out the official site.
+					Failed to fetch offers. Check back later or check out the{' '}
+					<Link href="https://store.epicgames.com/en-US/free-games" target="_blank">
+						<span className="underline text-epic-blue">official site.</span>
+					</Link>
 				</p>
 			)}
 		</div>
