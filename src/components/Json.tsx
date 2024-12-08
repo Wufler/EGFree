@@ -8,6 +8,7 @@ import {
 	Clipboard,
 	Check,
 	Loader2,
+	Save,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -28,6 +29,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { encrypt, decrypt } from '@/lib/encryption'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 function Switches({
 	id,
@@ -66,6 +79,7 @@ interface EgFreeSettings {
 	includeFooter: boolean
 	includePrice: boolean
 	includeImage: boolean
+	webhookUrl: string
 }
 
 const defaultColor = '#85ce4b'
@@ -77,36 +91,59 @@ export default function Json({ games }: any) {
 	const [isLoading, setIsLoading] = useState(false)
 	const [isVisible, setIsVisible] = useState(false)
 	const [isCopied, setIsCopied] = useState(false)
-	const [settings, setSettings] = useState<EgFreeSettings>(() => {
-		if (typeof window !== 'undefined') {
-			const savedSettings = localStorage.getItem('egFreeSettings')
-			return savedSettings
-				? JSON.parse(savedSettings)
-				: {
-						includeCurrent: true,
-						includeUpcoming: false,
-						embedContent: '',
-						embedColor: defaultColor,
-						includeFooter: true,
-						includePrice: true,
-						includeImage: true,
-				  }
-		}
-		return {
-			includeCurrent: true,
-			includeUpcoming: false,
-			embedContent: '',
-			embedColor: defaultColor,
-			includeFooter: true,
-			includePrice: true,
-			includeImage: true,
-		}
+	const [settings, setSettings] = useState<EgFreeSettings>({
+		includeCurrent: true,
+		includeUpcoming: false,
+		embedContent: '',
+		embedColor: defaultColor,
+		includeFooter: true,
+		includePrice: true,
+		includeImage: true,
+		webhookUrl: '',
 	})
 
 	useEffect(() => {
 		if (typeof window !== 'undefined') {
-			localStorage.setItem('egFreeSettings', JSON.stringify(settings))
+			const loadSettings = async () => {
+				const savedSettings = localStorage.getItem('egFreeSettings')
+				if (savedSettings) {
+					try {
+						const parsed = JSON.parse(savedSettings)
+						const decryptedWebhook = parsed.webhookUrl
+							? await decrypt(parsed.webhookUrl)
+							: ''
+						setSettings({
+							...parsed,
+							webhookUrl: decryptedWebhook,
+						})
+						setWebhookUrl(decryptedWebhook)
+					} catch (error) {
+						console.error('Failed to load settings:', error)
+					}
+				}
+			}
+			loadSettings()
 		}
+	}, [])
+
+	useEffect(() => {
+		const saveSettings = async () => {
+			if (typeof window !== 'undefined') {
+				try {
+					const encryptedWebhook = settings.webhookUrl
+						? await encrypt(settings.webhookUrl)
+						: ''
+					const settingsToSave = {
+						...settings,
+						webhookUrl: encryptedWebhook,
+					}
+					localStorage.setItem('egFreeSettings', JSON.stringify(settingsToSave))
+				} catch (error) {
+					console.error('Failed to save settings:', error)
+				}
+			}
+		}
+		saveSettings()
 	}, [settings])
 
 	const updateSetting = (key: keyof EgFreeSettings, value: any) => {
@@ -230,9 +267,7 @@ export default function Json({ games }: any) {
 				throw new Error(errorData.message || 'Failed to send JSON Data.')
 			}
 		} catch (error) {
-			console.error('Failed to send:', error, {
-				position: 'bottom-center',
-			})
+			console.error('Failed to send:', error)
 			toast.error('Failed to send JSON Data.', {
 				description: 'The webhook or data might be invalid.',
 				position: 'bottom-center',
@@ -276,25 +311,71 @@ export default function Json({ games }: any) {
 					<ScrollArea className="flex-1 w-full">
 						<TabsContent value="settings" className="overflow-y-auto">
 							<div className="flex items-center gap-2 mt-2">
-								<div className="flex-grow flex">
-									<Input
-										type={isVisible ? 'text' : 'password'}
-										onFocus={() => setIsVisible(true)}
-										onBlur={() => setIsVisible(false)}
-										placeholder="Webhook URL"
-										value={webhookUrl}
-										onChange={e => setWebhookUrl(e.target.value)}
-										style={{ boxShadow: 'none' }}
-										className="rounded-r-none border-r-0"
-									/>
-									<Button
-										variant="outline"
-										size="icon"
-										className="px-2 rounded-l-none"
-										onClick={handlePaste}
-									>
-										<Clipboard className="size-4" />
-									</Button>
+								<div className="flex-grow flex flex-col">
+									<div className="flex">
+										<Input
+											type={isVisible ? 'text' : 'password'}
+											onFocus={() => setIsVisible(true)}
+											onBlur={() => setIsVisible(false)}
+											placeholder="Webhook URL"
+											value={webhookUrl}
+											onChange={e => {
+												setWebhookUrl(e.target.value)
+											}}
+											style={{ boxShadow: 'none' }}
+											className="rounded-r-none border-r-0"
+										/>
+										<AlertDialog>
+											<AlertDialogTrigger asChild>
+												<Button
+													variant="outline"
+													size="icon"
+													className="px-2 rounded-none border-l-0 border-r-0 disabled:opacity-100 disabled:text-muted-foreground"
+													disabled={!webhookUrl.trim()}
+												>
+													<Save className="size-4" />
+												</Button>
+											</AlertDialogTrigger>
+											<AlertDialogContent>
+												<AlertDialogHeader>
+													<AlertDialogTitle>Warning</AlertDialogTitle>
+													<AlertDialogDescription className="space-y-2" asChild>
+														<div>
+															<p>
+																This will encrypt and save your webhook in your browsers local
+																storage and will automatically be in the URL input.
+															</p>
+															<p className="font-medium">
+																⚠️ This might not be secure. Consider manually pasting the
+																webhook instead.
+															</p>
+														</div>
+													</AlertDialogDescription>
+												</AlertDialogHeader>
+												<AlertDialogFooter>
+													<AlertDialogCancel>Cancel</AlertDialogCancel>
+													<AlertDialogAction
+														onClick={() => {
+															updateSetting('webhookUrl', webhookUrl)
+															toast.success('Webhook saved locally', {
+																position: 'bottom-center',
+															})
+														}}
+													>
+														Save Anyway
+													</AlertDialogAction>
+												</AlertDialogFooter>
+											</AlertDialogContent>
+										</AlertDialog>
+										<Button
+											variant="outline"
+											size="icon"
+											className="px-2 rounded-l-none border-l-0"
+											onClick={handlePaste}
+										>
+											<Clipboard className="size-4" />
+										</Button>
+									</div>
 								</div>
 								<Button size="sm" onClick={handleWebhook} disabled={isLoading}>
 									{isLoading ? (
