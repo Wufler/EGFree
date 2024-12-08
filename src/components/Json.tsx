@@ -178,7 +178,8 @@ export default function Json({ games }: any) {
 						},
 						timestamp: endDate.toISOString(),
 					}),
-					...(settings.includeImage && { image: { url: encodeURI(imageUrl) } }),
+					...(settings.includeImage &&
+						imageUrl && { image: { url: encodeURI(imageUrl) } }),
 				}
 			})
 
@@ -233,7 +234,7 @@ export default function Json({ games }: any) {
 				position: 'bottom-center',
 			})
 			toast.error('Failed to send JSON Data.', {
-				description: 'The webhook might be invalid.',
+				description: 'The webhook or data might be invalid.',
 				position: 'bottom-center',
 			})
 		}
