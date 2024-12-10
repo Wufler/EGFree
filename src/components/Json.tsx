@@ -174,7 +174,11 @@ export default function Json({ games }: any) {
 				)
 				const linkPrefix = isBundleGame ? '/bundles/' : '/p/'
 
-				let fieldValue = isCurrent
+				const isTestAccount = game.seller?.name === 'Epic Dev Test Account'
+
+				let fieldValue = isTestAccount
+					? ''
+					: isCurrent
 					? `${
 							settings.includePrice
 								? game.price.totalPrice.originalPrice === 0
@@ -193,7 +197,7 @@ export default function Json({ games }: any) {
 					  }[Game Link](https://store.epicgames.com/en-US${linkPrefix}${pageSlug})`
 
 				const imageUrl = game.keyImages.find(
-					(img: any) => img.type === 'OfferImageWide'
+					(img: any) => img.type === 'VaultClosed' || img.type === 'OfferImageWide'
 				)?.url
 
 				return {

@@ -84,9 +84,23 @@ export default function List({ games }: { games: any }) {
 				{game.seller.name === 'Epic Dev Test Account' ? (
 					<Card className="h-full overflow-hidden group hover:shadow-lg transition-all duration-300 bg-white dark:bg-epic-darkBlue flex flex-col">
 						<div className="relative overflow-hidden">
-							<div className="bg-gray-200 dark:bg-epic-black w-full h-48 xl:h-56 flex items-center justify-center transition-all duration-300 group-hover:scale-105">
-								<Gift className="size-20 text-epic-blue" />
-							</div>
+							{game.keyImages.find((img: any) => img.type === 'VaultClosed') ? (
+								<img
+									src={
+										game.keyImages.find((img: any) => img.type === 'VaultClosed')?.url
+									}
+									alt={game.title}
+									className={`w-full ${
+										isSingleGame ? 'h-48 lg:h-72 xl:h-96' : 'h-48 lg:h-60'
+									} object-cover transition-all duration-300 group-hover:scale-105 ${
+										timeLeft[game.id] === 'Expired' ? 'grayscale' : ''
+									}`}
+								/>
+							) : (
+								<div className="bg-gray-200 dark:bg-epic-black w-full h-48 xl:h-56 flex items-center justify-center transition-all duration-300 group-hover:scale-105">
+									<Gift className="size-20 text-epic-blue" />
+								</div>
+							)}
 						</div>
 						<CardContent className="p-0 px-4 pt-3 pb-1 flex-grow">
 							<CardTitle className="text-xl mb-2 text-epic-black dark:text-white">
