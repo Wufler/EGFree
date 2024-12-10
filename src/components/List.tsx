@@ -92,7 +92,7 @@ export default function List({ games }: { games: any }) {
 							<CardTitle className="text-xl mb-2 text-epic-black dark:text-white">
 								<div className="flex flex-col">
 									<p className="text-lg font-bold line-clamp-1 text-gray-900 dark:text-white group-hover:text-epic-blue transition-colors">
-										Mystery Game
+										{game.title}
 									</p>
 								</div>
 							</CardTitle>
