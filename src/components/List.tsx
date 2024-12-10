@@ -1,6 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useCallback } from 'react'
-import Image from 'next/image'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { motion } from 'motion/react'
 import { format } from 'date-fns'
@@ -82,90 +81,118 @@ export default function List({ games }: { games: any }) {
 				exit={{ opacity: 0, scale: 0.9 }}
 				transition={{ duration: 0.4 }}
 			>
-				<Link
-					href={`https://store.epicgames.com/en-US${linkPrefix}${pageSlug}`}
-					target="_blank"
-				>
+				{game.seller.name === 'Epic Dev Test Account' ? (
 					<Card className="h-full overflow-hidden group hover:shadow-lg transition-all duration-300 bg-white dark:bg-epic-darkBlue flex flex-col">
 						<div className="relative overflow-hidden">
-							{game.keyImages.find((img: any) => img.type === 'OfferImageWide') ? (
-								<Image
-									src={
-										game.keyImages.find((img: any) => img.type === 'OfferImageWide')?.url
-									}
-									alt={game.title}
-									width={640}
-									height={360}
-									className={`w-full ${
-										isSingleGame ? 'h-48 lg:h-72 xl:h-96' : 'h-48 lg:h-60'
-									} object-cover transition-all duration-300 group-hover:scale-105 ${
-										timeLeft[game.id] === 'Expired' ? 'grayscale' : ''
-									}`}
-								/>
-							) : (
-								<div className="bg-gray-200 dark:bg-epic-black w-full h-48 xl:h-60 flex items-center justify-center transition-all duration-300 group-hover:scale-105">
-									<Gift className="size-20 text-epic-blue" />
-								</div>
-							)}
+							<div className="bg-gray-200 dark:bg-epic-black w-full h-48 xl:h-56 flex items-center justify-center transition-all duration-300 group-hover:scale-105">
+								<Gift className="size-20 text-epic-blue" />
+							</div>
 						</div>
-						<CardContent className="p-4 py-3 flex-grow">
+						<CardContent className="p-0 px-4 pt-3 pb-1 flex-grow">
 							<CardTitle className="text-xl mb-2 text-epic-black dark:text-white">
 								<div className="flex flex-col">
 									<p className="text-lg font-bold line-clamp-1 text-gray-900 dark:text-white group-hover:text-epic-blue transition-colors">
 										{game.title}
 									</p>
-									{game.seller.name !== 'Epic Dev Test Account' && (
+								</div>
+							</CardTitle>
+						</CardContent>
+						<CardFooter className="p-4 py-3 flex justify-between items-center bg-gray-50 dark:bg-gray-950/20">
+							<div className="flex items-center text-gray-600 dark:text-gray-400">
+								<Calendar className="size-4 mr-1" />
+								<span className="text-sm">
+									{format(
+										new Date(
+											game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0].startDate
+										),
+										'MMM d'
+									)}
+								</span>
+							</div>
+						</CardFooter>
+					</Card>
+				) : (
+					<Link
+						href={`https://store.epicgames.com/en-US${linkPrefix}${pageSlug}`}
+						target="_blank"
+					>
+						<Card className="h-full overflow-hidden group hover:shadow-lg transition-all duration-300 bg-white dark:bg-epic-darkBlue flex flex-col">
+							<div className="relative overflow-hidden">
+								{game.keyImages.find((img: any) => img.type === 'OfferImageWide') ? (
+									<img
+										src={
+											game.keyImages.find((img: any) => img.type === 'OfferImageWide')?.url
+										}
+										alt={game.title}
+										className={`w-full ${
+											isSingleGame ? 'h-48 lg:h-72 xl:h-96' : 'h-48 lg:h-60'
+										} object-cover transition-all duration-300 group-hover:scale-105 ${
+											timeLeft[game.id] === 'Expired' ? 'grayscale' : ''
+										}`}
+									/>
+								) : (
+									<div className="bg-gray-200 dark:bg-epic-black w-full h-48 xl:h-56 flex items-center justify-center transition-all duration-300 group-hover:scale-105">
+										<Gift className="size-20 text-epic-blue" />
+									</div>
+								)}
+							</div>
+							<CardContent className="p-4 py-3 flex-grow">
+								<CardTitle className="text-xl mb-2 text-epic-black dark:text-white">
+									<div className="flex flex-col">
+										<p className="text-lg font-bold line-clamp-1 text-gray-900 dark:text-white group-hover:text-epic-blue transition-colors">
+											{game.title}
+										</p>
 										<p className="text-xs text-epic-gray dark:text-epic-lightGray line-clamp-1">
 											{game.seller.name}
 										</p>
-									)}
-								</div>
-							</CardTitle>
-							<CardDescription className="line-clamp-3">
-								{game.description}
-							</CardDescription>
-						</CardContent>
-						<CardFooter className="p-4 py-3 flex justify-between items-center bg-gray-50 dark:bg-gray-950/20">
-							{isCurrentGame ? (
-								<TimeDisplay gameId={game.id} />
-							) : (
-								<div className="flex items-center text-gray-600 dark:text-gray-400">
-									<Calendar className="size-4 mr-1" />
-									<span className="text-sm">
-										{format(
-											new Date(
-												game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0].startDate
-											),
-											'MMM d'
-										)}
-									</span>
-								</div>
-							)}
-							<span className="text-epic-gray dark:text-epic-lightGray text-sm">
+									</div>
+								</CardTitle>
+								<CardDescription className="line-clamp-3">
+									{game.description}
+								</CardDescription>
+							</CardContent>
+							<CardFooter className="p-4 py-3 flex justify-between items-center bg-gray-50 dark:bg-gray-950/20">
 								{isCurrentGame ? (
-									<span
-										className={`font-semibold ${
-											timeLeft[game.id] === 'Expired' ||
-											game.price.totalPrice.originalPrice === 0
-												? ''
-												: 'line-through'
-										}`}
-									>
-										{game.price.totalPrice.originalPrice === 0
-											? 'Free'
-											: game.price.totalPrice.fmtPrice.originalPrice}
-									</span>
+									<TimeDisplay gameId={game.id} />
 								) : (
-									<span className="dark:text-epic-lightGray">
-										{game.price.totalPrice.originalPrice === 0
-											? 'Free'
-											: game.price.totalPrice.fmtPrice.originalPrice}
-									</span>
+									<div className="flex items-center text-gray-600 dark:text-gray-400">
+										<Calendar className="size-4 mr-1" />
+										<span className="text-sm">
+											{format(
+												new Date(
+													game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0].startDate
+												),
+												'MMM d'
+											)}
+										</span>
+									</div>
 								)}
-							</span>
-						</CardFooter>
-					</Card>
-				</Link>
+								<span className="text-epic-gray dark:text-epic-lightGray text-sm">
+									{isCurrentGame ? (
+										<span
+											className={`font-semibold ${
+												timeLeft[game.id] === 'Expired' ||
+												game.price.totalPrice.originalPrice === 0
+													? ''
+													: 'line-through'
+											}`}
+										>
+											{game.price.totalPrice.originalPrice === 0
+												? 'Free'
+												: game.price.totalPrice.fmtPrice.originalPrice}
+										</span>
+									) : (
+										<span className="dark:text-epic-lightGray">
+											{game.price.totalPrice.originalPrice === 0
+												? 'Free'
+												: game.price.totalPrice.fmtPrice.originalPrice}
+										</span>
+									)}
+								</span>
+							</CardFooter>
+						</Card>
+					</Link>
+				)}
 			</motion.div>
 		)
 	}

@@ -15,89 +15,113 @@ export default async function Image() {
 	await connection()
 	const games = await getEpicFreeGames()
 
-	const renderGameCard = (game: any, isCurrentGame: boolean) => (
-		<div
-			key={game.id}
-			style={{
-				display: 'flex',
-				flexDirection: 'column',
-				alignItems: 'center',
-				justifyContent: 'center',
-				width: '30%',
-				height: '80%',
-				backgroundColor: 'white',
-				borderRadius: '8px',
-				margin: '0 16px',
-			}}
-		>
-			<img
-				src={game.keyImages.find((img: any) => img.type === 'OfferImageWide')?.url}
-				alt={game.title}
-				style={{
-					width: '100%',
-					height: '200px',
-					objectFit: 'cover',
-					borderTopLeftRadius: '8px',
-					borderTopRightRadius: '8px',
-					marginTop: '16px',
-					filter: isCurrentGame ? 'none' : 'grayscale(100%)',
-				}}
-			/>
-			<h3
-				style={{
-					fontSize: '20px',
-					fontWeight: 'bold',
-					marginTop: '12px',
-					color: '#000',
-					textAlign: 'center',
-				}}
-			>
-				{game.title}
-			</h3>
+	const renderGameCard = (game: any, isCurrentGame: boolean) => {
+		const gameImage = game.keyImages.find(
+			(img: any) => img.type === 'OfferImageWide'
+		)?.url
+
+		return (
 			<div
+				key={game.id}
 				style={{
 					display: 'flex',
-					justifyContent: 'space-between',
+					flexDirection: 'column',
 					alignItems: 'center',
-					width: '100%',
-					marginBottom: '16px',
-					padding: '16px',
-					paddingTop: '0px',
+					justifyContent: 'center',
+					width: '30%',
+					height: '80%',
+					backgroundColor: 'white',
+					borderRadius: '8px',
+					margin: '0 16px',
 				}}
 			>
-				<span
+				{gameImage ? (
+					<img
+						src={gameImage}
+						alt={game.title}
+						style={{
+							width: '100%',
+							height: '200px',
+							objectFit: 'cover',
+							borderTopLeftRadius: '8px',
+							borderTopRightRadius: '8px',
+							marginTop: '16px',
+							filter: isCurrentGame ? 'none' : 'grayscale(100%)',
+						}}
+					/>
+				) : (
+					<div
+						style={{
+							width: '100%',
+							height: '200px',
+							backgroundColor: '#E5E7EB',
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							marginTop: '16px',
+							borderTopLeftRadius: '8px',
+							borderTopRightRadius: '8px',
+						}}
+					>
+						<span style={{ fontSize: '64px', color: '#0070f3' }}>🎁</span>
+					</div>
+				)}
+				<h3
 					style={{
-						fontSize: '12px',
-						color: isCurrentGame ? 'white' : '#666',
-						backgroundColor: isCurrentGame ? '#0070f3' : 'transparent',
-						border: isCurrentGame ? 'none' : '1px solid #666',
-						padding: '4px 8px',
-						borderRadius: '8px',
+						fontSize: '20px',
+						fontWeight: 'bold',
+						marginTop: '12px',
+						color: '#000',
+						textAlign: 'center',
 					}}
 				>
-					{isCurrentGame
-						? 'Free Now'
-						: `${format(
-								new Date(
-									game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0].startDate
-								),
-								'MMM d'
-						  )}`}
-				</span>
-				<span
+					{game.title}
+				</h3>
+				<div
 					style={{
-						fontSize: '12px',
-						color: '#666',
-						textDecoration: isCurrentGame ? 'line-through' : 'none',
+						display: 'flex',
+						justifyContent: 'space-between',
+						alignItems: 'center',
+						width: '100%',
+						marginBottom: '16px',
+						padding: '16px',
+						paddingTop: '0px',
 					}}
 				>
-					{game.price.totalPrice.originalPrice === 0
-						? ''
-						: game.price.totalPrice.fmtPrice.originalPrice}
-				</span>
+					<span
+						style={{
+							fontSize: '12px',
+							color: isCurrentGame ? 'white' : '#666',
+							backgroundColor: isCurrentGame ? '#0070f3' : 'transparent',
+							border: isCurrentGame ? 'none' : '1px solid #666',
+							padding: '4px 8px',
+							borderRadius: '8px',
+						}}
+					>
+						{isCurrentGame
+							? 'Free Now'
+							: `${format(
+									new Date(
+										game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0].startDate
+									),
+									'MMM d'
+							  )}`}
+					</span>
+					<span
+						style={{
+							fontSize: '12px',
+							color: '#666',
+							textDecoration: isCurrentGame ? 'line-through' : 'none',
+						}}
+					>
+						{game.price.totalPrice.originalPrice === 0
+							? ''
+							: game.price.totalPrice.fmtPrice.originalPrice}
+					</span>
+				</div>
 			</div>
-		</div>
-	)
+		)
+	}
 
 	return new ImageResponse(
 		(
