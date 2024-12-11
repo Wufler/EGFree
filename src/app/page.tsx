@@ -1,6 +1,6 @@
 import Json from '@/components/Json'
 import List from '@/components/List'
-import Theme from '@/components/Theme'
+import ModeToggle from '@/components/ModeToggle'
 import { Button } from '@/components/ui/button'
 import { getEpicFreeGames } from '@/lib/getGames'
 import { Metadata } from 'next'
@@ -71,7 +71,7 @@ export default async function Home() {
 								/>
 							</Link>
 						</Button>
-						<Theme />
+						<ModeToggle />
 					</div>
 				</header>
 				<List games={games} />
