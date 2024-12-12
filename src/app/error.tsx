@@ -1,5 +1,6 @@
 'use client'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 export default function Error({ reset }: { reset: () => void }) {
 	return (
@@ -9,11 +10,20 @@ export default function Error({ reset }: { reset: () => void }) {
 					Oops!
 				</h1>
 				<p className="mt-6 text-base leading-7 text-gray-600 dark:text-gray-300">
-					There seems to be something wrong with the site... Please check back later.
+					Currently, we are experiencing issues with the Epic Games API. Please check
+					back later.
+				</p>
+				<p className="mt-2 text-base leading-7 text-gray-600 dark:text-gray-300">
+					For now check out the official Epic Games website for the free games.
 				</p>
 				<div className="mt-4 flex items-center justify-center gap-x-6">
-					<Button className="mt-4 w-full rounded-lg" onClick={() => reset()}>
+					{/* <Button className="mt-4 w-full rounded-lg" onClick={() => reset()}>
 						Try Again
+					</Button> */}
+					<Button>
+						<Link href="https://store.epicgames.com/en-US/free-games">
+							Proceed to the Epic Games Store
+						</Link>
 					</Button>
 				</div>
 			</div>

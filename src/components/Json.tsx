@@ -240,17 +240,13 @@ export default function Json({ games }: any) {
 			setTimeout(() => setIsCopied(false), 1000)
 		} catch (err) {
 			console.error('Failed to copy text: ', err)
-			toast.error('Failed to copy JSON Data.', {
-				position: 'bottom-center',
-			})
+			toast.error('Failed to copy JSON Data.')
 		}
 	}
 
 	const handleWebhook = async () => {
 		if (!webhookUrl) {
-			toast.error('Insert a webhook.', {
-				position: 'bottom-center',
-			})
+			toast.error('Insert a webhook.')
 			return
 		}
 
@@ -265,7 +261,7 @@ export default function Json({ games }: any) {
 			})
 
 			if (response.ok) {
-				toast.success('Successfully sent data.', { position: 'bottom-center' })
+				toast.success('Successfully sent data.')
 			} else {
 				const errorData = await response.json()
 				throw new Error(errorData.message || 'Failed to send JSON Data.')
@@ -274,7 +270,6 @@ export default function Json({ games }: any) {
 			console.error('Failed to send:', error)
 			toast.error('Failed to send JSON Data.', {
 				description: 'The webhook or data might be invalid.',
-				position: 'bottom-center',
 			})
 		}
 		setIsLoading(false)
@@ -361,9 +356,7 @@ export default function Json({ games }: any) {
 													<AlertDialogAction
 														onClick={() => {
 															updateSetting('webhookUrl', webhookUrl)
-															toast.success('Webhook saved locally', {
-																position: 'bottom-center',
-															})
+															toast.success('Webhook saved locally')
 														}}
 													>
 														Save Anyway

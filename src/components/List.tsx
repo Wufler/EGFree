@@ -46,7 +46,6 @@ export default function List({ games }: { games: any }) {
 							loading: 'Game offers expired, refreshing...',
 							success: 'Game offers updated successfully!',
 							error: 'Failed to update game offers. Please refresh manually.',
-							position: 'bottom-center',
 						}
 					)
 				}
