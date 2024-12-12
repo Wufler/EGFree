@@ -57,8 +57,8 @@ importers:
         specifier: ^0.468.0
         version: 0.468.0(react@19.0.0)
       motion:
-        specifier: ^11.13.5
-        version: 11.13.5(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: ^11.14.1
+        version: 11.14.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       next:
         specifier: 15.1.0
         version: 15.1.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -74,6 +74,9 @@ importers:
       react-dom:
         specifier: 19.0.0
         version: 19.0.0(react@19.0.0)
+      react-snowfall:
+        specifier: ^2.2.0
+        version: 2.2.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       sonner:
         specifier: ^1.7.1
         version: 1.7.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -1348,8 +1351,8 @@ packages:
     resolution: {integrity: sha512-Ld2g8rrAyMYFXBhEqMz8ZAHBi4J4uS1i/CxGMDnjyFWddMXLVcDp051DZfu+t7+ab7Wv6SMqpWmyFIj5UbfFvg==}
     engines: {node: '>=14'}
 
-  framer-motion@11.13.5:
-    resolution: {integrity: sha512-rArI0zPU9VkpS3Wt0J7dmRxAFUWtzPWoSofNQAP0UO276CmJ+Xlf5xN19GMw3w2QsdrS2sU+0+Q2vtuz4IEZaw==}
+  framer-motion@11.14.1:
+    resolution: {integrity: sha512-6B7jC54zgnefmUSa2l4gkc/2CrqclHL9AUbDxxRfbFyWKLd+4guUYtEabzoYMU8G5ICZ6CdJdydOLy74Ekd7ag==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
       react: ^18.0.0 || ^19.0.0
@@ -1680,18 +1683,18 @@ packages:
     resolution: {integrity: sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==}
     engines: {node: '>=16 || 14 >=14.17'}
 
-  motion-dom@11.13.0:
-    resolution: {integrity: sha512-Oc1MLGJQ6nrvXccXA89lXtOqFyBmvHtaDcTRGT66o8Czl7nuA8BeHAd9MQV1pQKX0d2RHFBFaw5g3k23hQJt0w==}
+  motion-dom@11.14.1:
+    resolution: {integrity: sha512-Y68tHWR0d2HxHDskNxpeY3pzUdz7L/m5A8TV7VSE6Sq4XUNJdZV8zXco1aeAQ44o48u0i8UKjt8TGIqkZSQ8ew==}
 
-  motion-utils@11.13.0:
-    resolution: {integrity: sha512-lq6TzXkH5c/ysJQBxgLXgM01qwBH1b4goTPh57VvZWJbVJZF/0SB31UWEn4EIqbVPf3au88n2rvK17SpDTja1A==}
+  motion-utils@11.14.1:
+    resolution: {integrity: sha512-R6SsehArpkEBUHydkcwQ/8ij8k2PyKWAJ7Y8PN3ztnFwq5RBU3zIamYH6esTp09OgsbwB57mBEZ9DORaN1WTxQ==}
 
-  motion@11.13.5:
-    resolution: {integrity: sha512-zmX/dz60w1ZtQB5NP9xYkLcCKwX9gc+pnHp4/mFhD9YW8wUe2ZmT8OPOtrTtq26/huxElSDu3hB7BMTSJa5iIQ==}
+  motion@11.14.1:
+    resolution: {integrity: sha512-dOZnRp9+YKI2ZfZWX7mfkDXzt/C0Kyw6b8OGpBgBhYrIDTjMtzbM9KhklgZT751PwmIsgqxxZFa3XmB3Sg5m9A==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
-      react: ^18.0.0
-      react-dom: ^18.0.0
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
     peerDependenciesMeta:
       '@emotion/is-prop-valid':
         optional: true
@@ -1904,6 +1907,9 @@ packages:
     peerDependencies:
       react: ^19.0.0
 
+  react-fast-compare@3.2.2:
+    resolution: {integrity: sha512-nsO+KSNgo1SbJqJEYRE9ERzo7YtYbou/OqjSQKxV7jcKox7+usiUVZOAC+XnDOABXggQTno0Y1CpVnuWEc1boQ==}
+
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
@@ -1926,6 +1932,12 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  react-snowfall@2.2.0:
+    resolution: {integrity: sha512-dRk7vEHq/ZUOG+JHk2k/hH3HmliOWGXr4rKRDeW4mjWuHeI1r5h0Lc1r2jnTtUS1im702d6tCmNGymlNTdhXYg==}
+    peerDependencies:
+      react: "^16.8 ||\_17.x || 18.x"
+      react-dom: ^16.8 || 17.x || 18.x
 
   react-style-singleton@2.2.1:
     resolution: {integrity: sha512-ZWj0fHEMyWkHzKYUr2Bs/4zU6XLmq9HsgBURm7g5pAVfyn49DgUiNgY2d4lXRlYSiCif9YBGpQleewkcqddc7g==}
@@ -3623,10 +3635,10 @@ snapshots:
       cross-spawn: 7.0.5
       signal-exit: 4.1.0
 
-  framer-motion@11.13.5(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+  framer-motion@11.14.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
-      motion-dom: 11.13.0
-      motion-utils: 11.13.0
+      motion-dom: 11.14.1
+      motion-utils: 11.14.1
       tslib: 2.8.1
     optionalDependencies:
       react: 19.0.0
@@ -3937,13 +3949,13 @@ snapshots:
 
   minipass@7.1.2: {}
 
-  motion-dom@11.13.0: {}
+  motion-dom@11.14.1: {}
 
-  motion-utils@11.13.0: {}
+  motion-utils@11.14.1: {}
 
-  motion@11.13.5(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+  motion@11.14.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
-      framer-motion: 11.13.5(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      framer-motion: 11.14.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       tslib: 2.8.1
     optionalDependencies:
       react: 19.0.0
@@ -4142,6 +4154,8 @@ snapshots:
       react: 19.0.0
       scheduler: 0.25.0
 
+  react-fast-compare@3.2.2: {}
+
   react-is@16.13.1: {}
 
   react-remove-scroll-bar@2.3.6(@types/react@19.0.0)(react@19.0.0):
@@ -4162,6 +4176,12 @@ snapshots:
       use-sidecar: 1.1.2(@types/react@19.0.0)(react@19.0.0)
     optionalDependencies:
       '@types/react': 19.0.0
+
+  react-snowfall@2.2.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+    dependencies:
+      react: 19.0.0
+      react-dom: 19.0.0(react@19.0.0)
+      react-fast-compare: 3.2.2
 
   react-style-singleton@2.2.1(@types/react@19.0.0)(react@19.0.0):
     dependencies:
