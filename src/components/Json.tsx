@@ -168,36 +168,40 @@ export default function Json({ games }: any) {
 					: game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0]
 							.startDate
 				const endDate = new Date(dateInfo)
-				const pageSlug = game.offerMappings[0]?.pageSlug || game.urlSlug
+				const pageSlug =
+					game.productSlug || game.offerMappings[0]?.pageSlug || game.urlSlug
 				const isBundleGame = game.categories?.some(
 					(category: any) => category.path === 'bundles'
 				)
-				const linkPrefix = isBundleGame ? '/bundles/' : '/p/'
+				const linkPrefix = isBundleGame ? 'bundles/' : 'p/'
 
-				const isTestAccount = game.seller?.name === 'Epic Dev Test Account'
-
-				let fieldValue = isTestAccount
+				let fieldValue = isCurrent
+					? game.title.toLowerCase().includes('mystery')
+						? ''
+						: `${
+								settings.includePrice
+									? game.price.totalPrice.originalPrice === 0
+										? '**Free**\n'
+										: `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **Free**\n`
+									: ''
+						  }[Claim ${
+								isBundleGame ? 'Bundle' : 'Game'
+						  }](https://store.epicgames.com/${linkPrefix}${pageSlug})`
+					: game.title.toLowerCase().includes('mystery')
 					? ''
-					: isCurrent
-					? `${
-							settings.includePrice
-								? game.price.totalPrice.originalPrice === 0
-									? '**Free**\n'
-									: `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **Free**\n`
-								: ''
-					  }[Claim ${
-							isBundleGame ? 'Bundle' : 'Game'
-					  }](https://store.epicgames.com/en-US${linkPrefix}${pageSlug})`
 					: `${
 							settings.includePrice
 								? game.price.totalPrice.originalPrice === 0
 									? 'Free\n'
 									: `${game.price.totalPrice.fmtPrice.originalPrice}\n`
 								: ''
-					  }[Game Link](https://store.epicgames.com/en-US${linkPrefix}${pageSlug})`
+					  }[Game Link](https://store.epicgames.com/${linkPrefix}${pageSlug})`
 
 				const imageUrl = game.keyImages.find(
-					(img: any) => img.type === 'VaultClosed' || img.type === 'OfferImageWide'
+					(img: any) =>
+						img.type === 'VaultClosed' ||
+						img.type === 'DieselStoreFrontWide' ||
+						img.type === 'OfferImageWide'
 				)?.url
 
 				return {

@@ -45,7 +45,7 @@ export default async function Home() {
 				<header className="flex flex-col sm:flex-row items-center justify-between lg:mb-8 mb-6">
 					<div className="mb-4 sm:mb-0 text-center">
 						<Link
-							href="https://store.epicgames.com/en-US/free-games"
+							href="https://store.epicgames.com/free-games"
 							target="_blank"
 							className="flex items-center sm:items-end flex-col sm:flex-row gap-4"
 						>

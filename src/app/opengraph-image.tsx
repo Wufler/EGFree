@@ -17,7 +17,10 @@ export default async function Image() {
 
 	const renderGameCard = (game: any, isCurrentGame: boolean) => {
 		const gameImage = game.keyImages.find(
-			(img: any) => img.type === 'OfferImageWide' || img.type === 'VaultClosed'
+			(img: any) =>
+				img.type === 'OfferImageWide' ||
+				img.type === 'VaultClosed' ||
+				img.type === 'DieselStoreFrontWide'
 		)?.url
 
 		return (
