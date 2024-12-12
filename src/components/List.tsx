@@ -191,7 +191,7 @@ export default function List({ games }: { games: any }) {
 		games.currentGames.length === 1 && games.nextGames.length === 1
 
 	const renderGameList = (games: any[], isCurrentGames: boolean) => (
-		<div className={`grid grid-cols-1 lg:grid-cols-3 gap-6`}>
+		<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 z-50 relative">
 			{games.length > 0 ? (
 				games.map((game: any) => renderGameCard(game, isCurrentGames))
 			) : (
@@ -207,13 +207,13 @@ export default function List({ games }: { games: any }) {
 
 	const combinedView = () => (
 		<div className="grid grid-cols-2 gap-6">
-			<div>
+			<div className="z-50">
 				<h2 className="text-3xl font-bold mb-4 text-epic-blue dark:text-epic-blue">
 					Current
 				</h2>
 				{games.currentGames.map((game: any) => renderGameCard(game, true))}
 			</div>
-			<div>
+			<div className="z-50">
 				<h2 className="text-3xl font-bold mb-4 text-epic-lightBlue dark:text-white">
 					Upcoming
 				</h2>
