@@ -155,7 +155,7 @@ export default function List({ games }: { games: any }) {
 						) : (
 							<span className="dark:text-epic-lightGray">
 								{game.price.totalPrice.originalPrice === 0
-									? 'Free'
+									? ''
 									: game.price.totalPrice.fmtPrice.originalPrice}
 							</span>
 						)}

@@ -16,7 +16,7 @@ export default function manifest(): MetadataRoute.Manifest {
                 type: 'image/svg+xml',
             },
             {
-                src: "https://wolfey.s-ul.eu/M8SJQZKP",
+                src: "https://wolfey.s-ul.eu/ktNjedec",
                 sizes: "192x192",
                 type: "image/svg+xml",
                 purpose: "maskable"
