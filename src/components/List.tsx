@@ -15,8 +15,9 @@ import { calculateTimeLeft } from '@/lib/calculateTime'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { Calendar, Clock, Gift } from 'lucide-react'
+import Image from 'next/image'
 
-export default function List({ games }: { games: any }) {
+export default function List({ games }: { games: Game }) {
 	const [timeLeft] = useState<{ [key: string]: string }>({})
 	const router = useRouter()
 	const hasToastShown = useRef(false)
@@ -26,9 +27,9 @@ export default function List({ games }: { games: any }) {
 
 		useEffect(() => {
 			const updateGameTime = () => {
-				const game = games.currentGames.find((g: any) => g.id === gameId)
+				const game = games.currentGames.find(g => g.id === gameId)
 				const endDate = new Date(
-					game.promotions.promotionalOffers[0]?.promotionalOffers[0]?.endDate ?? ''
+					game?.promotions.promotionalOffers[0]?.promotionalOffers[0]?.endDate ?? ''
 				)
 				const timeLeftForGame = calculateTimeLeft(endDate)
 				setGameTimeLeft(timeLeftForGame)
@@ -64,15 +65,15 @@ export default function List({ games }: { games: any }) {
 		)
 	}
 
-	const renderGameCard = (game: any, isCurrentGame: boolean) => {
+	const renderGameCard = (game: GameItem, isCurrentGame: boolean) => {
 		const pageSlug =
-			game.productSlug || game.offerMappings[0]?.pageSlug || game.urlSlug
+			game.productSlug || game.offerMappings?.[0]?.pageSlug || game.urlSlug
 		const isBundleGame = game.categories?.some(
-			(category: any) => category.path === 'bundles'
+			category => category.path === 'bundles'
 		)
 		const linkPrefix = isBundleGame ? 'bundles/' : 'p/'
 
-		const getGameDate = (game: any) => {
+		const getGameDate = (game: GameItem) => {
 			if (isCurrentGame) {
 				return game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0]
 					?.endDate
@@ -85,16 +86,18 @@ export default function List({ games }: { games: any }) {
 			<Card className="h-full overflow-hidden group hover:shadow-lg transition-all duration-300 bg-white dark:bg-epic-darkBlue flex flex-col">
 				<div className="relative overflow-hidden">
 					{game.keyImages.find(
-						(img: any) =>
+						img =>
 							img.type === 'OfferImageWide' || img.type === 'DieselStoreFrontWide'
 					) ? (
-						<img
+						<Image
 							src={
 								game.keyImages.find(
-									(img: any) =>
+									img =>
 										img.type === 'OfferImageWide' || img.type === 'DieselStoreFrontWide'
-								)?.url
+								)?.url || ''
 							}
+							width={1280}
+							height={720}
 							alt={game.title}
 							className={`w-full ${
 								isSingleGame ? 'h-48 lg:h-72 xl:h-96' : 'h-48 lg:h-60'
@@ -114,9 +117,9 @@ export default function List({ games }: { games: any }) {
 							<p className="text-lg font-bold line-clamp-1 text-gray-900 dark:text-white group-hover:text-epic-blue transition-colors">
 								{game.title}
 							</p>
-							{game.seller.name !== 'Epic Dev Test Account' && (
+							{game.seller?.name !== 'Epic Dev Test Account' && (
 								<p className="text-xs text-epic-gray dark:text-epic-lightGray line-clamp-1">
-									{game.seller.name}
+									{game.seller?.name}
 								</p>
 							)}
 						</div>
@@ -190,10 +193,10 @@ export default function List({ games }: { games: any }) {
 	const isSingleGame =
 		games.currentGames.length === 1 && games.nextGames.length === 1
 
-	const renderGameList = (games: any[], isCurrentGames: boolean) => (
+	const renderGameList = (games: GameItem[], isCurrentGames: boolean) => (
 		<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 z-50 relative">
 			{games.length > 0 ? (
-				games.map((game: any) => renderGameCard(game, isCurrentGames))
+				games.map(game => renderGameCard(game, isCurrentGames))
 			) : (
 				<p className="text-lg text-epic-gray dark:text-epic-lightGray lg:col-span-3 col-span-full text-center lg:text-left">
 					Failed to fetch offers. Check back later or check out the{' '}
@@ -211,13 +214,13 @@ export default function List({ games }: { games: any }) {
 				<h2 className="text-3xl font-bold mb-4 text-epic-blue dark:text-epic-blue">
 					Current
 				</h2>
-				{games.currentGames.map((game: any) => renderGameCard(game, true))}
+				{games.currentGames.map(game => renderGameCard(game, true))}
 			</div>
 			<div className="z-50">
 				<h2 className="text-3xl font-bold mb-4 text-epic-lightBlue dark:text-white">
 					Upcoming
 				</h2>
-				{games.nextGames.map((game: any) => renderGameCard(game, false))}
+				{games.nextGames.map(game => renderGameCard(game, false))}
 			</div>
 		</div>
 	)
