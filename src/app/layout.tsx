@@ -4,28 +4,36 @@ import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from 'next-themes'
 import Snow from '@/components/Snow'
+import { getEpicFreeGames } from '@/lib/getGames'
 
 const inter = Inter({ subsets: ['latin'] })
 
-export const metadata: Metadata = {
-	title: 'Epic Games Free Games',
-	description: 'Check out the latest free games for Epic Games!',
-	openGraph: {
+export async function generateMetadata(): Promise<Metadata> {
+	const games = await getEpicFreeGames()
+
+	const currentTitles = games.currentGames.map(game => game.title).join(', ')
+	const upcomingTitles = games.nextGames.map(game => game.title).join(', ')
+
+	return {
 		title: 'Epic Games Free Games',
-		description: 'Check out the latest free games for Epic Games!',
-		url: 'https://egfreegames.vercel.app/',
-		siteName: 'Epic Games Free Games',
-		images: [
-			{
-				url: 'https://wolfey.s-ul.eu/MdoL9N34',
-				width: 1280,
-				height: 720,
-				alt: 'Thumbnail',
-			},
-		],
-		locale: 'en_US',
-		type: 'website',
-	},
+		description: `💵 Current: ${currentTitles} \n ⌛ Upcoming: ${upcomingTitles}`,
+		openGraph: {
+			title: 'Epic Games Free Games',
+			description: `💵 Current: ${currentTitles} \n ⌛ Upcoming: ${upcomingTitles}`,
+			url: 'https://egfreegames.vercel.app/',
+			siteName: 'Epic Games Free Games',
+			images: [
+				{
+					url: `/api/og`,
+					width: 1280,
+					height: 720,
+					alt: 'Epic Games Free Games',
+				},
+			],
+			locale: 'en_US',
+			type: 'website',
+		},
+	}
 }
 
 export default function RootLayout({

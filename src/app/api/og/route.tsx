@@ -2,7 +2,6 @@ import { ImageResponse } from 'next/og'
 import { getEpicFreeGames } from '@/lib/getGames'
 import { connection } from 'next/server'
 import { format } from 'date-fns'
-import Image from 'next/image'
 
 export const GET = async () => {
 	await connection()
@@ -32,7 +31,8 @@ export const GET = async () => {
 				}}
 			>
 				{gameImage ? (
-					<Image
+					// eslint-disable-next-line
+					<img
 						src={gameImage}
 						alt={game.title}
 						width={1280}

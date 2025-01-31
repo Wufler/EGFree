@@ -4,33 +4,8 @@ import ModeToggle from '@/components/ModeToggle'
 import { Button } from '@/components/ui/button'
 import Github from '@/components/ui/github'
 import { getEpicFreeGames } from '@/lib/getGames'
-import { Metadata } from 'next'
 import Link from 'next/link'
 import { connection } from 'next/server'
-
-export async function generateMetadata(): Promise<Metadata> {
-	const games = await getEpicFreeGames()
-
-	const currentTitles = games.currentGames.map(game => game.title).join(', ')
-	const upcomingTitles = games.nextGames.map(game => game.title).join(', ')
-
-	return {
-		title: 'Epic Games Free Games',
-		description: `💵 Current: ${currentTitles} \n ⌛ Upcoming: ${upcomingTitles}`,
-		openGraph: {
-			title: 'Epic Games Free Games',
-			description: `💵 Current: ${currentTitles} \n ⌛ Upcoming: ${upcomingTitles}`,
-			images: [
-				{
-					url: `/api/og`,
-					width: 1280,
-					height: 720,
-					alt: 'Epic Games Free Games',
-				},
-			],
-		},
-	}
-}
 
 export default async function Home() {
 	await connection()
