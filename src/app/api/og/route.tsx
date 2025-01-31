@@ -2,22 +2,15 @@ import { ImageResponse } from 'next/og'
 import { getEpicFreeGames } from '@/lib/getGames'
 import { connection } from 'next/server'
 import { format } from 'date-fns'
+import Image from 'next/image'
 
-export const alt = 'Epic Games Free Games'
-export const size = {
-	width: 1280,
-	height: 720,
-}
-
-export const contentType = 'image/png'
-
-export default async function Image() {
+export const GET = async () => {
 	await connection()
 	const games = await getEpicFreeGames()
 
-	const renderGameCard = (game: any, isCurrentGame: boolean) => {
+	const renderGameCard = (game: GameItem, isCurrentGame: boolean) => {
 		const gameImage = game.keyImages.find(
-			(img: any) =>
+			img =>
 				img.type === 'OfferImageWide' ||
 				img.type === 'VaultClosed' ||
 				img.type === 'DieselStoreFrontWide'
@@ -39,9 +32,11 @@ export default async function Image() {
 				}}
 			>
 				{gameImage ? (
-					<img
+					<Image
 						src={gameImage}
 						alt={game.title}
+						width={1280}
+						height={720}
 						style={{
 							width: '100%',
 							height: '200px',
@@ -144,10 +139,10 @@ export default async function Image() {
 				}}
 			>
 				<div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-					{games.currentGames.map((game: any) => renderGameCard(game, true))}
+					{games.currentGames.map(game => renderGameCard(game, true))}
 				</div>
 				<div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-					{games.nextGames.map((game: any) => renderGameCard(game, false))}
+					{games.nextGames.map(game => renderGameCard(game, false))}
 				</div>
 				<div
 					style={{
@@ -176,7 +171,8 @@ export default async function Image() {
 			</div>
 		),
 		{
-			...size,
+			width: 1280,
+			height: 720,
 		}
 	)
 }

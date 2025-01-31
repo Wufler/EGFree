@@ -1,10 +1,11 @@
-interface Game {
+type GameItem = {
     id: string
     title: string
     description: string
     keyImages: Array<{ type: string; url: string }>
     price: {
         totalPrice: {
+            originalPrice: number
             fmtPrice: {
                 originalPrice: string
                 discountPrice: string
@@ -25,9 +26,16 @@ interface Game {
             }>
         }>
     }
-    catalogNs: {
-        mappings: Array<{ pageSlug: string }>
-    }
+    productSlug?: string
+    offerMappings?: Array<{ pageSlug: string }>
     urlSlug: string
+    seller?: {
+        name: string
+    }
     categories: Array<{ path: string }>
+}
+
+type Game = {
+    currentGames: GameItem[]
+    nextGames: GameItem[]
 }
