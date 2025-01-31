@@ -71,21 +71,10 @@ function Switches({
 	)
 }
 
-interface EgFreeSettings {
-	includeCurrent: boolean
-	includeUpcoming: boolean
-	embedContent: string
-	embedColor: string
-	includeFooter: boolean
-	includePrice: boolean
-	includeImage: boolean
-	webhookUrl: string
-}
-
 const defaultColor = '#85ce4b'
 const defaultContent = '<@&847939354978811924>'
 
-export default function Json({ games }: any) {
+export default function Json({ games }: { games: Game }) {
 	const [jsonData, setJsonData] = useState({})
 	const [webhookUrl, setWebhookUrl] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
@@ -146,7 +135,7 @@ export default function Json({ games }: any) {
 		saveSettings()
 	}, [settings])
 
-	const updateSetting = (key: keyof EgFreeSettings, value: any) => {
+	const updateSetting = (key: keyof EgFreeSettings, value: string | boolean) => {
 		setSettings(prev => ({ ...prev, [key]: value }))
 	}
 
@@ -161,7 +150,7 @@ export default function Json({ games }: any) {
 				...(settings.includeUpcoming ? games.nextGames : []),
 			]
 
-			const embeds = selectedGames.map((game: any) => {
+			const embeds = selectedGames.map((game: GameItem) => {
 				const isCurrent = game.promotions.promotionalOffers.length > 0
 				const dateInfo = isCurrent
 					? game.promotions.promotionalOffers[0].promotionalOffers[0].endDate
@@ -169,13 +158,13 @@ export default function Json({ games }: any) {
 							.startDate
 				const endDate = new Date(dateInfo)
 				const pageSlug =
-					game.productSlug || game.offerMappings[0]?.pageSlug || game.urlSlug
+					game.productSlug || game.offerMappings?.[0]?.pageSlug || game.urlSlug
 				const isBundleGame = game.categories?.some(
-					(category: any) => category.path === 'bundles'
+					(category: { path: string }) => category.path === 'bundles'
 				)
 				const linkPrefix = isBundleGame ? 'bundles/' : 'p/'
 
-				let fieldValue = isCurrent
+				const fieldValue = isCurrent
 					? game.title.toLowerCase().includes('mystery')
 						? ''
 						: `${
@@ -198,7 +187,7 @@ export default function Json({ games }: any) {
 					  }[Game Link](https://store.epicgames.com/${linkPrefix}${pageSlug})`
 
 				const imageUrl = game.keyImages.find(
-					(img: any) =>
+					(img: { type: string; url: string }) =>
 						img.type === 'VaultClosed' ||
 						img.type === 'DieselStoreFrontWide' ||
 						img.type === 'OfferImageWide'
@@ -283,7 +272,7 @@ export default function Json({ games }: any) {
 		try {
 			const text = await navigator.clipboard.readText()
 			setWebhookUrl(text)
-		} catch (err) {
+		} catch {
 			console.error('Failed to paste text')
 		}
 	}
@@ -405,7 +394,7 @@ export default function Json({ games }: any) {
 											<PopoverContent
 												className="w-full p-3"
 												align="start"
-												onOpenAutoFocus={(e: any) => e.preventDefault()}
+												onOpenAutoFocus={(e: Event) => e.preventDefault()}
 											>
 												<Input
 													maxLength={7}

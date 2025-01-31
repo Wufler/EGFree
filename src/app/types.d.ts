@@ -39,3 +39,14 @@ type Game = {
     currentGames: GameItem[]
     nextGames: GameItem[]
 }
+
+interface EgFreeSettings {
+    includeCurrent: boolean
+    includeUpcoming: boolean
+    embedContent: string
+    embedColor: string
+    includeFooter: boolean
+    includePrice: boolean
+    includeImage: boolean
+    webhookUrl: string
+}
