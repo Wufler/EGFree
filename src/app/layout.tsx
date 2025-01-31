@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
 			siteName: 'Epic Games Free Games',
 			images: [
 				{
-					url: `/api/og`,
+					url: `/api/og?date=${Date.now()}`,
 					width: 1280,
 					height: 720,
 					alt: 'Epic Games Free Games',
