@@ -16,7 +16,7 @@ export default function DiscordPreview({
 	]
 
 	return (
-		<div className="bg-[#ffffff] dark:bg-[#313338] dark:text-white rounded-sm p-4">
+		<div className="bg-[#ffffff] dark:bg-[#313338] dark:text-white rounded-sm p-4 [overflow-wrap:anywhere]">
 			<div className="mb-2 text-sm">
 				{(settings.embedContent || defaultContent)
 					.split(/(<@&\d+>)/)
