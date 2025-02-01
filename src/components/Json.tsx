@@ -288,7 +288,7 @@ export default function Json({ games }: { games: Game }) {
 					<FileJson2 />
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="bg-white dark:bg-epic-black max-w-3xl max-h-[90vh] overflow-hidden">
+			<DialogContent className="bg-gray-100 dark:bg-epic-black max-w-3xl max-h-[90vh] overflow-hidden">
 				<DialogHeader>
 					<DialogTitle>JSON Data</DialogTitle>
 					<DialogDescription>
@@ -498,7 +498,7 @@ export default function Json({ games }: { games: Game }) {
 											}}
 											className="order-1 after:absolute after:inset-0"
 										/>
-										<div className="flex grow items-center justify-center gap-2">
+										<div className="flex grow items-center gap-2">
 											<Discord />
 											<Label htmlFor="discord" className="cursor-pointer">
 												Discord Preview

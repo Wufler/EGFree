@@ -16,7 +16,7 @@ export default function DiscordPreview({
 	]
 
 	return (
-		<div className="mb-4 bg-[#313338] text-white rounded-sm p-4">
+		<div className="bg-[#ffffff] dark:bg-[#313338] dark:text-white rounded-sm p-4">
 			<div className="mb-2 text-sm">
 				{(settings.embedContent || defaultContent)
 					.split(/(<@&\d+>)/)
@@ -26,7 +26,7 @@ export default function DiscordPreview({
 							return (
 								<span
 									key={i}
-									className="text-[#c9cdfb] bg-[#3c4270] rounded-sm py-0.5 px-1"
+									className="text-[#535ec8] dark:text-[#c9cdfb] bg-[#e6e8fd] dark:bg-[#3c4270] rounded-sm py-0.5 px-1"
 								>
 									@role
 								</span>
@@ -61,16 +61,16 @@ export default function DiscordPreview({
 						className="flex mt-1 rounded-sm overflow-hidden"
 						style={{ borderLeft: `4px solid ${settings.embedColor}` }}
 					>
-						<div className="max-w-md bg-[#2B2D31] p-3.5 pr-4">
+						<div className="max-w-md bg-[#f2f3f5] dark:bg-[#2B2D31] p-3.5 pr-4">
 							<div className="flex items-center mb-2">
 								<Image
 									width={1280}
 									height={720}
 									src="https://wolfey.s-ul.eu/YcyMXrI1"
 									alt="Epic Games Store"
-									className="size-7 rounded-full mr-2"
+									className="size-7 rounded-full mr-2.5"
 								/>
-								<p className="text-white hover:underline text-sm font-medium cursor-pointer">
+								<p className="hover:underline text-sm font-medium cursor-pointer">
 									Epic Games Store
 								</p>
 							</div>
@@ -78,7 +78,7 @@ export default function DiscordPreview({
 								<h1 className="font-semibold">{game.title}</h1>
 								{settings.includePrice &&
 									(!isCurrent ? (
-										<span className="font-extralight">
+										<span className="font-light">
 											{game.price.totalPrice.fmtPrice.originalPrice}
 										</span>
 									) : (
@@ -91,7 +91,7 @@ export default function DiscordPreview({
 									))}
 								<a
 									href={`https://store.epicgames.com/${linkPrefix}${pageSlug}`}
-									className="text-[#00A8FC] hover:underline self-start"
+									className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
 									target="_blank"
 								>
 									{isCurrent ? 'Claim Game' : 'Game Link'}
