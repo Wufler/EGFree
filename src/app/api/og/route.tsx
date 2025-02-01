@@ -99,9 +99,8 @@ export const GET = async () => {
 						{isCurrentGame
 							? 'Free Now'
 							: `${format(
-									new Date(
-										game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0].startDate
-									),
+									game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0]
+										.startDate,
 									'MMM d'
 							  )}`}
 					</span>

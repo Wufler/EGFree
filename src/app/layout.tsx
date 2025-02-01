@@ -21,10 +21,9 @@ export async function generateMetadata(): Promise<Metadata> {
 			title: 'Epic Games Free Games',
 			description: `💵 Current: ${currentTitles} \n ⌛ Upcoming: ${upcomingTitles}`,
 			url: 'https://egfreegames.vercel.app/',
-			siteName: 'Epic Games Free Games',
 			images: [
 				{
-					url: `/api/og?date=${Date.now()}`,
+					url: `/api/og`,
 					width: 1280,
 					height: 720,
 					alt: 'Epic Games Free Games',
