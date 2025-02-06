@@ -1,4 +1,4 @@
-// AI generated this, i hope its safe!
+// AI generated this, thanks!
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()

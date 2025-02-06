@@ -136,9 +136,7 @@ export default function List({ games }: { games: Game }) {
 					) : (
 						<div className="flex items-center text-gray-600 dark:text-gray-400">
 							<Calendar className="size-4 mr-1" />
-							<span className="text-sm">
-								{format(new Date(getGameDate(game)), 'MMM d')}
-							</span>
+							<span className="text-sm">{format(getGameDate(game), 'MMM d')}</span>
 						</div>
 					)}
 					<span className="text-epic-gray dark:text-epic-lightGray text-sm">

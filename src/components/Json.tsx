@@ -41,6 +41,9 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import DiscordPreview from './DiscordEmbed'
+import { Checkbox } from './ui/checkbox'
+import Discord from './ui/discord'
 
 function Switches({
 	id,
@@ -89,6 +92,7 @@ export default function Json({ games }: { games: Game }) {
 		includePrice: true,
 		includeImage: true,
 		webhookUrl: '',
+		showDiscordPreview: true,
 	})
 
 	useEffect(() => {
@@ -284,10 +288,7 @@ export default function Json({ games }: { games: Game }) {
 					<FileJson2 />
 				</Button>
 			</DialogTrigger>
-			<DialogContent
-				style={{ borderLeft: `6px solid ${settings.embedColor}` }}
-				className="bg-white dark:bg-epic-black max-w-3xl max-h-[90vh] overflow-hidden"
-			>
+			<DialogContent className="bg-gray-100 dark:bg-epic-black max-w-3xl max-h-[90vh] overflow-hidden">
 				<DialogHeader>
 					<DialogTitle>JSON Data</DialogTitle>
 					<DialogDescription>
@@ -479,22 +480,39 @@ export default function Json({ games }: { games: Game }) {
 					<TabsContent value="preview" className="overflow-y-auto pt-3">
 						<Card>
 							<CardContent className="p-4">
-								<Button
-									onClick={copyToClipboard}
-									variant="outline"
-									size="sm"
-									className="mb-4 w-full"
-								>
-									{isCopied ? (
-										<Check className="size-4 mr-2" />
-									) : (
-										<ClipboardCopy className="size-4 mr-2" />
-									)}
-									Copy JSON
-								</Button>
-								<pre className="bg-secondary text-secondary-foreground p-4 rounded-md overflow-auto text-sm whitespace-pre-wrap break-all">
-									{JSON.stringify(jsonData, null, 2)}
-								</pre>
+								<div className="flex flex-col lg:flex-row justify-center items-center mb-4 gap-4">
+									<Button onClick={copyToClipboard} variant="outline" className="w-full">
+										{isCopied ? (
+											<Check className="size-4 mr-2" />
+										) : (
+											<ClipboardCopy className="size-4 mr-2" />
+										)}
+										Copy JSON
+									</Button>
+									<div className="relative flex w-full items-center gap-2 rounded-md border border-input p-3 has-[[data-state=checked]]:border-ring">
+										<Checkbox
+											id="discord"
+											checked={settings.showDiscordPreview}
+											onCheckedChange={checked => {
+												updateSetting('showDiscordPreview', checked)
+											}}
+											className="order-1 after:absolute after:inset-0"
+										/>
+										<div className="flex grow items-center gap-2">
+											<Discord />
+											<Label htmlFor="discord" className="cursor-pointer">
+												Discord Preview
+											</Label>
+										</div>
+									</div>
+								</div>
+								{settings.showDiscordPreview ? (
+									<DiscordPreview games={games} settings={settings} />
+								) : (
+									<pre className="bg-secondary text-secondary-foreground p-4 rounded-md overflow-auto text-sm whitespace-pre-wrap break-all">
+										{JSON.stringify(jsonData, null, 2)}
+									</pre>
+								)}
 							</CardContent>
 						</Card>
 					</TabsContent>

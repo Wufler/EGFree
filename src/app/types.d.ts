@@ -17,12 +17,18 @@ type GameItem = {
             promotionalOffers: Array<{
                 startDate: string
                 endDate: string
+                discountSetting: {
+                    discountPercentage: number
+                }
             }>
         }>
         upcomingPromotionalOffers: Array<{
             promotionalOffers: Array<{
                 startDate: string
                 endDate: string
+                discountSetting: {
+                    discountPercentage: number
+                }
             }>
         }>
     }
@@ -49,4 +55,5 @@ interface EgFreeSettings {
     includePrice: boolean
     includeImage: boolean
     webhookUrl: string
+    showDiscordPreview: boolean
 }
