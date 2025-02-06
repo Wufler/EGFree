@@ -11,8 +11,8 @@ export default function DiscordPreview({
 	settings: EgFreeSettings
 }) {
 	const selectedGames = [
-		...(settings.includeCurrent ? [games.currentGames[0]] : []),
-		...(settings.includeUpcoming ? [games.nextGames[0]] : []),
+		...(settings.includeCurrent ? games.currentGames : []),
+		...(settings.includeUpcoming ? games.nextGames : []),
 	]
 
 	return (
@@ -78,23 +78,37 @@ export default function DiscordPreview({
 								<h1 className="font-semibold">{game.title}</h1>
 								{settings.includePrice &&
 									(!isCurrent ? (
-										<span className="font-light">
-											{game.price.totalPrice.fmtPrice.originalPrice}
+										<span>
+											{game.price.totalPrice.originalPrice === 0 ? (
+												<span className="font-light">Free</span>
+											) : (
+												<span>{game.price.totalPrice.fmtPrice.originalPrice}</span>
+											)}
 										</span>
 									) : (
-										<span>
-											<span className="line-through font-extralight">
-												{game.price.totalPrice.fmtPrice.originalPrice}
-											</span>{' '}
-											<span className="font-semibold">Free</span>
-										</span>
+										<>
+											{game.price.totalPrice.originalPrice === 0 ? (
+												<span className="font-semibold">Free</span>
+											) : (
+												<span>
+													<span className="line-through font-extralight">
+														{game.price.totalPrice.fmtPrice.originalPrice}
+													</span>{' '}
+													<span className="font-semibold">Free</span>
+												</span>
+											)}
+										</>
 									))}
 								<a
 									href={`https://store.epicgames.com/${linkPrefix}${pageSlug}`}
 									className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
 									target="_blank"
 								>
-									{isCurrent ? 'Claim Game' : 'Game Link'}
+									{isCurrent
+										? isBundleGame
+											? 'Claim Bundle'
+											: 'Claim Game'
+										: 'Game Link'}
 								</a>
 								{settings.includeImage && imageUrl && (
 									<Image
