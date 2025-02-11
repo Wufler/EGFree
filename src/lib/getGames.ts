@@ -13,26 +13,33 @@ export async function getEpicFreeGames(): Promise<Game> {
             if (!game.price) return
 
             const { promotionalOffers, upcomingPromotionalOffers } = game.promotions
+            const now = new Date().getTime()
 
-            if (promotionalOffers?.length > 0 && promotionalOffers[0]?.promotionalOffers?.length > 0) {
-                const offer = promotionalOffers[0].promotionalOffers[0]
-                const now = new Date().getTime()
-                const start = new Date(offer.startDate).getTime()
-                const end = new Date(offer.endDate).getTime()
+            const allOffers = promotionalOffers?.[0]?.promotionalOffers || []
 
-                if (now >= start && now < end && offer.discountSetting?.discountPercentage === 0) {
-                    currentGames.push(game as GameItem)
-                }
+            const currentFreeOffer = allOffers
+                .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+                .find(offer => {
+                    const start = new Date(offer.startDate).getTime()
+                    const end = new Date(offer.endDate).getTime()
+                    return now >= start && now < end && offer.discountSetting?.discountPercentage === 0
+                })
+
+            if (currentFreeOffer) {
+                currentGames.push(game as GameItem)
             }
 
-            if (upcomingPromotionalOffers?.length > 0 && upcomingPromotionalOffers[0]?.promotionalOffers?.length > 0) {
-                const offer = upcomingPromotionalOffers[0].promotionalOffers[0]
-                const now = new Date().getTime()
-                const start = new Date(offer.startDate).getTime()
+            const allUpcomingOffers = upcomingPromotionalOffers?.[0]?.promotionalOffers || []
 
-                if (now < start && offer.discountSetting?.discountPercentage === 0) {
-                    nextGames.push(game as GameItem)
-                }
+            const nextFreeOffer = allUpcomingOffers
+                .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+                .find(offer => {
+                    const start = new Date(offer.startDate).getTime()
+                    return now < start && offer.discountSetting?.discountPercentage === 0
+                })
+
+            if (nextFreeOffer) {
+                nextGames.push(game as GameItem)
             }
         })
 

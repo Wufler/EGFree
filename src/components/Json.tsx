@@ -86,6 +86,7 @@ export default function Json({ games }: { games: Game }) {
 	const [settings, setSettings] = useState<EgFreeSettings>({
 		includeCurrent: true,
 		includeUpcoming: false,
+		includeAddOns: true,
 		embedContent: '',
 		embedColor: defaultColor,
 		includeFooter: true,
@@ -94,6 +95,10 @@ export default function Json({ games }: { games: Game }) {
 		webhookUrl: '',
 		showDiscordPreview: true,
 	})
+
+	const hasAddOns = [...games.currentGames, ...games.nextGames].some(
+		game => game.offerType === 'ADD_ON'
+	)
 
 	useEffect(() => {
 		if (typeof window !== 'undefined') {
@@ -152,7 +157,7 @@ export default function Json({ games }: { games: Game }) {
 			const selectedGames = [
 				...(settings.includeCurrent ? games.currentGames : []),
 				...(settings.includeUpcoming ? games.nextGames : []),
-			]
+			].filter(game => settings.includeAddOns || game.offerType !== 'ADD_ON')
 
 			const embeds = selectedGames.map((game: GameItem) => {
 				const isCurrent = game.promotions.promotionalOffers.length > 0
@@ -177,8 +182,12 @@ export default function Json({ games }: { games: Game }) {
 										? '**Free**\n'
 										: `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **Free**\n`
 									: ''
-						  }[Claim ${
-								isBundleGame ? 'Bundle' : 'Game'
+						  }[${
+								game.offerType === 'ADD_ON'
+									? 'Claim Add-on'
+									: isBundleGame
+									? 'Claim Bundle'
+									: 'Claim Game'
 						  }](https://store.epicgames.com/${linkPrefix}${pageSlug})`
 					: game.title.toLowerCase().includes('mystery')
 					? ''
@@ -188,7 +197,9 @@ export default function Json({ games }: { games: Game }) {
 									? 'Free\n'
 									: `${game.price.totalPrice.fmtPrice.originalPrice}\n`
 								: ''
-					  }[Game Link](https://store.epicgames.com/${linkPrefix}${pageSlug})`
+					  }[${
+							game.offerType === 'ADD_ON' ? 'Add-on Link' : 'Game Link'
+					  }](https://store.epicgames.com/${linkPrefix}${pageSlug})`
 
 				const imageUrl = game.keyImages.find(
 					(img: { type: string; url: string }) =>
@@ -446,6 +457,13 @@ export default function Json({ games }: { games: Game }) {
 													updateSetting('includeUpcoming', checked)
 												}
 												label="Upcoming"
+											/>
+											<Switches
+												id="include-addons"
+												checked={settings.includeAddOns}
+												onCheckedChange={checked => updateSetting('includeAddOns', checked)}
+												disabled={!hasAddOns}
+												label="Add-ons"
 											/>
 										</div>
 										<div className="space-y-2">

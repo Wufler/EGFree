@@ -13,7 +13,7 @@ export default function DiscordPreview({
 	const selectedGames = [
 		...(settings.includeCurrent ? games.currentGames : []),
 		...(settings.includeUpcoming ? games.nextGames : []),
-	]
+	].filter(game => settings.includeAddOns || game.offerType !== 'ADD_ON')
 
 	return (
 		<div className="bg-[#ffffff] dark:bg-[#313338] dark:text-white rounded-sm p-4 [overflow-wrap:anywhere]">
@@ -54,6 +54,7 @@ export default function DiscordPreview({
 						img.type === 'DieselStoreFrontWide' ||
 						img.type === 'OfferImageWide'
 				)?.url
+				const isAddOn = game.offerType === 'ADD_ON'
 
 				return (
 					<div
@@ -75,7 +76,7 @@ export default function DiscordPreview({
 								</p>
 							</div>
 							<div className="flex flex-col text-sm gap-0.5">
-								<h1 className="font-semibold">{game.title}</h1>
+								<h1 className="font-semibold flex items-center gap-1">{game.title}</h1>
 								{settings.includePrice &&
 									(!isCurrent ? (
 										<span>
@@ -105,9 +106,13 @@ export default function DiscordPreview({
 									target="_blank"
 								>
 									{isCurrent
-										? isBundleGame
+										? isAddOn
+											? 'Claim Add-on'
+											: isBundleGame
 											? 'Claim Bundle'
 											: 'Claim Game'
+										: isAddOn
+										? 'Add-on Link'
 										: 'Game Link'}
 								</a>
 								{settings.includeImage && imageUrl && (
@@ -116,7 +121,7 @@ export default function DiscordPreview({
 										height={720}
 										src={imageUrl}
 										alt={game.title}
-										className="w-full h-full object-cover rounded-lg mt-4"
+										className="w-full h-full object-cover rounded-md mt-4"
 									/>
 								)}
 							</div>
