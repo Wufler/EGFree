@@ -3,9 +3,11 @@ type GameItem = {
     title: string
     description: string
     keyImages: Array<{ type: string; url: string }>
+    offerType: 'BASE_GAME' | 'ADD_ON'
     price: {
         totalPrice: {
             originalPrice: number
+            discountPrice: number
             fmtPrice: {
                 originalPrice: string
                 discountPrice: string
@@ -18,6 +20,7 @@ type GameItem = {
                 startDate: string
                 endDate: string
                 discountSetting: {
+                    discountType?: string
                     discountPercentage: number
                 }
             }>
@@ -27,6 +30,7 @@ type GameItem = {
                 startDate: string
                 endDate: string
                 discountSetting: {
+                    discountType?: string
                     discountPercentage: number
                 }
             }>
@@ -49,6 +53,7 @@ type Game = {
 interface EgFreeSettings {
     includeCurrent: boolean
     includeUpcoming: boolean
+    includeAddOns: boolean
     embedContent: string
     embedColor: string
     includeFooter: boolean

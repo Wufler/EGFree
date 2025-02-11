@@ -14,10 +14,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { calculateTimeLeft } from '@/lib/calculateTime'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import { Calendar, Clock, Gift } from 'lucide-react'
+import { Calendar, Clock, Gift, Puzzle } from 'lucide-react'
 import Image from 'next/image'
 
 export default function List({ games }: { games: Game }) {
+	console.log(games)
 	const [timeLeft] = useState<{ [key: string]: string }>({})
 	const router = useRouter()
 	const hasToastShown = useRef(false)
@@ -71,6 +72,7 @@ export default function List({ games }: { games: Game }) {
 		const isBundleGame = game.categories?.some(
 			category => category.path === 'bundles'
 		)
+		const isAddOn = game.offerType === 'ADD_ON'
 		const linkPrefix = isBundleGame ? 'bundles/' : 'p/'
 
 		const getGameDate = (game: GameItem) => {
@@ -85,6 +87,12 @@ export default function List({ games }: { games: Game }) {
 		const cardContent = (
 			<Card className="h-full overflow-hidden group hover:shadow-lg transition-all duration-300 bg-white dark:bg-epic-darkBlue flex flex-col">
 				<div className="relative overflow-hidden">
+					{isAddOn && (
+						<div className="absolute top-2 right-2 z-10 bg-epic-blue text-white px-2 py-1 rounded-md text-xs font-semibold flex items-center">
+							<Puzzle className="size-3 mr-1" />
+							ADD-ON
+						</div>
+					)}
 					{game.keyImages.find(
 						img =>
 							img.type === 'OfferImageWide' || img.type === 'DieselStoreFrontWide'

@@ -13,9 +13,9 @@ export default async function Home() {
 
 	return (
 		<main className="min-h-dvh bg-white dark:bg-epic-black text-epic-black dark:text-white flex flex-col">
-			<div className="container mx-auto sm:px-4 sm:pb-8 pb-0 pt-8 flex flex-col flex-grow">
+			<div className="container mx-auto pt-6 flex flex-col flex-grow">
 				<header className="flex flex-col sm:flex-row items-center justify-between lg:mb-8 mb-6">
-					<div className="mb-4 sm:mb-0 text-center">
+					<div className="mb-4 sm:mb-0 sm:px-4 px-6 text-center">
 						<Link
 							href="https://store.epicgames.com/free-games"
 							target="_blank"
@@ -27,7 +27,7 @@ export default async function Home() {
 							</p>
 						</Link>
 					</div>
-					<div className="flex items-center gap-2">
+					<div className="flex items-center sm:px-4 px-6 gap-2">
 						<Json games={games} />
 						<ModeToggle />
 						<Button
@@ -43,8 +43,11 @@ export default async function Home() {
 					</div>
 				</header>
 				<List games={games} />
-				<div className="mt-auto text-center text-sm text-muted-foreground py-2">
+				<div className="mt-auto text-center text-sm text-muted-foreground py-4">
 					&copy; 2025 Wolfey
+					<p className="text-xs text-muted-foreground">
+						Some offers might not appear correctly due to API issues.
+					</p>
 				</div>
 			</div>
 		</main>
