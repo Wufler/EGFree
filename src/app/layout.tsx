@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 		openGraph: {
 			title: 'Epic Games Free Games',
 			description: `💵 Current: ${currentTitles} \n ⌛ Upcoming: ${upcomingTitles}`,
-			url: 'https://egfreegames.vercel.app/',
+			url: 'https://free.wolfey.me/',
 			images: [
 				{
 					url: `/api/og`,

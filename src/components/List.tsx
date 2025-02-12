@@ -3,22 +3,15 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { motion } from 'motion/react'
 import { format } from 'date-fns'
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { calculateTimeLeft } from '@/lib/calculateTime'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import { Calendar, Clock, Gift, Puzzle } from 'lucide-react'
+import { Calendar, Clock, Gift } from 'lucide-react'
 import Image from 'next/image'
 
 export default function List({ games }: { games: Game }) {
-	console.log(games)
 	const [timeLeft] = useState<{ [key: string]: string }>({})
 	const router = useRouter()
 	const hasToastShown = useRef(false)
@@ -60,8 +53,8 @@ export default function List({ games }: { games: Game }) {
 
 		return (
 			<div className="flex items-center text-epic-blue">
-				<Clock className="size-4 mr-1" />
-				<span className="font-semibold">{gameTimeLeft}</span>
+				<Clock className="mr-1.5 size-4" />
+				<span className="text-sm font-semibold">{gameTimeLeft}</span>
 			</div>
 		)
 	}
@@ -85,11 +78,10 @@ export default function List({ games }: { games: Game }) {
 		}
 
 		const cardContent = (
-			<Card className="h-full overflow-hidden group hover:shadow-lg transition-all duration-300 bg-white dark:bg-epic-darkBlue flex flex-col">
-				<div className="relative overflow-hidden">
+			<Card className="group relative h-full overflow-hidden border-0 bg-epic-black-light dark:bg-epic-black transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
+				<div className="relative aspect-[16/9] overflow-hidden">
 					{isAddOn && (
-						<div className="absolute top-2 right-2 z-10 bg-epic-blue text-white px-2 py-1 rounded-md text-xs font-semibold flex items-center">
-							<Puzzle className="size-3 mr-1" />
+						<div className="absolute right-2 top-2 z-10 flex items-center rounded-sm bg-epic-blue-light/80 dark:bg-epic-blue/80 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
 							ADD-ON
 						</div>
 					)}
@@ -107,69 +99,58 @@ export default function List({ games }: { games: Game }) {
 							width={1280}
 							height={720}
 							alt={game.title}
-							className={`w-full ${
-								isSingleGame ? 'h-48 lg:h-72 xl:h-96' : 'h-48 lg:h-60'
-							} object-cover transition-all duration-300 group-hover:scale-105 ${
+							className={`h-full w-full object-cover transition-all duration-500 group-hover:scale-105 ${
 								timeLeft[game.id] === 'Expired' ? 'grayscale' : ''
 							}`}
 						/>
 					) : (
-						<div className="bg-gray-200 dark:bg-epic-black w-full h-48 xl:h-56 flex items-center justify-center transition-all duration-300 group-hover:scale-105">
+						<div className="flex h-full w-full items-center justify-center bg-epic-darkBlue">
 							<Gift className="size-20 text-epic-blue" />
 						</div>
 					)}
+					<div className="absolute inset-0 bg-gradient-to-t from-epic-black via-epic-black/60" />
 				</div>
-				<CardContent className="p-4 py-3 flex-grow">
-					<CardTitle className="text-xl mb-2 text-epic-black dark:text-white">
-						<div className="flex flex-col">
-							<p className="text-lg font-bold line-clamp-1 text-gray-900 dark:text-white group-hover:text-epic-blue transition-colors">
+
+				<CardContent className="absolute bottom-0 left-0 right-0 p-4">
+					<div className="flex items-end justify-between mb-1">
+						{isCurrentGame ? (
+							<TimeDisplay gameId={game.id} />
+						) : (
+							<div className="flex items-center text-epic-lightGray">
+								<Calendar className="mr-1.5 size-4" />
+								<span className="text-sm font-medium">
+									{format(getGameDate(game), 'MMM d')}
+								</span>
+							</div>
+						)}
+					</div>
+					<div className="flex justify-between items-center">
+						<div>
+							<p className="line-clamp-1 text-lg font-bold text-foreground text-white transition-colors duration-200 group-hover:text-epic-blue-light dark:group-hover:text-epic-blue">
 								{game.title}
 							</p>
 							{game.seller?.name !== 'Epic Dev Test Account' && (
-								<p className="text-xs text-epic-gray dark:text-epic-lightGray line-clamp-1">
+								<p className="line-clamp-1 text-sm text-epic-lightGray">
 									{game.seller?.name}
 								</p>
 							)}
 						</div>
-					</CardTitle>
-					{game.description !== game.title && (
-						<CardDescription className="line-clamp-3">
-							{game.description}
-						</CardDescription>
-					)}
-				</CardContent>
-				<CardFooter className="p-4 py-3 flex justify-between items-center bg-gray-50 dark:bg-gray-950/20">
-					{isCurrentGame ? (
-						<TimeDisplay gameId={game.id} />
-					) : (
-						<div className="flex items-center text-gray-600 dark:text-gray-400">
-							<Calendar className="size-4 mr-1" />
-							<span className="text-sm">{format(getGameDate(game), 'MMM d')}</span>
+						<div className="flex flex-col items-end">
+							{isCurrentGame && (
+								<span className="font-bold text-foreground text-white">Free</span>
+							)}
+							{game.price.totalPrice.originalPrice !== 0 && (
+								<span
+									className={`text-sm text-epic-lightGray ${
+										isCurrentGame ? 'line-through opacity-70' : ''
+									}`}
+								>
+									{game.price.totalPrice.fmtPrice.originalPrice}
+								</span>
+							)}
 						</div>
-					)}
-					<span className="text-epic-gray dark:text-epic-lightGray text-sm">
-						{isCurrentGame ? (
-							<span
-								className={`font-semibold ${
-									timeLeft[game.id] === 'Expired' ||
-									game.price.totalPrice.originalPrice === 0
-										? ''
-										: 'line-through'
-								}`}
-							>
-								{game.price.totalPrice.originalPrice === 0
-									? 'Free'
-									: game.price.totalPrice.fmtPrice.originalPrice}
-							</span>
-						) : (
-							<span className="dark:text-epic-lightGray">
-								{game.price.totalPrice.originalPrice === 0
-									? ''
-									: game.price.totalPrice.fmtPrice.originalPrice}
-							</span>
-						)}
-					</span>
-				</CardFooter>
+					</div>
+				</CardContent>
 			</Card>
 		)
 
@@ -177,15 +158,17 @@ export default function List({ games }: { games: Game }) {
 			<motion.div
 				layout
 				key={game.id}
-				initial={{ opacity: 0, scale: 0.9 }}
-				animate={{ opacity: 1, scale: 1 }}
-				exit={{ opacity: 0, scale: 0.9 }}
-				transition={{ duration: 0.4 }}
+				initial={{ opacity: 0, y: 20 }}
+				animate={{ opacity: 1, y: 0 }}
+				exit={{ opacity: 0, y: 20 }}
+				transition={{ duration: 0.3 }}
+				className="h-full"
 			>
 				{pageSlug && pageSlug !== '[]' ? (
 					<Link
 						href={`https://store.epicgames.com/${linkPrefix}${pageSlug}`}
 						target="_blank"
+						className="block h-full"
 					>
 						{cardContent}
 					</Link>
@@ -198,74 +181,77 @@ export default function List({ games }: { games: Game }) {
 
 	const isSingleGame =
 		games.currentGames.length === 1 && games.nextGames.length === 1
+	const isTwoCurrentGames = games.currentGames.length <= 2
+	const isTwoUpcomingGames = games.nextGames.length <= 2
 
-	const renderGameList = (games: GameItem[], isCurrentGames: boolean) => (
-		<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 z-50 relative">
-			{games.length > 0 ? (
-				games.map(game => renderGameCard(game, isCurrentGames))
-			) : (
-				<p className="text-lg text-epic-gray dark:text-epic-lightGray lg:col-span-3 col-span-full text-center lg:text-left">
-					Failed to fetch offers. Check back later or check out the{' '}
-					<Link href="https://store.epicgames.com/free-games" target="_blank">
-						<span className="underline text-epic-blue">official site.</span>
-					</Link>
-				</p>
-			)}
-		</div>
-	)
-
-	const combinedView = () => (
-		<div className="grid grid-cols-2 gap-6">
-			<div className="z-50">
-				<h2 className="text-3xl font-bold mb-4 text-epic-blue dark:text-epic-blue">
-					Current
-				</h2>
-				{games.currentGames.map(game => renderGameCard(game, true))}
-			</div>
-			<div className="z-50">
-				<h2 className="text-3xl font-bold mb-4 text-epic-lightBlue dark:text-white">
-					Upcoming
-				</h2>
-				{games.nextGames.map(game => renderGameCard(game, false))}
-			</div>
-		</div>
-	)
+	const gridClassName = `grid gap-4 lg:gap-6 ${
+		isSingleGame
+			? 'grid-cols-1'
+			: isTwoCurrentGames && isTwoUpcomingGames
+			? 'grid-cols-1 sm:grid-cols-2'
+			: 'grid-cols-1 sm:grid-cols-3'
+	}`
 
 	return (
-		<div className="p-4 lg:p-8 bg-gray-100 dark:bg-epic-darkBlue sm:rounded-lg rounded-none">
-			<Tabs defaultValue="current" className="w-full lg:hidden">
-				<TabsList className="grid w-full grid-cols-2 mb-4">
-					<TabsTrigger value="current">Current</TabsTrigger>
-					<TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-				</TabsList>
-				<TabsContent value="current">
-					{renderGameList(games.currentGames, true)}
-				</TabsContent>
-				<TabsContent value="upcoming">
-					{renderGameList(games.nextGames, false)}
-				</TabsContent>
-			</Tabs>
+		<div className="min-h-[50vh] rounded-none bg-epic-black-light dark:bg-epic-black p-4 lg:rounded-lg lg:p-8">
+			{isSingleGame ? (
+				<div className={gridClassName}>
+					{games.currentGames.map(game => renderGameCard(game, true))}
+					{games.nextGames.map(game => renderGameCard(game, false))}
+				</div>
+			) : (
+				<>
+					<Tabs defaultValue="current" className="w-full sm:hidden">
+						<TabsList className="mb-6 grid w-full grid-cols-2 bg-epic-darkBlue-light dark:bg-epic-darkBlue">
+							<TabsTrigger
+								value="current"
+								className="data-[state=active]:bg-epic-blue-light data-[state=active]:text-white dark:data-[state=active]:bg-epic-blue"
+							>
+								Free Now
+							</TabsTrigger>
+							<TabsTrigger
+								value="upcoming"
+								className="data-[state=active]:bg-epic-blue-light data-[state=active]:text-white dark:data-[state=active]:bg-epic-blue"
+							>
+								Coming Soon
+							</TabsTrigger>
+						</TabsList>
+						<TabsContent value="current">
+							<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+								{games.currentGames.map(game => renderGameCard(game, true))}
+							</div>
+						</TabsContent>
+						<TabsContent value="upcoming">
+							<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+								{games.nextGames.map(game => renderGameCard(game, false))}
+							</div>
+						</TabsContent>
+					</Tabs>
 
-			<div className="hidden lg:block">
-				{isSingleGame ? (
-					<section>{combinedView()}</section>
-				) : (
-					<>
+					<div className="hidden sm:block">
 						<section>
-							<h2 className="text-3xl font-bold mb-4 text-epic-blue dark:text-epic-blue">
-								Current
-							</h2>
-							{renderGameList(games.currentGames, true)}
+							<div className="space-y-12">
+								<div>
+									<h3 className="mb-6 text-lg font-medium text-epic-lightGray-light dark:text-epic-lightGray">
+										Free Now
+									</h3>
+									<div className={gridClassName}>
+										{games.currentGames.map(game => renderGameCard(game, true))}
+									</div>
+								</div>
+								<div>
+									<h3 className="mb-6 text-lg font-medium text-epic-lightGray-light dark:text-epic-lightGray">
+										Coming Soon
+									</h3>
+									<div className={gridClassName}>
+										{games.nextGames.map(game => renderGameCard(game, false))}
+									</div>
+								</div>
+							</div>
 						</section>
-						<section className="mt-8">
-							<h2 className="text-3xl font-bold mb-4 text-epic-lightBlue dark:text-white">
-								Upcoming
-							</h2>
-							{renderGameList(games.nextGames, false)}
-						</section>
-					</>
-				)}
-			</div>
+					</div>
+				</>
+			)}
 		</div>
 	)
 }

@@ -295,8 +295,8 @@ export default function Json({ games }: { games: Game }) {
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<Button variant="ghost" className="px-2 rounded-full">
-					<FileJson2 />
+				<Button variant="ghost" className="px-2.5 rounded-full">
+					<FileJson2 className="size-5" />
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="bg-gray-100 dark:bg-epic-black max-w-3xl max-h-[90vh] overflow-hidden">
@@ -388,9 +388,9 @@ export default function Json({ games }: { games: Game }) {
 											/>
 										</div>
 									) : (
-										<Send className="size-4 sm:mr-2" />
+										<Send className="size-4 sm:mr-2 dark:text-black" />
 									)}
-									<p className="sm:block hidden">Send</p>
+									<p className="sm:block hidden dark:text-black">Send</p>
 								</Button>
 							</div>
 							<Card className="mt-4">
