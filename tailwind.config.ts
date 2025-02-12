@@ -44,12 +44,26 @@ export default {
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
 				epic: {
-					blue: '#26bbff',
-					lightBlue: '#2A2A2A',
-					darkBlue: '#1A1A1A',
-					black: '#121216',
-					gray: '#2A2A2A',
-					lightGray: '#BEBEBE'
+					blue: {
+						DEFAULT: '#34b8fc',
+						light: '#0078f2'
+					},
+					darkBlue: {
+						DEFAULT: '#1A1A1A',
+						light: '#f5f5f5'
+					},
+					black: {
+						DEFAULT: '#101014',
+						light: '#ffffff'
+					},
+					gray: {
+						DEFAULT: '#202024',
+						light: '#e4e4e4'
+					},
+					lightGray: {
+						DEFAULT: '#BEBEBE',
+						light: '#666666'
+					}
 				},
 				chart: {
 					'1': 'hsl(var(--chart-1))',
