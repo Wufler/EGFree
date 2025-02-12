@@ -14,6 +14,7 @@ export const GET = async () => {
 				img.type === 'VaultClosed' ||
 				img.type === 'DieselStoreFrontWide'
 		)?.url
+		const isAddOn = game.offerType === 'ADD_ON'
 
 		return (
 			<div
@@ -28,8 +29,27 @@ export const GET = async () => {
 					backgroundColor: 'white',
 					borderRadius: '8px',
 					margin: '0 16px',
+					position: 'relative',
 				}}
 			>
+				{isAddOn && (
+					<div
+						style={{
+							position: 'absolute',
+							top: '8px',
+							right: '8px',
+							backgroundColor: '#0070f3',
+							color: 'white',
+							padding: '4px 8px',
+							borderRadius: '4px',
+							fontSize: '12px',
+							fontWeight: 'bold',
+							zIndex: 10,
+						}}
+					>
+						ADD-ON
+					</div>
+				)}
 				{gameImage ? (
 					// eslint-disable-next-line
 					<img
@@ -71,6 +91,10 @@ export const GET = async () => {
 						marginTop: '12px',
 						color: '#000',
 						textAlign: 'center',
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'center',
+						gap: '4px',
 					}}
 				>
 					{game.title}

@@ -8,10 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { calculateTimeLeft } from '@/lib/calculateTime'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import { Calendar, Clock, Gift } from 'lucide-react'
+import { Calendar, Clock, Gift, Puzzle } from 'lucide-react'
 import Image from 'next/image'
 
 export default function List({ games }: { games: Game }) {
+	console.log(games)
 	const [timeLeft] = useState<{ [key: string]: string }>({})
 	const router = useRouter()
 	const hasToastShown = useRef(false)
