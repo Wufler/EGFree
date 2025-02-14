@@ -397,10 +397,13 @@ export default function Json({ games }: { games: Game }) {
 					<FileJson2 className="size-5" />
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+			<DialogContent
+				onOpenAutoFocus={e => e.preventDefault()}
+				className="max-w-4xl max-h-[90vh] overflow-hidden p-0"
+			>
 				<div className="flex h-[90vh] flex-col lg:flex-row">
 					<div className="w-full lg:w-[400px] border-b lg:border-b-0 lg:border-r flex flex-col">
-						<div className="p-6 border-b">
+						<div className="p-6 lg:border-b">
 							<DialogTitle>JSON Data</DialogTitle>
 							<DialogDescription className="mt-1.5">
 								This tool is designed to create Discord embeds.
@@ -409,15 +412,21 @@ export default function Json({ games }: { games: Game }) {
 
 						<div className="block lg:hidden">
 							<Tabs defaultValue="settings" className="w-full">
-								<TabsList className="w-full rounded-none">
-									<TabsTrigger value="settings" className="flex-1">
+								<TabsList className="w-full h-auto rounded-none border-b border-border bg-transparent p-0">
+									<TabsTrigger
+										value="settings"
+										className="flex-1 relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
+									>
 										Settings
 									</TabsTrigger>
-									<TabsTrigger value="preview" className="flex-1">
+									<TabsTrigger
+										value="preview"
+										className="flex-1 relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
+									>
 										Preview
 									</TabsTrigger>
 								</TabsList>
-								<TabsContent value="settings" className="m-0">
+								<TabsContent value="settings">
 									<ScrollArea className="h-[calc(90vh-10rem)] p-6">
 										<div className="space-y-6">
 											<div className="space-y-6">
@@ -587,7 +596,7 @@ export default function Json({ games }: { games: Game }) {
 										</div>
 									</ScrollArea>
 								</TabsContent>
-								<TabsContent value="preview" className="m-0">
+								<TabsContent value="preview">
 									<ScrollArea className="h-[calc(90vh-10rem)] p-6">
 										<div className="space-y-4">
 											<div className="flex gap-2">

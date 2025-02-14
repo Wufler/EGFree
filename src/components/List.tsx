@@ -215,16 +215,16 @@ export default function List({ games }: { games: Game }) {
 			) : (
 				<>
 					<Tabs defaultValue="current" className="w-full sm:hidden">
-						<TabsList className="mb-6 grid w-full grid-cols-2 bg-epic-darkBlue-light dark:bg-epic-darkBlue">
+						<TabsList className="w-full h-auto rounded-none border-b border-border bg-transparent p-0">
 							<TabsTrigger
 								value="current"
-								className="data-[state=active]:bg-epic-blue-light data-[state=active]:text-white dark:data-[state=active]:bg-epic-blue"
+								className="flex-1 relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
 							>
 								Free Now
 							</TabsTrigger>
 							<TabsTrigger
 								value="upcoming"
-								className="data-[state=active]:bg-epic-blue-light data-[state=active]:text-white dark:data-[state=active]:bg-epic-blue"
+								className="flex-1 relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
 							>
 								Coming Soon
 							</TabsTrigger>
