@@ -403,7 +403,7 @@ export default function Json({ games }: { games: Game }) {
 			>
 				<div className="flex h-[90vh] flex-col lg:flex-row">
 					<div className="w-full lg:w-[400px] border-b lg:border-b-0 lg:border-r flex flex-col">
-						<div className="p-6 lg:border-b">
+						<div className="p-6 pb-4 lg:border-b">
 							<DialogTitle>JSON Data</DialogTitle>
 							<DialogDescription className="mt-1.5">
 								This tool is designed to create Discord embeds.
@@ -427,7 +427,7 @@ export default function Json({ games }: { games: Game }) {
 									</TabsTrigger>
 								</TabsList>
 								<TabsContent value="settings">
-									<ScrollArea className="h-[calc(90vh-10rem)] p-6">
+									<ScrollArea className="h-[calc(90vh-10rem)] p-4 pt-2">
 										<div className="space-y-6">
 											<div className="space-y-6">
 												<div className="space-y-3">
@@ -597,9 +597,9 @@ export default function Json({ games }: { games: Game }) {
 									</ScrollArea>
 								</TabsContent>
 								<TabsContent value="preview">
-									<ScrollArea className="h-[calc(90vh-10rem)] p-6">
+									<ScrollArea className="h-[calc(90vh-10rem)] p-4 pt-2">
 										<div className="space-y-4">
-											<div className="flex gap-2">
+											<div className="flex sm:flex-row flex-col gap-2">
 												<Button
 													onClick={copyToClipboard}
 													className="w-full"

@@ -215,7 +215,7 @@ export default function List({ games }: { games: Game }) {
 			) : (
 				<>
 					<Tabs defaultValue="current" className="w-full sm:hidden">
-						<TabsList className="w-full h-auto rounded-none border-b border-border bg-transparent p-0">
+						<TabsList className="w-full h-auto rounded-none bg-transparent !pb-2 p-0">
 							<TabsTrigger
 								value="current"
 								className="flex-1 relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
