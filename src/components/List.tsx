@@ -12,7 +12,6 @@ import { Calendar, Clock, Gift } from 'lucide-react'
 import Image from 'next/image'
 
 export default function List({ games }: { games: Game }) {
-	console.log(games)
 	const [timeLeft] = useState<{ [key: string]: string }>({})
 	const router = useRouter()
 	const hasToastShown = useRef(false)
@@ -141,13 +140,26 @@ export default function List({ games }: { games: Game }) {
 								<span className="font-bold text-foreground text-white">Free</span>
 							)}
 							{game.price.totalPrice.originalPrice !== 0 && (
-								<span
-									className={`text-sm text-epic-lightGray ${
-										isCurrentGame ? 'line-through opacity-70' : ''
-									}`}
-								>
-									{game.price.totalPrice.fmtPrice.originalPrice}
-								</span>
+								<>
+									{!isCurrentGame &&
+										game.price.totalPrice.discountPrice !==
+											game.price.totalPrice.originalPrice && (
+											<span className="text-sm font-bold">
+												{game.price.totalPrice.fmtPrice.discountPrice}
+											</span>
+										)}
+									<span
+										className={`text-sm text-epic-lightGray ${
+											isCurrentGame ||
+											game.price.totalPrice.discountPrice !==
+												game.price.totalPrice.originalPrice
+												? 'line-through opacity-70'
+												: ''
+										}`}
+									>
+										{game.price.totalPrice.fmtPrice.originalPrice}
+									</span>
+								</>
 							)}
 						</div>
 					</div>
@@ -231,7 +243,7 @@ export default function List({ games }: { games: Game }) {
 
 					<div className="hidden sm:block">
 						<section>
-							<div className="space-y-12">
+							<div className="space-y-6">
 								<div>
 									<h3 className="mb-6 text-lg font-medium text-epic-lightGray-light dark:text-epic-lightGray">
 										Free Now

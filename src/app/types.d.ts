@@ -50,10 +50,8 @@ type Game = {
     nextGames: GameItem[]
 }
 
-interface EgFreeSettings {
-    includeCurrent: boolean
-    includeUpcoming: boolean
-    includeAddOns: boolean
+type EgFreeSettings = {
+    selectedGames: { [key: string]: boolean }
     embedContent: string
     embedColor: string
     includeFooter: boolean

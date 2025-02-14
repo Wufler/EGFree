@@ -15,7 +15,7 @@ export default async function Home() {
 		<main className="flex min-h-dvh flex-col bg-epic-black-light dark:bg-epic-black text-foreground dark:text-white">
 			<div className="container mx-auto flex flex-grow flex-col">
 				<header className="z-50 border-b border-gray-200/80 dark:border-white/10 bg-epic-black-light/95 dark:bg-epic-black/95 px-4 backdrop-blur-md">
-					<div className="container mx-auto flex flex-col sm:flex-row h-auto sm:h-20 items-center justify-between py-6 sm:py-0 gap-4 sm:gap-0">
+					<div className="container mx-auto flex flex-col sm:flex-row h-auto sm:h-20 items-center justify-between py-5 sm:py-0 gap-4 sm:gap-0">
 						<Link
 							href="https://store.epicgames.com/free-games"
 							target="_blank"
@@ -49,7 +49,7 @@ export default async function Home() {
 
 				<List games={games} />
 
-				<footer className="px-4 mt-auto border-t border-gray-200/80 dark:border-white/10 py-6 text-center">
+				<footer className="px-4 mt-auto border-t border-gray-200/80 dark:border-white/10 py-5 text-center">
 					<div className="text-sm text-epic-lightGray-light dark:text-epic-lightGray">
 						2025, Wolfey
 					</div>
