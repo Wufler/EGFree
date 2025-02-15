@@ -60,3 +60,40 @@ type EgFreeSettings = {
     webhookUrl: string
     showDiscordPreview: boolean
 }
+
+type EmbedField = {
+    name: string
+    value: string
+    inline?: boolean
+}
+
+type EmbedAuthor = {
+    name: string
+    url?: string
+    icon_url?: string
+}
+
+type EmbedFooter = {
+    text: string
+    icon_url?: string
+}
+
+type EmbedImage = {
+    url: string
+}
+
+type EmbedData = {
+    content?: string
+    title?: string
+    description?: string
+    url?: string
+    color?: string
+    fields: EmbedField[]
+    footer?: EmbedFooter
+    timestamp?: string
+    image?: EmbedImage
+    thumbnail?: EmbedImage
+    author?: EmbedAuthor
+}
+
+type EmbedValue = string | EmbedField[] | EmbedFooter | EmbedImage | EmbedAuthor | { url: string } | number

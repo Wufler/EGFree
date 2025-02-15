@@ -5,7 +5,6 @@ export async function getEpicFreeGames(): Promise<Game> {
 
         const games = api?.data?.Catalog?.searchStore?.elements || []
 
-        console.log(games)
         const currentGames: GameItem[] = []
         const nextGames: GameItem[] = []
 

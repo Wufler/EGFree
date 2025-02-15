@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from 'next-themes'
 import Snow from '@/components/Snow'
 import { getEpicFreeGames } from '@/lib/getGames'
+import Loglib from '@loglib/tracker/react'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -23,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
 			url: 'https://free.wolfey.me/',
 			images: [
 				{
-					url: `/api/og`,
+					url: `/api/og?date=${Date.now()}`,
 					width: 1280,
 					height: 720,
 					alt: 'Epic Games Free Games',
@@ -52,6 +53,7 @@ export default function RootLayout({
 					{children}
 					<Snow />
 					<Toaster position="bottom-center" />
+					<Loglib config={{ id: 'egfree' }} />
 				</ThemeProvider>
 			</body>
 		</html>
