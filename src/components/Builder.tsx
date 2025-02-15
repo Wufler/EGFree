@@ -81,7 +81,11 @@ export default function EmbedBuilder() {
 	const [isVisible, setIsVisible] = useState(false)
 	const [isLoading, setIsLoading] = useState(false)
 
-	const updateEmbed = (embedIndex: number, key: string, value: any) => {
+	const updateEmbed = (
+		embedIndex: number,
+		key: keyof typeof defaultEmbed,
+		value: (typeof defaultEmbed)[keyof typeof defaultEmbed]
+	) => {
 		setEmbedData(prev => ({
 			...prev,
 			embeds: prev.embeds.map((embed, i) =>
@@ -90,7 +94,10 @@ export default function EmbedBuilder() {
 		}))
 	}
 
-	const updateMetadata = (key: string, value: any) => {
+	const updateMetadata = (
+		key: keyof Omit<typeof embedData, 'embeds'>,
+		value: string
+	) => {
 		setEmbedData(prev => ({
 			...prev,
 			[key]: value,
@@ -253,10 +260,6 @@ export default function EmbedBuilder() {
 		} catch {
 			console.error('Failed to paste text')
 		}
-	}
-
-	const handleColorChange = (color: string) => {
-		updateEmbed(0, 'color', parseInt(color.replace('#', ''), 16))
 	}
 
 	return (
