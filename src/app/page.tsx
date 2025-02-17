@@ -1,6 +1,6 @@
 import Json from '@/components/Json'
 import List from '@/components/List'
-import ModeToggle from '@/components/ModeToggle'
+import Theme from '@/components/Theme'
 import { Button } from '@/components/ui/button'
 import Github from '@/components/ui/github'
 import { getEpicFreeGames } from '@/lib/getGames'
@@ -32,7 +32,7 @@ export default async function Home() {
 						<div className="flex items-center gap-2 sm:gap-4">
 							<Json games={games} />
 							<div className="h-6 w-[1px] bg-gray-200 dark:bg-white/10" />
-							<ModeToggle />
+							<Theme />
 							<Button
 								asChild
 								variant="ghost"

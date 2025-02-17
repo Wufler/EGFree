@@ -9,6 +9,7 @@ import {
 	Check,
 	Loader2,
 	Save,
+	ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -38,9 +39,10 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import DiscordPreview from './DiscordEmbed'
+import DiscordPreview from './Embed'
 import { Checkbox } from './ui/checkbox'
 import Discord from './ui/discord'
+import Link from 'next/link'
 
 function Switches({
 	id,
@@ -281,7 +283,7 @@ export default function Json({ games }: { games: Game }) {
 					],
 					author: {
 						name: 'Epic Games Store',
-						url: 'https://egfreegames.vercel.app/',
+						url: 'https://free.wolfey.me/',
 						icon_url: 'https://wolfey.s-ul.eu/YcyMXrI1',
 					},
 					...(settings.includeFooter && {
@@ -394,7 +396,8 @@ export default function Json({ games }: { games: Game }) {
 		<Dialog>
 			<DialogTrigger asChild>
 				<Button variant="ghost" className="px-2.5 rounded-full">
-					<FileJson2 className="size-5" />
+					<FileJson2 className="size-5 mr-2" />
+					Builder
 				</Button>
 			</DialogTrigger>
 			<DialogContent
@@ -404,7 +407,12 @@ export default function Json({ games }: { games: Game }) {
 				<div className="flex h-[90vh] flex-col lg:flex-row">
 					<div className="w-full lg:w-[400px] border-b lg:border-b-0 lg:border-r flex flex-col">
 						<div className="p-6 pb-4 lg:border-b">
-							<DialogTitle>JSON Data</DialogTitle>
+							<DialogTitle className="flex items-center justify-between">
+								JSON Data
+								<Link href="/builder">
+									<ExternalLink className="size-5" />
+								</Link>
+							</DialogTitle>
 							<DialogDescription className="mt-1.5">
 								This tool is designed to create Discord embeds.
 							</DialogDescription>
@@ -513,11 +521,34 @@ export default function Json({ games }: { games: Game }) {
 
 												<div className="space-y-3">
 													<Label className="text-sm font-medium">Message Content</Label>
-													<Input
-														placeholder={defaultContent}
-														value={settings.embedContent}
-														onChange={e => updateSetting('embedContent', e.target.value)}
-													/>
+													<div className="flex items-center gap-2">
+														<Input
+															placeholder={defaultContent}
+															value={settings.embedContent}
+															onChange={e => updateSetting('embedContent', e.target.value)}
+														/>
+														<Button
+															variant="outline"
+															onClick={async () => {
+																try {
+																	const text = await navigator.clipboard.readText()
+																	if (/^\d+$/.test(text)) {
+																		updateSetting(
+																			'embedContent',
+																			`${settings.embedContent}<@&${text}>`
+																		)
+																	} else {
+																		toast.error('Clipboard content must be a role ID')
+																	}
+																} catch (err) {
+																	console.error('Failed to read clipboard:', err)
+																	toast.error('Failed to read clipboard')
+																}
+															}}
+														>
+															@&
+														</Button>
+													</div>
 												</div>
 
 												{games.currentGames.length > 0 && (
@@ -630,7 +661,7 @@ export default function Json({ games }: { games: Game }) {
 											{settings.showDiscordPreview ? (
 												<DiscordPreview games={games} settings={settings} />
 											) : (
-												<pre className="bg-secondary text-secondary-foreground p-4 rounded-md overflow-auto text-sm whitespace-pre-wrap break-all">
+												<pre className="bg-secondary text-secondary-foreground p-4 rounded-md overflow-auto text-xs whitespace-pre-wrap break-all">
 													{JSON.stringify(jsonData, null, 2)}
 												</pre>
 											)}
@@ -723,13 +754,36 @@ export default function Json({ games }: { games: Game }) {
 										</Button>
 									</div>
 
-									<div className="space-y-3">
+									<div className="space-y-2">
 										<Label className="text-sm font-medium">Message Content</Label>
-										<Input
-											placeholder={defaultContent}
-											value={settings.embedContent}
-											onChange={e => updateSetting('embedContent', e.target.value)}
-										/>
+										<div className="flex items-center gap-2">
+											<Input
+												placeholder={defaultContent}
+												value={settings.embedContent}
+												onChange={e => updateSetting('embedContent', e.target.value)}
+											/>
+											<Button
+												variant="outline"
+												onClick={async () => {
+													try {
+														const text = await navigator.clipboard.readText()
+														if (/^\d+$/.test(text)) {
+															updateSetting(
+																'embedContent',
+																`${settings.embedContent}<@&${text}>`
+															)
+														} else {
+															toast.error('Clipboard content must be a role ID (numbers only)')
+														}
+													} catch (err) {
+														console.error('Failed to read clipboard:', err)
+														toast.error('Failed to read clipboard')
+													}
+												}}
+											>
+												@
+											</Button>
+										</div>
 									</div>
 
 									{games.currentGames.length > 0 && (
@@ -834,7 +888,7 @@ export default function Json({ games }: { games: Game }) {
 								{settings.showDiscordPreview ? (
 									<DiscordPreview games={games} settings={settings} />
 								) : (
-									<pre className="bg-secondary text-secondary-foreground p-4 rounded-md overflow-auto text-sm whitespace-pre-wrap break-all">
+									<pre className="bg-secondary text-secondary-foreground p-4 rounded-md overflow-auto text-xs whitespace-pre-wrap break-all">
 										{JSON.stringify(jsonData, null, 2)}
 									</pre>
 								)}

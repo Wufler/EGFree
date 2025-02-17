@@ -31,7 +31,6 @@ export const GET = async () => {
 				}}
 			>
 				{gameImage ? (
-					// eslint-disable-next-line
 					<img
 						src={gameImage}
 						alt={game.title}
