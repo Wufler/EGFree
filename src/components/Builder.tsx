@@ -423,15 +423,6 @@ export default function EmbedBuilder() {
 
 											<Separator />
 
-											<Accordion type="single" collapsible>
-												<AccordionItem value="item-1">
-													<AccordionTrigger>Is it accessible?</AccordionTrigger>
-													<AccordionContent>
-														Yes. It adheres to the WAI-ARIA design pattern.
-													</AccordionContent>
-												</AccordionItem>
-											</Accordion>
-
 											<div className="space-y-2">
 												<div className="flex items-center justify-between">
 													<Label>Embeds</Label>
