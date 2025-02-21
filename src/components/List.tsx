@@ -98,6 +98,7 @@ export default function List({ games }: { games: Game }) {
 							}
 							width={1280}
 							height={720}
+							priority
 							alt={game.title}
 							className={`h-full w-full object-cover transition-all duration-500 group-hover:scale-105 ${
 								timeLeft[game.id] === 'Expired' ? 'grayscale' : ''
@@ -199,7 +200,7 @@ export default function List({ games }: { games: Game }) {
 
 	const gridClassName = `grid gap-4 lg:gap-6 ${
 		isSingleGame
-			? 'grid-cols-1'
+			? 'grid-cols-1 sm:grid-cols-2'
 			: isTwoCurrentGames && isTwoUpcomingGames
 			? 'grid-cols-1 sm:grid-cols-2'
 			: 'grid-cols-1 sm:grid-cols-3'

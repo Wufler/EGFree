@@ -773,7 +773,7 @@ export default function Json({ games }: { games: Game }) {
 																`${settings.embedContent}<@&${text}>`
 															)
 														} else {
-															toast.error('Clipboard content must be a role ID (numbers only)')
+															toast.error('Clipboard content must be a role ID')
 														}
 													} catch (err) {
 														console.error('Failed to read clipboard:', err)
@@ -781,7 +781,7 @@ export default function Json({ games }: { games: Game }) {
 													}
 												}}
 											>
-												@
+												@&
 											</Button>
 										</div>
 									</div>
