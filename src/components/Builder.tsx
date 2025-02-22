@@ -69,6 +69,18 @@ const defaultEmbed = {
 	},
 }
 
+const limits = {
+	EMBED_TITLE: 256,
+	EMBED_DESCRIPTION: 2048,
+	EMBED_FIELDS: 25,
+	FIELD_NAME: 256,
+	FIELD_VALUE: 1024,
+	FOOTER_TEXT: 2048,
+	AUTHOR_NAME: 256,
+	TOTAL_EMBED_CHARS: 6000,
+	MAX_EMBEDS: 10,
+}
+
 export default function EmbedBuilder() {
 	const [embedData, setEmbedData] = useState({
 		content: '<@&847939354978811924>',
@@ -85,11 +97,46 @@ export default function EmbedBuilder() {
 	const [showDiscordPreview, setShowDiscordPreview] = useState(true)
 	const [messageId, setMessageId] = useState('')
 
+	const calculateEmbedCharCount = (embed: typeof defaultEmbed) => {
+		let count = 0
+		if (embed.author?.name) count += embed.author.name.length
+		if (embed.footer?.text) count += embed.footer.text.length
+		embed.fields.forEach(field => {
+			count += (field.name?.length || 0) + (field.value?.length || 0)
+		})
+		return count
+	}
+
 	const updateEmbed = (
 		embedIndex: number,
 		key: keyof typeof defaultEmbed,
 		value: (typeof defaultEmbed)[keyof typeof defaultEmbed]
 	) => {
+		if (key === 'author' && (value as any)?.name?.length > limits.AUTHOR_NAME) {
+			toast.error('Author name too long', {
+				description: 'Author names are limited to 256 characters.',
+			})
+			return
+		}
+		if (key === 'footer' && (value as any)?.text?.length > limits.FOOTER_TEXT) {
+			toast.error('Footer text too long', {
+				description: 'Footer text is limited to 2048 characters.',
+			})
+			return
+		}
+
+		const newEmbed = {
+			...embedData.embeds[embedIndex],
+			[key]: value,
+		}
+		const totalChars = calculateEmbedCharCount(newEmbed)
+		if (totalChars > limits.TOTAL_EMBED_CHARS) {
+			toast.error('Embed too large', {
+				description: 'Total embed characters cannot exceed 6000.',
+			})
+			return
+		}
+
 		setEmbedData(prev => ({
 			...prev,
 			embeds: prev.embeds.map((embed, i) =>
@@ -109,6 +156,12 @@ export default function EmbedBuilder() {
 	}
 
 	const addEmbed = () => {
+		if (embedData.embeds.length >= limits.MAX_EMBEDS) {
+			toast.error('Cannot add more embeds', {
+				description: 'Discord webhooks are limited to 10 embeds per message.',
+			})
+			return
+		}
 		setEmbedData(prev => ({
 			...prev,
 			embeds: [...prev.embeds, { ...defaultEmbed }],
@@ -123,6 +176,13 @@ export default function EmbedBuilder() {
 	}
 
 	const addField = (embedIndex: number) => {
+		const embed = embedData.embeds[embedIndex]
+		if (embed.fields.length >= limits.EMBED_FIELDS) {
+			toast.error('Cannot add more fields', {
+				description: 'Discord embeds are limited to 25 fields.',
+			})
+			return
+		}
 		setEmbedData(prev => ({
 			...prev,
 			embeds: prev.embeds.map((embed, i) =>
@@ -141,6 +201,33 @@ export default function EmbedBuilder() {
 		fieldIndex: number,
 		field: Partial<(typeof embedData.embeds)[0]['fields'][0]>
 	) => {
+		if (field.name && field.name.length > limits.FIELD_NAME) {
+			toast.error('Field name too long', {
+				description: 'Field names are limited to 256 characters.',
+			})
+			return
+		}
+		if (field.value && field.value.length > limits.FIELD_VALUE) {
+			toast.error('Field value too long', {
+				description: 'Field values are limited to 1024 characters.',
+			})
+			return
+		}
+
+		const newEmbed = {
+			...embedData.embeds[embedIndex],
+			fields: embedData.embeds[embedIndex].fields.map((f, j) =>
+				j === fieldIndex ? { ...f, ...field } : f
+			),
+		}
+		const totalChars = calculateEmbedCharCount(newEmbed)
+		if (totalChars > limits.TOTAL_EMBED_CHARS) {
+			toast.error('Embed too large', {
+				description: 'Total embed characters cannot exceed 6000.',
+			})
+			return
+		}
+
 		setEmbedData(prev => ({
 			...prev,
 			embeds: prev.embeds.map((embed, i) =>
@@ -482,6 +569,9 @@ export default function EmbedBuilder() {
 																				})
 																			}
 																		/>
+																		<div className="flex justify-end text-xs text-muted-foreground">
+																			{embed.author?.name?.length || 0}/{limits.AUTHOR_NAME}
+																		</div>
 																		<Input
 																			placeholder="URL"
 																			value={embed.author?.url}
@@ -554,6 +644,9 @@ export default function EmbedBuilder() {
 																							})
 																						}
 																					/>
+																					<div className="flex justify-end text-xs text-muted-foreground">
+																						{field.value?.length || 0}/{limits.FIELD_VALUE}
+																					</div>
 																					<div className="flex items-center space-x-2">
 																						<Switch
 																							id={`field-${embedIndex}-${fieldIndex}-inline`}
@@ -602,6 +695,9 @@ export default function EmbedBuilder() {
 																				})
 																			}
 																		/>
+																		<div className="flex justify-end text-xs text-muted-foreground">
+																			{embed.footer?.text?.length || 0}/{limits.FOOTER_TEXT}
+																		</div>
 																	</div>
 																</div>
 
@@ -749,6 +845,10 @@ export default function EmbedBuilder() {
 																			</div>
 																		</div>
 																	</div>
+																</div>
+																<div className="mt-4 flex justify-end text-xs text-muted-foreground">
+																	Total characters: {calculateEmbedCharCount(embed)}/
+																	{limits.TOTAL_EMBED_CHARS}
 																</div>
 															</div>
 														</AccordionContent>
@@ -1088,6 +1188,9 @@ export default function EmbedBuilder() {
 																		})
 																	}
 																/>
+																<div className="flex justify-end text-xs text-muted-foreground">
+																	{embed.author?.name?.length || 0}/{limits.AUTHOR_NAME}
+																</div>
 																<Input
 																	placeholder="URL"
 																	value={embed.author?.url}
@@ -1160,6 +1263,9 @@ export default function EmbedBuilder() {
 																					})
 																				}
 																			/>
+																			<div className="flex justify-end text-xs text-muted-foreground">
+																				{field.value?.length || 0}/{limits.FIELD_VALUE}
+																			</div>
 																			<div className="flex items-center space-x-2">
 																				<Switch
 																					id={`field-${embedIndex}-${fieldIndex}-inline`}
@@ -1206,6 +1312,9 @@ export default function EmbedBuilder() {
 																		})
 																	}
 																/>
+																<div className="flex justify-end text-xs text-muted-foreground">
+																	{embed.footer?.text?.length || 0}/{limits.FOOTER_TEXT}
+																</div>
 															</div>
 														</div>
 
@@ -1351,6 +1460,10 @@ export default function EmbedBuilder() {
 																	</div>
 																</div>
 															</div>
+														</div>
+														<div className="mt-4 flex justify-end text-xs text-muted-foreground">
+															Total characters: {calculateEmbedCharCount(embed)}/
+															{limits.TOTAL_EMBED_CHARS}
 														</div>
 													</div>
 												</AccordionContent>

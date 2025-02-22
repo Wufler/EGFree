@@ -1,6 +1,6 @@
 export async function getEpicFreeGames(): Promise<Game> {
     try {
-        const logs = false;
+        const logs = false
         const response = await fetch('https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions')
         const api = await response.json()
 
@@ -13,57 +13,65 @@ export async function getEpicFreeGames(): Promise<Game> {
             if (!game.promotions) return
             if (!game.price) return
 
-            const { promotions, price } = game
-            const { promotionalOffers, upcomingPromotionalOffers } = promotions
+            const { promotionalOffers, upcomingPromotionalOffers } = game.promotions
             const now = new Date().getTime()
 
-            const currentOffers = promotionalOffers?.[0]?.promotionalOffers || []
-            const freeCurrentOffers = currentOffers.filter(offer => offer.discountSetting?.discountPercentage === 0)
-            const sortedCurrentOffers = [...freeCurrentOffers].sort((a, b) =>
-                new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
-            )
+            const allOffers = promotionalOffers?.[0]?.promotionalOffers || []
+            const allUpcomingOffers = upcomingPromotionalOffers?.[0]?.promotionalOffers || []
 
-            const currentFreeOffer = sortedCurrentOffers.find(offer => {
-                const start = new Date(offer.startDate).getTime()
-                const end = new Date(offer.endDate).getTime()
-                const isFree = offer.discountSetting?.discountPercentage === 0
-                const isCurrently = now >= start && now < end
+            const currentFreeOffer = allOffers
+                .filter(offer => offer.discountSetting?.discountPercentage === 0)
+                .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+                .find(offer => {
+                    const start = new Date(offer.startDate).getTime()
+                    const end = new Date(offer.endDate).getTime()
+                    return now >= start && now < end
+                })
 
-                if (logs) {
-                    console.log({
-                        gameName: game.title,
-                        offerType: 'current',
-                        start: new Date(offer.startDate).toLocaleString(),
-                        end: new Date(offer.endDate).toLocaleString(),
-                        discountPercentage: offer.discountSetting?.discountPercentage,
-                        originalPrice: price.totalPrice.originalPrice,
-                        isFree,
-                        isCurrently,
-                        isValid: isFree && isCurrently
-                    })
-                }
+            const nextFreeOffer = allUpcomingOffers
+                .filter(offer => offer.discountSetting?.discountPercentage === 0)
+                .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+                .find(offer => {
+                    const start = new Date(offer.startDate).getTime()
+                    return now < start
+                })
 
-                return isFree && isCurrently
-            })
+            const currentOfferStatus = currentFreeOffer ? '✅ Currently FREE!' : 'Not currently free'
+            const upcomingOfferStatus = nextFreeOffer ? '🔜 Will be FREE soon!' : 'No upcoming free offers'
 
-            if (currentFreeOffer) {
-                currentGames.push(game as GameItem)
+            const freeCurrentOffers = allOffers
+                .filter(o => o.discountSetting?.discountPercentage === 0)
+                .map(o => `[${o.startDate} to ${o.endDate}]: FREE`)
+
+            const freeUpcomingOffers = allUpcomingOffers
+                .filter(o => o.discountSetting?.discountPercentage === 0)
+                .map(o => `[${o.startDate} to ${o.endDate}]: Will be FREE`)
+
+            if (logs) {
+                console.log(
+                    `\nGame: ${game.title}\n` +
+                    `Status: ${currentOfferStatus} | ${upcomingOfferStatus}\n` +
+                    `Current Free Offers: ${freeCurrentOffers.join(', ') || 'None'}\n` +
+                    `Upcoming Free Offers: ${freeUpcomingOffers.join(', ') || 'None'}`
+                )
             }
 
-            const nextOffers = upcomingPromotionalOffers?.[0]?.promotionalOffers || []
-            const freeNextOffers = nextOffers.filter(offer => offer.discountSetting?.discountPercentage === 0)
-            const sortedNextOffers = [...freeNextOffers].sort((a, b) =>
-                new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-            )
-
-            const nextFreeOffer = sortedNextOffers.find(offer => {
-                const start = new Date(offer.startDate).getTime()
-                const isFree = offer.discountSetting?.discountPercentage === 0
-                const isUpcoming = now < start
-                return isFree && isUpcoming
-            })
-
+            if (currentFreeOffer) {
+                game.promotions = {
+                    ...game.promotions,
+                    promotionalOffers: [{
+                        promotionalOffers: [currentFreeOffer]
+                    }]
+                }
+                currentGames.push(game as GameItem)
+            }
             if (nextFreeOffer) {
+                game.promotions = {
+                    ...game.promotions,
+                    upcomingPromotionalOffers: [{
+                        promotionalOffers: [nextFreeOffer]
+                    }]
+                }
                 nextGames.push(game as GameItem)
             }
         })
