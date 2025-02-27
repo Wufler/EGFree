@@ -112,13 +112,23 @@ export default function EmbedBuilder() {
 		key: keyof typeof defaultEmbed,
 		value: (typeof defaultEmbed)[keyof typeof defaultEmbed]
 	) => {
-		if (key === 'author' && (value as any)?.name?.length > limits.AUTHOR_NAME) {
+		if (
+			key === 'author' &&
+			typeof value === 'object' &&
+			'name' in value &&
+			value.name?.length > limits.AUTHOR_NAME
+		) {
 			toast.error('Author name too long', {
 				description: 'Author names are limited to 256 characters.',
 			})
 			return
 		}
-		if (key === 'footer' && (value as any)?.text?.length > limits.FOOTER_TEXT) {
+		if (
+			key === 'footer' &&
+			typeof value === 'object' &&
+			'text' in value &&
+			value.text?.length > limits.FOOTER_TEXT
+		) {
 			toast.error('Footer text too long', {
 				description: 'Footer text is limited to 2048 characters.',
 			})

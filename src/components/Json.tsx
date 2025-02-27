@@ -104,23 +104,34 @@ export default function Json({ games }: { games: Game }) {
 							? await decrypt(parsed.webhookUrl)
 							: ''
 
-						const initialSelectedGames: Record<string, boolean> = {
-							...parsed.selectedGames,
-						}
+						const validGameIds = new Set([
+							...games.currentGames.map(game => game.id),
+							...games.nextGames.map(game => game.id),
+						])
+
+						const cleanedSelectedGames: Record<string, boolean> = {}
+						Object.entries(parsed.selectedGames || {}).forEach(
+							([gameId, isSelected]) => {
+								if (validGameIds.has(gameId)) {
+									cleanedSelectedGames[gameId] = isSelected as boolean
+								}
+							}
+						)
+
 						games.currentGames.forEach(game => {
-							if (initialSelectedGames[game.id] === undefined) {
-								initialSelectedGames[game.id] = true
+							if (cleanedSelectedGames[game.id] === undefined) {
+								cleanedSelectedGames[game.id] = true
 							}
 						})
 						games.nextGames.forEach(game => {
-							if (initialSelectedGames[game.id] === undefined) {
-								initialSelectedGames[game.id] = false
+							if (cleanedSelectedGames[game.id] === undefined) {
+								cleanedSelectedGames[game.id] = false
 							}
 						})
 
 						setSettings({
 							...parsed,
-							selectedGames: initialSelectedGames,
+							selectedGames: cleanedSelectedGames,
 							webhookUrl: decryptedWebhook,
 						})
 						setWebhookUrl(decryptedWebhook)
@@ -219,7 +230,7 @@ export default function Json({ games }: { games: Game }) {
 							.startDate
 				const endDate = new Date(dateInfo)
 				const pageSlug =
-					game.productSlug || game.offerMappings?.[0]?.pageSlug || game.urlSlug
+					game.urlSlug || game.offerMappings?.[0]?.pageSlug || game.productSlug
 				const isBundleGame = game.categories?.some(
 					(category: { path: string }) => category.path === 'bundles'
 				)
@@ -373,7 +384,7 @@ export default function Json({ games }: { games: Game }) {
 				>
 					<Checkbox
 						id={game.id}
-						checked={settings.selectedGames[game.id] ?? true}
+						checked={settings.selectedGames[game.id] ?? false}
 						onCheckedChange={checked => {
 							updateSetting('selectedGames', {
 								...settings.selectedGames,

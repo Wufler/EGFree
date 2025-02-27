@@ -81,7 +81,7 @@ export default function DiscordPreview({
 									.startDate
 						const endDate = new Date(dateInfo)
 						const pageSlug =
-							game.productSlug || game.offerMappings?.[0]?.pageSlug || game.urlSlug
+							game.urlSlug || game.offerMappings?.[0]?.pageSlug || game.productSlug
 						const isBundleGame = game.categories?.some(
 							(category: { path: string }) => category.path === 'bundles'
 						)
