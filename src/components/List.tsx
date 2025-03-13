@@ -61,7 +61,7 @@ export default function List({ games }: { games: Game }) {
 
 	const renderGameCard = (game: GameItem, isCurrentGame: boolean) => {
 		const pageSlug =
-			game.urlSlug || game.offerMappings?.[0]?.pageSlug || game.productSlug
+			game.productSlug || game.offerMappings?.[0]?.pageSlug || game.urlSlug
 		const isBundleGame = game.categories?.some(
 			category => category.path === 'bundles'
 		)

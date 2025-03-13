@@ -230,7 +230,7 @@ export default function Json({ games }: { games: Game }) {
 							.startDate
 				const endDate = new Date(dateInfo)
 				const pageSlug =
-					game.urlSlug || game.offerMappings?.[0]?.pageSlug || game.productSlug
+					game.productSlug || game.offerMappings?.[0]?.pageSlug || game.urlSlug
 				const isBundleGame = game.categories?.some(
 					(category: { path: string }) => category.path === 'bundles'
 				)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
 	Check,
 	Clipboard,
@@ -11,6 +11,7 @@ import {
 	Upload,
 	Undo2,
 	ArrowLeft,
+	Save,
 } from 'lucide-react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -40,6 +41,18 @@ import {
 	AccordionItem,
 	AccordionTrigger,
 } from '@/components/ui/accordion'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { encrypt, decrypt } from '@/lib/encryption'
 
 const defaultColor = '#85ce4b'
 
@@ -96,6 +109,37 @@ export default function EmbedBuilder() {
 	const [isLoading, setIsLoading] = useState(false)
 	const [showDiscordPreview, setShowDiscordPreview] = useState(true)
 	const [messageId, setMessageId] = useState('')
+
+	useEffect(() => {
+		const loadSavedWebhook = async () => {
+			try {
+				const savedWebhook = localStorage.getItem('embedWebhook')
+				if (savedWebhook) {
+					const decryptedWebhook = await decrypt(savedWebhook)
+					setWebhookUrl(decryptedWebhook)
+				}
+			} catch (error) {
+				console.error('Failed to load webhook:', error)
+			}
+		}
+
+		loadSavedWebhook()
+	}, [])
+
+	const saveWebhookUrl = async () => {
+		try {
+			if (!webhookUrl.trim()) {
+				return
+			}
+
+			const encryptedWebhook = await encrypt(webhookUrl)
+			localStorage.setItem('embedWebhook', encryptedWebhook)
+			toast.success('Webhook saved locally')
+		} catch (error) {
+			console.error('Failed to save webhook:', error)
+			toast.error('Failed to save webhook')
+		}
+	}
 
 	const calculateEmbedCharCount = (embed: typeof defaultEmbed) => {
 		let count = 0
@@ -461,6 +505,46 @@ export default function EmbedBuilder() {
 															onChange={e => setWebhookUrl(e.target.value)}
 															className="rounded-r-none border-r-0"
 														/>
+														<AlertDialog>
+															<AlertDialogTrigger asChild>
+																<Button
+																	variant="outline"
+																	size="icon"
+																	className="px-2 rounded-none border-l-0 border-r-0 disabled:opacity-100 disabled:text-muted-foreground"
+																	disabled={!webhookUrl.trim()}
+																>
+																	<Save className="size-4" />
+																</Button>
+															</AlertDialogTrigger>
+															<AlertDialogContent>
+																<AlertDialogHeader>
+																	<AlertDialogTitle>Warning</AlertDialogTitle>
+																	<AlertDialogDescription className="space-y-2" asChild>
+																		<div>
+																			<p>
+																				This will encrypt and save your webhook in your browsers
+																				local storage and will automatically be in the URL input.
+																			</p>
+																			<p className="font-medium">
+																				⚠️ This might not be secure. Consider manually pasting the
+																				webhook instead.
+																			</p>
+																		</div>
+																	</AlertDialogDescription>
+																</AlertDialogHeader>
+																<AlertDialogFooter>
+																	<AlertDialogCancel className="w-full">
+																		Cancel
+																	</AlertDialogCancel>
+																	<AlertDialogAction
+																		className="dark:text-black w-full"
+																		onClick={saveWebhookUrl}
+																	>
+																		Save Anyway
+																	</AlertDialogAction>
+																</AlertDialogFooter>
+															</AlertDialogContent>
+														</AlertDialog>
 														<Button
 															variant="outline"
 															size="icon"
@@ -1079,6 +1163,44 @@ export default function EmbedBuilder() {
 													onChange={e => setWebhookUrl(e.target.value)}
 													className="rounded-r-none border-r-0"
 												/>
+												<AlertDialog>
+													<AlertDialogTrigger asChild>
+														<Button
+															variant="outline"
+															size="icon"
+															className="px-2 rounded-none border-l-0 border-r-0 disabled:opacity-100 disabled:text-muted-foreground"
+															disabled={!webhookUrl.trim()}
+														>
+															<Save className="size-4" />
+														</Button>
+													</AlertDialogTrigger>
+													<AlertDialogContent>
+														<AlertDialogHeader>
+															<AlertDialogTitle>Warning</AlertDialogTitle>
+															<AlertDialogDescription className="space-y-2" asChild>
+																<div>
+																	<p>
+																		This will encrypt and save your webhook in your browsers local
+																		storage and will automatically be in the URL input.
+																	</p>
+																	<p className="font-medium">
+																		⚠️ This might not be secure. Consider manually pasting the
+																		webhook instead.
+																	</p>
+																</div>
+															</AlertDialogDescription>
+														</AlertDialogHeader>
+														<AlertDialogFooter>
+															<AlertDialogCancel className="w-full">Cancel</AlertDialogCancel>
+															<AlertDialogAction
+																className="dark:text-black w-full"
+																onClick={saveWebhookUrl}
+															>
+																Save Anyway
+															</AlertDialogAction>
+														</AlertDialogFooter>
+													</AlertDialogContent>
+												</AlertDialog>
 												<Button
 													variant="outline"
 													size="icon"
