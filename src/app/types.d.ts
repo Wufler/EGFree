@@ -34,9 +34,6 @@ type GameItem = {
                 intermediatePrice?: string
             }
         }
-        lineOffers?: Array<{
-            appliedRules: any[]
-        }>
     }
     promotions: {
         promotionalOffers: Array<{
