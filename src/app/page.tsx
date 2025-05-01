@@ -4,11 +4,12 @@ import Theme from '@/components/Theme'
 import { Button } from '@/components/ui/button'
 import Github from '@/components/ui/github'
 import { getEpicFreeGames } from '@/lib/getGames'
+import { Hammer } from 'lucide-react'
 import Link from 'next/link'
-import { connection } from 'next/server'
+
+export const revalidate = 3600
 
 export default async function Home() {
-	await connection()
 	const games = await getEpicFreeGames()
 
 	return (
@@ -29,7 +30,13 @@ export default async function Home() {
 								Free Games
 							</span>
 						</Link>
-						<div className="flex items-center gap-2 sm:gap-4">
+						<div className="flex items-center gap-2">
+							<Button variant="ghost" className="rounded-full" asChild>
+								<Link href="https://builder.wolfey.me" className="px-2.5 rounded-full">
+									<Hammer className="size-5 mr-2" />
+									Builder
+								</Link>
+							</Button>
 							<Json games={games} />
 							<div className="h-6 w-[1px] bg-gray-200 dark:bg-white/10" />
 							<Theme />

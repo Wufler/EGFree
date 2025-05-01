@@ -93,39 +93,33 @@ type EgFreeSettings = {
     showDiscordPreview: boolean
 }
 
-type EmbedField = {
-    name: string
-    value: string
-    inline?: boolean
-}
+type Field = {
+    name: string;
+    value: string;
+    inline: boolean;
+};
 
-type EmbedAuthor = {
-    name: string
-    url?: string
-    icon_url?: string
-}
-
-type EmbedFooter = {
-    text: string
-    icon_url?: string
-}
-
-type EmbedImage = {
-    url: string
-}
+type Embed = {
+    color: number;
+    fields: Field[];
+    author?: {
+        name?: string;
+        url?: string;
+        icon_url?: string;
+    };
+    footer?: {
+        text?: string;
+    };
+    timestamp?: string;
+    image?: {
+        url: string;
+    };
+};
 
 type EmbedData = {
-    content?: string
-    title?: string
-    description?: string
-    url?: string
-    color?: string
-    fields: EmbedField[]
-    footer?: EmbedFooter
-    timestamp?: string
-    image?: EmbedImage
-    thumbnail?: EmbedImage
-    author?: EmbedAuthor
-}
-
-type EmbedValue = string | EmbedField[] | EmbedFooter | EmbedImage | EmbedAuthor | { url: string } | number
+    content: string;
+    embeds: Embed[];
+    username: string;
+    avatar_url: string;
+    attachments: any[];
+};
