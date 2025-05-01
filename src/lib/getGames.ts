@@ -1,7 +1,10 @@
 export async function getEpicFreeGames(): Promise<Game> {
     try {
         const logs = false
-        const response = await fetch('https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions')
+        const response = await fetch(
+            'https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions',
+            { next: { revalidate: 3600, }, }
+        )
         const api = await response.json()
 
         const games = api?.data?.Catalog?.searchStore?.elements || []

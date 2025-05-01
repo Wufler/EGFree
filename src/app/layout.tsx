@@ -5,7 +5,6 @@ import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from 'next-themes'
 import Snow from '@/components/Snow'
 import { getEpicFreeGames } from '@/lib/getGames'
-import Loglib from '@loglib/tracker/react'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -53,7 +52,6 @@ export default function RootLayout({
 					{children}
 					<Snow />
 					<Toaster position="bottom-center" />
-					<Loglib config={{ id: 'egfree' }} />
 				</ThemeProvider>
 			</body>
 		</html>

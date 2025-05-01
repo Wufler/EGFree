@@ -406,9 +406,9 @@ export default function Json({ games }: { games: Game }) {
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<Button variant="ghost" className="px-2.5 rounded-full">
-					<FileJson2 className="size-5 mr-2" />
-					Builder
+				<Button variant="ghost" className="rounded-full">
+					<FileJson2 className="!size-5" />
+					JSON
 				</Button>
 			</DialogTrigger>
 			<DialogContent
@@ -420,7 +420,7 @@ export default function Json({ games }: { games: Game }) {
 						<div className="p-6 pb-4 lg:border-b">
 							<DialogTitle className="flex items-center justify-between">
 								JSON Data
-								<Link href="/builder">
+								<Link href="https://builder.wolfey.me">
 									<ExternalLink className="size-5" />
 								</Link>
 							</DialogTitle>

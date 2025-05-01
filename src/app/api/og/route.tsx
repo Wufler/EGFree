@@ -1,10 +1,10 @@
 import { ImageResponse } from 'next/og'
 import { getEpicFreeGames } from '@/lib/getGames'
-import { connection } from 'next/server'
 import { format } from 'date-fns'
 
+export const dynamic = 'force-dynamic'
+
 export const GET = async () => {
-	await connection()
 	const games = await getEpicFreeGames()
 
 	const renderGameCard = (game: GameItem, isCurrentGame: boolean) => {
