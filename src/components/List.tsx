@@ -18,8 +18,6 @@ export default function List({ games }: { games: Game }) {
 
 	const TimeDisplay = ({ gameId }: { gameId: string }) => {
 		const [gameTimeLeft, setGameTimeLeft] = useState<string>('Loading...')
-		const [refreshAttempts, setRefreshAttempts] = useState(0)
-		const refreshTimer = useRef<NodeJS.Timeout>(undefined)
 
 		useEffect(() => {
 			const updateGameTime = () => {
@@ -32,47 +30,26 @@ export default function List({ games }: { games: Game }) {
 
 				if (timeLeftForGame === 'Expired' && !hasToastShown.current) {
 					hasToastShown.current = true
-					const retryRefresh = () => {
-						setRefreshAttempts(prev => prev + 1)
-						toast.promise(
-							new Promise((resolve, reject) => {
-								refreshTimer.current = setTimeout(() => {
-									router.refresh()
-									if (games.currentGames.length === 0) {
-										if (refreshAttempts < 5) {
-											retryRefresh()
-											reject('No games available yet')
-										} else {
-											reject('Maximum retry attempts reached')
-										}
-									} else {
-										resolve(true)
-									}
-								}, 5000)
-							}),
-							{
-								loading: `Games expired, refreshing... (Attempt ${
-									refreshAttempts + 1
-								}/5)`,
-								success: 'Game offers updated successfully!',
-								error: err => `${err}. Will keep trying...`,
-							}
-						)
-					}
-
-					retryRefresh()
+					toast.promise(
+						new Promise(resolve => {
+							setTimeout(() => {
+								router.refresh()
+								resolve(true)
+							}, 5000)
+						}),
+						{
+							loading: 'Game offers expired, refreshing...',
+							success: 'Game offers updated successfully!',
+							error: 'Failed to update game offers. Please refresh manually.',
+						}
+					)
 				}
 			}
 
 			updateGameTime()
 			const timer = setInterval(updateGameTime, 1000)
-			return () => {
-				clearInterval(timer)
-				if (refreshTimer.current) {
-					clearTimeout(refreshTimer.current)
-				}
-			}
-		}, [gameId, refreshAttempts])
+			return () => clearInterval(timer)
+		}, [gameId])
 
 		return (
 			<div className="flex items-center text-epic-blue">

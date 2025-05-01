@@ -407,7 +407,7 @@ export default function Json({ games }: { games: Game }) {
 		<Dialog>
 			<DialogTrigger asChild>
 				<Button variant="ghost" className="rounded-full">
-					<FileJson2 className="size-5 mr-2" />
+					<FileJson2 className="!size-5" />
 					JSON
 				</Button>
 			</DialogTrigger>

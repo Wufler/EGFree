@@ -7,7 +7,7 @@ import { getEpicFreeGames } from '@/lib/getGames'
 import { Hammer } from 'lucide-react'
 import Link from 'next/link'
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 export default async function Home() {
 	const games = await getEpicFreeGames()
@@ -33,21 +33,16 @@ export default async function Home() {
 						<div className="flex items-center gap-2">
 							<Button variant="ghost" className="rounded-full" asChild>
 								<Link href="https://builder.wolfey.me" className="px-2.5 rounded-full">
-									<Hammer className="size-5 mr-2" />
+									<Hammer className="!size-5" />
 									Builder
 								</Link>
 							</Button>
 							<Json games={games} />
 							<div className="h-6 w-[1px] bg-gray-200 dark:bg-white/10" />
 							<Theme />
-							<Button
-								asChild
-								variant="ghost"
-								size="icon"
-								className="size-8 sm:size-10 rounded-full"
-							>
+							<Button asChild variant="ghost" size="icon" className="rounded-full">
 								<Link href="https://github.com/WoIfey/epicfreegames" target="_blank">
-									<Github className="size-4 sm:size-5 dark:invert-0 invert" />
+									<Github className="!size-5 dark:invert-0 invert" />
 								</Link>
 							</Button>
 						</div>
