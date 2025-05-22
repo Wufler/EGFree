@@ -1,6 +1,6 @@
 import Json from '@/components/Json'
 import List from '@/components/List'
-import Theme from '@/components/Theme'
+import Theme from '@/components/ui/Theme'
 import { Button } from '@/components/ui/button'
 import Github from '@/components/ui/github'
 import { getEpicFreeGames } from '@/lib/getGames'

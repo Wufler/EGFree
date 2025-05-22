@@ -87,13 +87,17 @@ export default function List({ games }: { games: Game }) {
 					)}
 					{game.keyImages.find(
 						img =>
-							img.type === 'OfferImageWide' || img.type === 'DieselStoreFrontWide'
+							img.type === 'OfferImageWide' ||
+							img.type === 'DieselStoreFrontWide' ||
+							img.type === 'DieselGameBoxWide'
 					) ? (
 						<Image
 							src={
 								game.keyImages.find(
 									img =>
-										img.type === 'OfferImageWide' || img.type === 'DieselStoreFrontWide'
+										img.type === 'OfferImageWide' ||
+										img.type === 'DieselStoreFrontWide' ||
+										img.type === 'DieselGameBoxWide'
 								)?.url || ''
 							}
 							width={1280}

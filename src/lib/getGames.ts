@@ -3,7 +3,6 @@ export async function getEpicFreeGames(): Promise<Game> {
         const logs = false
         const response = await fetch(
             'https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions',
-            { next: { revalidate: 3600, }, }
         )
         const api = await response.json()
 
@@ -57,6 +56,7 @@ export async function getEpicFreeGames(): Promise<Game> {
                     `Current Free Offers: ${freeCurrentOffers.join(', ') || 'None'}\n` +
                     `Upcoming Free Offers: ${freeUpcomingOffers.join(', ') || 'None'}`
                 )
+                console.log('JSON: ', game)
             }
 
             if (currentFreeOffer) {

@@ -12,7 +12,8 @@ export const GET = async () => {
 			img =>
 				img.type === 'OfferImageWide' ||
 				img.type === 'VaultClosed' ||
-				img.type === 'DieselStoreFrontWide'
+				img.type === 'DieselStoreFrontWide' ||
+				img.type === 'DieselGameBoxWide'
 		)?.url
 
 		return (

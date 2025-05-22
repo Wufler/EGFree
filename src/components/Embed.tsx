@@ -90,7 +90,8 @@ export default function DiscordPreview({
 							(img: { type: string; url: string }) =>
 								img.type === 'VaultClosed' ||
 								img.type === 'DieselStoreFrontWide' ||
-								img.type === 'OfferImageWide'
+								img.type === 'OfferImageWide' ||
+								img.type === 'DieselGameBoxWide'
 						)?.url
 						const isAddOn = game.offerType === 'ADD_ON'
 						return (
