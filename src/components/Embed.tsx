@@ -52,7 +52,7 @@ export default function DiscordPreview({
 							APP
 						</div>
 						<div className="text-xs ml-1 mt-0.5 text-[#616366] dark:text-[#949b9d]">
-							Today at {format(new Date(), 'HH:mm')}
+							{format(new Date(), 'HH:mm')}
 						</div>
 					</div>
 					<div className="mb-2 text-sm">

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
+import { Inter } from 'next/font/google'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from 'next-themes'
 import Snow from '@/components/ui/Snow'
@@ -17,6 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
 	return {
 		title: 'Epic Games Free Games',
 		description: `💵 Current: ${currentTitles} \n ⌛ Upcoming: ${upcomingTitles}`,
+		metadataBase: new URL('https://free.wolfey.me/'),
 		openGraph: {
 			title: 'Epic Games Free Games',
 			description: `💵 Current: ${currentTitles} \n ⌛ Upcoming: ${upcomingTitles}`,
