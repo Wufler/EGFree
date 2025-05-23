@@ -91,6 +91,7 @@ export default function Json({ games }: { games: Game }) {
 		includeFooter: true,
 		includePrice: true,
 		includeImage: true,
+		includeClaimAll: true,
 		webhookUrl: '',
 		showDiscordPreview: true,
 	})
@@ -224,6 +225,28 @@ export default function Json({ games }: { games: Game }) {
 				game => settings.selectedGames[game.id]
 			)
 
+			const mysteryGames = games.currentGames.some(
+				game => game.seller?.name === 'Epic Dev Test Account'
+			)
+
+			const generateBulkCheckoutUrl = () => {
+				if (mysteryGames) return null
+
+				const offers = games.currentGames
+					.map(game => {
+						if (!game.namespace || !game.id) return null
+						return `1-${game.namespace}-${game.id}-`
+					})
+					.filter(Boolean)
+
+				if (offers.length === 0) return null
+
+				const offersParam = offers.map(offer => `offers=${offer}`).join('&')
+				return `https://store.epicgames.com/purchase?${offersParam}#/purchase/payment-methods`
+			}
+
+			const bulkCheckoutUrl = generateBulkCheckoutUrl()
+
 			const embeds = selectedGames.map((game: GameItem) => {
 				const isCurrent = game.promotions.promotionalOffers.length > 0
 				const dateInfo = isCurrent
@@ -310,6 +333,32 @@ export default function Json({ games }: { games: Game }) {
 						imageUrl && { image: { url: encodeURI(imageUrl) } }),
 				}
 			})
+
+			if (
+				games.currentGames.length > 0 &&
+				settings.includeClaimAll &&
+				!mysteryGames
+			) {
+				const claimAllEmbed = {
+					color: parseInt(settings.embedColor.replace('#', ''), 16),
+					fields: [
+						{
+							name: '🛒 Checkout Link',
+							value: mysteryGames
+								? 'Currently disabled due to mystery games'
+								: bulkCheckoutUrl
+								? `[Claim All Games](${bulkCheckoutUrl})`
+								: 'No claimable games available',
+						},
+					],
+					author: {
+						name: 'Epic Games Store',
+						url: 'https://free.wolfey.me/',
+						icon_url: 'https://wolfey.s-ul.eu/YcyMXrI1',
+					},
+				}
+				embeds.push(claimAllEmbed)
+			}
 
 			setJsonData({
 				content: settings.embedContent || defaultContent,
@@ -578,7 +627,7 @@ export default function Json({ games }: { games: Game }) {
 													<GameSelectionList games={games.currentGames} type="Free Now" />
 												)}
 												{games.nextGames.length > 0 && (
-													<GameSelectionList games={games.nextGames} type="Coming Soon" />
+													<GameSelectionList games={games.nextGames} type="Upcoming" />
 												)}
 
 												<div className="space-y-3">
@@ -607,6 +656,14 @@ export default function Json({ games }: { games: Game }) {
 																updateSetting('includeFooter', checked)
 															}
 															label="Show Footer"
+														/>
+														<Switches
+															id="include-claim-all"
+															checked={settings.includeClaimAll}
+															onCheckedChange={checked =>
+																updateSetting('includeClaimAll', checked)
+															}
+															label="Show Claim All"
 														/>
 													</div>
 												</div>
@@ -814,7 +871,7 @@ export default function Json({ games }: { games: Game }) {
 										<GameSelectionList games={games.currentGames} type="Free Now" />
 									)}
 									{games.nextGames.length > 0 && (
-										<GameSelectionList games={games.nextGames} type="Coming Soon" />
+										<GameSelectionList games={games.nextGames} type="Upcoming" />
 									)}
 									<div className="space-y-3">
 										<Label className="text-sm font-medium">Appearance</Label>
@@ -836,6 +893,14 @@ export default function Json({ games }: { games: Game }) {
 												checked={settings.includeFooter}
 												onCheckedChange={checked => updateSetting('includeFooter', checked)}
 												label="Show Footer"
+											/>
+											<Switches
+												id="include-claim-all"
+												checked={settings.includeClaimAll}
+												onCheckedChange={checked =>
+													updateSetting('includeClaimAll', checked)
+												}
+												label="Show Claim All"
 											/>
 										</div>
 									</div>

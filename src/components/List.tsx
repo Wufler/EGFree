@@ -8,8 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { calculateTimeLeft } from '@/lib/calculateTime'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import { Calendar, Clock, Gem, Gift } from 'lucide-react'
+import { Calendar, Clock, Gem, Gift, ShoppingCart } from 'lucide-react'
 import Image from 'next/image'
+import ClaimTab from '@/components/ClaimTab'
 
 export default function List({ games }: { games: Game }) {
 	const [timeLeft] = useState<{ [key: string]: string }>({})
@@ -245,7 +246,7 @@ export default function List({ games }: { games: Game }) {
 	return (
 		<div className="dark:bg-epic-black lg:px-8 lg:py-6 py-0">
 			<>
-				<Tabs defaultValue="current" className="w-full lg:hidden gap-0 sm:gap-4">
+				<Tabs defaultValue="current" className="w-full lg:hidden gap-0">
 					<TabsList className="w-full h-auto rounded-none bg-transparent p-0">
 						<TabsTrigger
 							value="current"
@@ -257,12 +258,20 @@ export default function List({ games }: { games: Game }) {
 							value="upcoming"
 							className="flex-1 relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
 						>
-							<Calendar className="size-4" /> Coming Soon
+							<Calendar className="size-4" /> Upcoming
 						</TabsTrigger>
+						{games.currentGames.length > 0 && (
+							<TabsTrigger
+								value="claim"
+								className="flex-1 relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
+							>
+								<ShoppingCart className="size-4" /> Claim
+							</TabsTrigger>
+						)}
 					</TabsList>
 					<TabsContent value="current">
 						{games.currentGames.length > 0 ? (
-							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 sm:gap-4 gap-0 sm:px-4 px-0">
+							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 sm:gap-4 gap-0 sm:px-4 px-0 sm:pb-4 pb-0 sm:pt-4 pt-0">
 								{games.currentGames.map(game => renderGameCard(game, true))}
 							</div>
 						) : (
@@ -271,13 +280,18 @@ export default function List({ games }: { games: Game }) {
 					</TabsContent>
 					<TabsContent value="upcoming">
 						{games.nextGames.length > 0 ? (
-							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 sm:gap-4 gap-0 sm:px-4 px-0">
+							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 sm:gap-4 gap-0 sm:px-4 px-0 sm:pb-4 pb-0 sm:pt-4 pt-0">
 								{games.nextGames.map(game => renderGameCard(game, false))}
 							</div>
 						) : (
 							<NoOffers />
 						)}
 					</TabsContent>
+					{games.currentGames.length > 0 && (
+						<TabsContent value="claim">
+							<ClaimTab games={games} />
+						</TabsContent>
+					)}
 				</Tabs>
 
 				<div className="hidden lg:block">
@@ -296,7 +310,7 @@ export default function List({ games }: { games: Game }) {
 						</div>
 						<div>
 							<h3 className="pb-4	text-lg font-medium flex items-center">
-								<Calendar className="mr-2 size-4" /> Coming Soon
+								<Calendar className="mr-2 size-4" /> Upcoming
 							</h3>
 							{games.nextGames.length > 0 ? (
 								<div className={gridClassName}>

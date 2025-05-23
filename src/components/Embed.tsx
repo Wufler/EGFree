@@ -15,6 +15,28 @@ export default function DiscordPreview({
 		game => settings.selectedGames[game.id]
 	)
 
+	const mysteryGames = games.currentGames.some(
+		game => game.seller?.name === 'Epic Dev Test Account'
+	)
+
+	const generateBulkCheckoutUrl = () => {
+		if (mysteryGames) return null
+
+		const offers = games.currentGames
+			.map(game => {
+				if (!game.namespace || !game.id) return null
+				return `1-${game.namespace}-${game.id}-`
+			})
+			.filter(Boolean)
+
+		if (offers.length === 0) return null
+
+		const offersParam = offers.map(offer => `offers=${offer}`).join('&')
+		return `https://store.epicgames.com/purchase?${offersParam}#/purchase/payment-methods`
+	}
+
+	const bulkCheckoutUrl = generateBulkCheckoutUrl()
+
 	const isCurrentlyFree = (game: GameItem) => {
 		const currentPromo =
 			game.promotions?.promotionalOffers[0]?.promotionalOffers[0]
@@ -38,7 +60,7 @@ export default function DiscordPreview({
 	}
 
 	return (
-		<div className="bg-[#ffffff] dark:bg-[#313338] dark:text-white p-4 [overflow-wrap:anywhere] w-full">
+		<div className="bg-[#ffffff] dark:bg-[#313338] dark:text-white p-4 wrap-anywhere w-full">
 			<div className="flex gap-4">
 				<div className="flex-shrink-0">
 					<div className="dark:bg-[#6263ed] bg-[#5865f2] rounded-full size-10 mt-1 flex items-center justify-center">
@@ -192,6 +214,39 @@ export default function DiscordPreview({
 							</div>
 						)
 					})}
+
+					{games.currentGames.length > 0 && settings.includeClaimAll && (
+						<div
+							className="flex mt-1 rounded-sm overflow-hidden"
+							style={{ borderLeft: `4px solid ${settings.embedColor}` }}
+						>
+							<div className="max-w-md bg-[#f2f3f5] dark:bg-[#2B2D31] p-3.5 pr-4">
+								<div className="flex flex-col text-sm gap-0.5">
+									<h1 className="font-semibold">🛒 Checkout Link</h1>
+									{mysteryGames ? (
+										<>
+											<span>Currently disabled due to mystery games</span>
+											<span className="text-xs text-gray-500 dark:text-gray-400">
+												This will not appear in the JSON data
+											</span>
+										</>
+									) : bulkCheckoutUrl ? (
+										<a
+											href={bulkCheckoutUrl}
+											className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start font-medium"
+											target="_blank"
+										>
+											Claim All Games
+										</a>
+									) : (
+										<span className="text-gray-500 dark:text-gray-400">
+											No claimable games available
+										</span>
+									)}
+								</div>
+							</div>
+						</div>
+					)}
 				</div>
 			</div>
 		</div>
