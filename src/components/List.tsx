@@ -16,6 +16,42 @@ export default function List({ games }: { games: Game }) {
 	const router = useRouter()
 	const hasToastShown = useRef(false)
 
+	const NoOffers = () => (
+		<div className="pb-2 text-lg font-medium">
+			<div className="text-lg">If offers are not showing up, try refreshing.</div>
+			<div className="text-sm text-muted-foreground">
+				You can also check if the offers are at the{' '}
+				<Link
+					href="https://store.epicgames.com/en-US/free-games"
+					className="text-epic-blue"
+				>
+					Epic Games Store
+				</Link>
+			</div>
+		</div>
+	)
+
+	if (games.currentGames.length === 0 && games.nextGames.length === 0) {
+		return (
+			<div className="flex justify-center items-center h-[50vh] text-lg font-medium">
+				<div className="flex flex-col items-center">
+					<div className="text-lg font-medium">
+						If offers are not showing up, try refreshing.
+					</div>
+					<div className="text-sm text-muted-foreground">
+						You can also check if the offers are at the{' '}
+						<Link
+							href="https://store.epicgames.com/en-US/free-games"
+							className="text-epic-blue"
+						>
+							Epic Games Store
+						</Link>
+					</div>
+				</div>
+			</div>
+		)
+	}
+
 	const TimeDisplay = ({ gameId }: { gameId: string }) => {
 		const [gameTimeLeft, setGameTimeLeft] = useState<string>('Loading...')
 
@@ -208,62 +244,71 @@ export default function List({ games }: { games: Game }) {
 
 	return (
 		<div className="dark:bg-epic-black lg:px-8 lg:py-6 py-0">
-			{isSingleGame ? (
-				<div className={gridClassName}>
-					{games.currentGames.map(game => renderGameCard(game, true))}
-					{games.nextGames.map(game => renderGameCard(game, false))}
-				</div>
-			) : (
-				<>
-					<Tabs defaultValue="current" className="w-full lg:hidden gap-0 sm:gap-4">
-						<TabsList className="w-full h-auto rounded-none bg-transparent p-0">
-							<TabsTrigger
-								value="current"
-								className="flex-1 !text-epic-blue relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
-							>
-								<Gem className="size-4" /> Free Now
-							</TabsTrigger>
-							<TabsTrigger
-								value="upcoming"
-								className="flex-1 relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
-							>
-								<Calendar className="size-4" /> Coming Soon
-							</TabsTrigger>
-						</TabsList>
-						<TabsContent value="current">
+			<>
+				<Tabs defaultValue="current" className="w-full lg:hidden gap-0 sm:gap-4">
+					<TabsList className="w-full h-auto rounded-none bg-transparent p-0">
+						<TabsTrigger
+							value="current"
+							className="flex-1 !text-epic-blue relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
+						>
+							<Gem className="size-4" /> Free Now
+						</TabsTrigger>
+						<TabsTrigger
+							value="upcoming"
+							className="flex-1 relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
+						>
+							<Calendar className="size-4" /> Coming Soon
+						</TabsTrigger>
+					</TabsList>
+					<TabsContent value="current">
+						{games.currentGames.length > 0 ? (
 							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 sm:gap-4 gap-0 sm:px-4 px-0">
 								{games.currentGames.map(game => renderGameCard(game, true))}
 							</div>
-						</TabsContent>
-						<TabsContent value="upcoming">
+						) : (
+							<NoOffers />
+						)}
+					</TabsContent>
+					<TabsContent value="upcoming">
+						{games.nextGames.length > 0 ? (
 							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 sm:gap-4 gap-0 sm:px-4 px-0">
 								{games.nextGames.map(game => renderGameCard(game, false))}
 							</div>
-						</TabsContent>
-					</Tabs>
+						) : (
+							<NoOffers />
+						)}
+					</TabsContent>
+				</Tabs>
 
-					<div className="hidden lg:block">
-						<div className="space-y-6 container mx-auto">
-							<div>
-								<h3 className="pb-4	text-lg font-medium text-epic-blue dark:text-epic-blue flex items-center">
-									<Gem className="mr-2 size-4" /> Free Now
-								</h3>
+				<div className="hidden lg:block">
+					<div className="space-y-6 container mx-auto">
+						<div>
+							<h3 className="pb-4	text-lg font-medium text-epic-blue dark:text-epic-blue flex items-center">
+								<Gem className="mr-2 size-4" /> Free Now
+							</h3>
+							{games.currentGames.length > 0 ? (
 								<div className={gridClassName}>
 									{games.currentGames.map(game => renderGameCard(game, true))}
 								</div>
-							</div>
-							<div>
-								<h3 className="pb-4	text-lg font-medium flex items-center">
-									<Calendar className="mr-2 size-4" /> Coming Soon
-								</h3>
+							) : (
+								<NoOffers />
+							)}
+						</div>
+						<div>
+							<h3 className="pb-4	text-lg font-medium flex items-center">
+								<Calendar className="mr-2 size-4" /> Coming Soon
+							</h3>
+							{games.nextGames.length > 0 ? (
 								<div className={gridClassName}>
 									{games.nextGames.map(game => renderGameCard(game, false))}
 								</div>
-							</div>
+							) : (
+								<NoOffers />
+							)}
 						</div>
 					</div>
-				</>
-			)}
+				</div>
+			</>
 		</div>
 	)
 }

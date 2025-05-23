@@ -48,7 +48,7 @@ export default async function Home() {
 					<div className="pb-1">
 						<Theme />
 						<Button asChild variant="ghost" size="icon" className="rounded-full">
-							<Link href="https://github.com/WoIfey/epicfreegames" target="_blank">
+							<Link href="https://github.com/Wufler/EGFree" target="_blank">
 								<Github className="!size-5 dark:invert-0 invert" />
 							</Link>
 						</Button>

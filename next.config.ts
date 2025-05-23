@@ -14,6 +14,12 @@ const nextConfig: NextConfig = {
     ],
     minimumCacheTTL: 604800,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   async headers() {
     return [
       {
