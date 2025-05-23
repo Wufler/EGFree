@@ -41,6 +41,7 @@ export default function ClaimTab({ games }: { games: Game }) {
 			setCopiedUrl(url)
 			setTimeout(() => setCopiedUrl(''), 2000)
 		} catch (err) {
+			console.error(err)
 			toast.error('Failed to copy URL')
 		}
 	}
