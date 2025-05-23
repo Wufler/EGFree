@@ -60,7 +60,7 @@ function Switches({
 	label: string
 }) {
 	return (
-		<div className="relative flex w-full items-start gap-2 rounded-lg border border-input p-4 shadow-sm shadow-black/5 has-[[data-state=checked]]:border-ring">
+		<div className="relative flex w-full bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 transition-all items-center gap-2 rounded-md border border-input p-3">
 			<Switch
 				id={id}
 				checked={checked}
@@ -383,7 +383,7 @@ export default function Json({ games }: { games: Game }) {
 			{games.map(game => (
 				<div
 					key={game.id}
-					className="relative flex w-full items-center gap-2 rounded-md border border-input p-3 has-[[data-state=checked]]:border-ring"
+					className="relative flex w-full bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 transition-all items-center gap-2 rounded-md border border-input p-3"
 				>
 					<Checkbox
 						id={game.id}
@@ -459,7 +459,7 @@ export default function Json({ games }: { games: Game }) {
 									value="settings"
 									className="overflow-hidden mt-0 pb-0 border-0"
 								>
-									<ScrollArea className="h-[calc(90vh-120px)]">
+									<ScrollArea className="h-[calc(90vh-150px)]">
 										<div className="space-y-6 p-4 pt-2">
 											<div className="space-y-6">
 												<div className="space-y-3">
@@ -616,22 +616,19 @@ export default function Json({ games }: { games: Game }) {
 													<div className="flex items-center gap-2">
 														<Popover>
 															<PopoverTrigger asChild>
-																<Button
-																	className="size-10"
-																	style={{ backgroundColor: settings.embedColor }}
-																/>
+																<Button style={{ backgroundColor: settings.embedColor }} />
 															</PopoverTrigger>
 															<PopoverContent className="w-full p-3" align="start">
 																<HexColorPicker
 																	color={settings.embedColor}
 																	onChange={handleColorChange}
-																	className="!w-full mb-2"
+																	className="w-full mb-2"
 																/>
 																<Button
 																	onClick={() => handleColorChange(defaultColor)}
 																	variant="outline"
 																	size="sm"
-																	className="w-full px-8"
+																	className="w-full"
 																>
 																	<Undo2 className="size-4" />
 																	Reset to Default
@@ -670,7 +667,7 @@ export default function Json({ games }: { games: Game }) {
 														)}
 														Copy JSON
 													</Button>
-													<div className="relative flex w-full items-center gap-2 rounded-lg border border-input p-3 shadow-sm shadow-black/5 has-[[data-state=checked]]:border-ring">
+													<div className="relative w-full flex bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 transition-all items-center gap-2 rounded-md border border-input p-2.5">
 														<Checkbox
 															id="discord-mobile"
 															checked={settings.showDiscordPreview}
@@ -845,16 +842,13 @@ export default function Json({ games }: { games: Game }) {
 										<div className="flex items-center gap-2">
 											<Popover>
 												<PopoverTrigger asChild>
-													<Button
-														className="size-10"
-														style={{ backgroundColor: settings.embedColor }}
-													/>
+													<Button style={{ backgroundColor: settings.embedColor }} />
 												</PopoverTrigger>
 												<PopoverContent className="w-full p-3" align="start">
 													<HexColorPicker
 														color={settings.embedColor}
 														onChange={handleColorChange}
-														className="!w-full mb-2"
+														className="w-full mb-2"
 													/>
 													<Button
 														onClick={() => handleColorChange(defaultColor)}
