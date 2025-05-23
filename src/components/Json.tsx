@@ -503,11 +503,11 @@ export default function Json({ games }: { games: Game }) {
 																		</AlertDialogDescription>
 																	</AlertDialogHeader>
 																	<AlertDialogFooter>
-																		<AlertDialogCancel className="w-full">
+																		<AlertDialogCancel className="sm:w-1/2">
 																			Cancel
 																		</AlertDialogCancel>
 																		<AlertDialogAction
-																			className="dark:text-black w-full"
+																			className="dark:text-black sm:w-1/2"
 																			onClick={() => {
 																				updateSetting('webhookUrl', webhookUrl)
 																				toast.success('Webhook saved locally')
@@ -741,9 +741,11 @@ export default function Json({ games }: { games: Game }) {
 															</AlertDialogDescription>
 														</AlertDialogHeader>
 														<AlertDialogFooter>
-															<AlertDialogCancel className="w-full">Cancel</AlertDialogCancel>
+															<AlertDialogCancel className="sm:w-1/2">
+																Cancel
+															</AlertDialogCancel>
 															<AlertDialogAction
-																className="dark:text-black w-full"
+																className="dark:text-black sm:w-1/2"
 																onClick={() => {
 																	updateSetting('webhookUrl', webhookUrl)
 																	toast.success('Webhook saved locally')
