@@ -50,7 +50,7 @@ export default function ClaimTab({ games }: { games: Game }) {
 
 	return (
 		<Card className="rounded-none border-none">
-			<CardContent>
+			<CardContent className="px-4">
 				<div className="space-y-4">
 					{mysteryGames ? (
 						<div className="p-4 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
@@ -101,7 +101,7 @@ export default function ClaimTab({ games }: { games: Game }) {
 										return (
 											<div
 												key={game.id}
-												className="flex items-center justify-between p-3 border rounded-lg"
+												className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 border rounded-lg"
 											>
 												<span className="font-medium">{game.title}</span>
 												<span className="text-sm text-muted-foreground">Unavailable</span>
@@ -146,15 +146,14 @@ export default function ClaimTab({ games }: { games: Game }) {
 									)
 								})}
 							</div>
+							<div className="text-xs text-muted-foreground mt-4">
+								<p>
+									You are required to be logged into your Epic Games account before
+									claiming the games.
+								</p>
+							</div>
 						</>
 					)}
-
-					<div className="text-xs text-muted-foreground mt-4">
-						<p>
-							You are required to be logged into your Epic Games account before
-							claiming the games.
-						</p>
-					</div>
 				</div>
 			</CardContent>
 		</Card>

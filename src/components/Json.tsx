@@ -663,7 +663,7 @@ export default function Json({ games }: { games: Game }) {
 															onCheckedChange={checked =>
 																updateSetting('includeClaimAll', checked)
 															}
-															label="Show Claim All"
+															label="Show Claim All Games"
 														/>
 													</div>
 												</div>
@@ -900,7 +900,7 @@ export default function Json({ games }: { games: Game }) {
 												onCheckedChange={checked =>
 													updateSetting('includeClaimAll', checked)
 												}
-												label="Show Claim All"
+												label="Show Claim All Games"
 											/>
 										</div>
 									</div>
