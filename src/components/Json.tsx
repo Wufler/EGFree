@@ -10,6 +10,7 @@ import {
 	Loader2,
 	Save,
 	ExternalLink,
+	X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -17,6 +18,7 @@ import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import {
 	Dialog,
+	DialogClose,
 	DialogContent,
 	DialogDescription,
 	DialogTitle,
@@ -414,25 +416,32 @@ export default function Json({ games }: { games: Game }) {
 			</DialogTrigger>
 			<DialogContent
 				onOpenAutoFocus={e => e.preventDefault()}
-				className="max-w-4xl max-h-[90vh] overflow-hidden p-0"
+				hideCloseButton
+				className="!max-w-4xl overflow-hidden p-0"
 			>
 				<div className="flex h-[90vh] flex-col lg:flex-row">
-					<div className="w-full lg:w-[400px] border-b lg:border-b-0 lg:border-r flex flex-col">
-						<div className="p-6 pb-4 lg:border-b">
-							<DialogTitle className="flex items-center justify-between">
-								JSON Data
-								<Link href="https://builder.wolfey.me">
-									<ExternalLink className="size-5" />
-								</Link>
-							</DialogTitle>
+					<div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r flex flex-col">
+						<div className="p-6 pb-4 lg:border-b shrink-0">
+							<div className="flex items-center justify-between">
+								<DialogTitle className="flex items-center gap-2">
+									JSON Data
+									<Link href="https://builder.wolfey.me">
+										<ExternalLink className="size-4" />
+									</Link>
+								</DialogTitle>
+								<DialogClose className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+									<X className="size-4" />
+									<span className="sr-only">Close</span>
+								</DialogClose>
+							</div>
 							<DialogDescription className="mt-1.5">
 								This tool is designed to create Discord embeds.
 							</DialogDescription>
 						</div>
 
 						<div className="block lg:hidden">
-							<Tabs defaultValue="settings" className="w-full">
-								<TabsList className="w-full h-auto rounded-none border-b border-border bg-transparent p-0">
+							<Tabs defaultValue="settings" className="flex h-full flex-col">
+								<TabsList className="w-full h-auto rounded-none border-b border-border bg-transparent p-0 shrink-0">
 									<TabsTrigger
 										value="settings"
 										className="flex-1 relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
@@ -446,9 +455,12 @@ export default function Json({ games }: { games: Game }) {
 										Preview
 									</TabsTrigger>
 								</TabsList>
-								<TabsContent value="settings">
-									<ScrollArea className="h-[calc(90vh-10rem)] p-4 pt-2">
-										<div className="space-y-6">
+								<TabsContent
+									value="settings"
+									className="overflow-hidden mt-0 pb-0 border-0"
+								>
+									<ScrollArea className="h-[calc(90vh-120px)]">
+										<div className="space-y-6 p-4 pt-2">
 											<div className="space-y-6">
 												<div className="space-y-3">
 													<Label className="text-sm font-medium">Webhook URL</Label>
@@ -523,14 +535,13 @@ export default function Json({ games }: { games: Game }) {
 														disabled={isLoading}
 													>
 														{isLoading ? (
-															<Loader2 className="size-4 mr-2 animate-spin" />
+															<Loader2 className="size-4 animate-spin" />
 														) : (
-															<Send className="size-4 mr-2" />
+															<Send className="size-4" />
 														)}
 														Send
 													</Button>
 												</div>
-
 												<div className="space-y-3">
 													<Label className="text-sm font-medium">Message Content</Label>
 													<div className="flex items-center gap-2">
@@ -622,7 +633,7 @@ export default function Json({ games }: { games: Game }) {
 																	size="sm"
 																	className="w-full px-8"
 																>
-																	<Undo2 className="size-4 mr-2" />
+																	<Undo2 className="size-4" />
 																	Reset to Default
 																</Button>
 															</PopoverContent>
@@ -639,53 +650,58 @@ export default function Json({ games }: { games: Game }) {
 										</div>
 									</ScrollArea>
 								</TabsContent>
-								<TabsContent value="preview">
-									<ScrollArea className="h-[calc(90vh-10rem)] p-4 pt-2">
-										<div className="space-y-4">
-											<div className="flex sm:flex-row flex-col gap-2">
-												<Button
-													onClick={copyToClipboard}
-													className="w-full"
-													variant="outline"
-												>
-													{isCopied ? (
-														<Check className="size-4 mr-2" />
-													) : (
-														<ClipboardCopy className="size-4 mr-2" />
-													)}
-													Copy JSON
-												</Button>
-												<div className="relative flex w-full items-center gap-2 rounded-lg border border-input p-3 shadow-sm shadow-black/5 has-[[data-state=checked]]:border-ring">
-													<Checkbox
-														id="discord-mobile"
-														checked={settings.showDiscordPreview}
-														onCheckedChange={checked => {
-															updateSetting('showDiscordPreview', checked as boolean)
-														}}
-														className="order-1 after:absolute after:inset-0"
-													/>
-													<div className="flex grow items-center gap-2">
-														<Discord />
-														<Label htmlFor="discord-mobile">Discord Preview</Label>
+								<TabsContent
+									value="preview"
+									className="overflow-hidden mt-0 pb-0 border-0"
+								>
+									<div className="overflow-hidden flex-grow">
+										<ScrollArea className="h-[calc(90vh-8rem)]">
+											<div className="space-y-4">
+												<div className="flex lg:flex-row flex-col gap-2 px-4 pt-2">
+													<Button
+														onClick={copyToClipboard}
+														className="w-full"
+														variant="outline"
+													>
+														{isCopied ? (
+															<Check className="size-4" />
+														) : (
+															<ClipboardCopy className="size-4" />
+														)}
+														Copy JSON
+													</Button>
+													<div className="relative flex w-full items-center gap-2 rounded-lg border border-input p-3 shadow-sm shadow-black/5 has-[[data-state=checked]]:border-ring">
+														<Checkbox
+															id="discord-mobile"
+															checked={settings.showDiscordPreview}
+															onCheckedChange={checked => {
+																updateSetting('showDiscordPreview', checked as boolean)
+															}}
+															className="order-1 after:absolute after:inset-0"
+														/>
+														<div className="flex grow items-center gap-2">
+															<Discord />
+															<Label htmlFor="discord-mobile">Discord Preview</Label>
+														</div>
 													</div>
 												</div>
+												{settings.showDiscordPreview ? (
+													<DiscordPreview games={games} settings={settings} />
+												) : (
+													<pre className="bg-secondary text-secondary-foreground p-4 overflow-auto text-xs whitespace-pre-wrap break-all">
+														{JSON.stringify(jsonData, null, 2)}
+													</pre>
+												)}
 											</div>
-											{settings.showDiscordPreview ? (
-												<DiscordPreview games={games} settings={settings} />
-											) : (
-												<pre className="bg-secondary text-secondary-foreground p-4 rounded-md overflow-auto text-xs whitespace-pre-wrap break-all">
-													{JSON.stringify(jsonData, null, 2)}
-												</pre>
-											)}
-										</div>
-									</ScrollArea>
+										</ScrollArea>
+									</div>
 								</TabsContent>
 							</Tabs>
 						</div>
 
-						<div className="hidden lg:block">
-							<ScrollArea className="h-[calc(93vh-8rem)] p-6">
-								<div className="space-y-6">
+						<div className="hidden lg:block overflow-hidden">
+							<ScrollArea className="h-full">
+								<div className="space-y-6 p-6">
 									<div className="space-y-3">
 										<Label className="text-sm font-medium">Webhook URL</Label>
 										<div className="flex items-center gap-2">
@@ -753,19 +769,17 @@ export default function Json({ games }: { games: Game }) {
 										</div>
 										<Button
 											onClick={handleWebhook}
-											size="sm"
+											className="w-full dark:text-black"
 											disabled={isLoading}
-											className="dark:text-black w-full"
 										>
 											{isLoading ? (
-												<Loader2 className="size-4 mr-2 animate-spin" />
+												<Loader2 className="size-4 animate-spin" />
 											) : (
-												<Send className="size-4 mr-2" />
+												<Send className="size-4" />
 											)}
 											Send
 										</Button>
 									</div>
-
 									<div className="space-y-2">
 										<Label className="text-sm font-medium">Message Content</Label>
 										<div className="flex items-center gap-2">
@@ -797,14 +811,12 @@ export default function Json({ games }: { games: Game }) {
 											</Button>
 										</div>
 									</div>
-
 									{games.currentGames.length > 0 && (
 										<GameSelectionList games={games.currentGames} type="Free Now" />
 									)}
 									{games.nextGames.length > 0 && (
 										<GameSelectionList games={games.nextGames} type="Coming Soon" />
 									)}
-
 									<div className="space-y-3">
 										<Label className="text-sm font-medium">Appearance</Label>
 										<div className="grid gap-2">
@@ -828,7 +840,6 @@ export default function Json({ games }: { games: Game }) {
 											/>
 										</div>
 									</div>
-
 									<div className="space-y-3 pb-2">
 										<Label className="text-sm font-medium">Embed Color</Label>
 										<div className="flex items-center gap-2">
@@ -851,7 +862,7 @@ export default function Json({ games }: { games: Game }) {
 														size="sm"
 														className="w-full px-8"
 													>
-														<Undo2 className="size-4 mr-2" />
+														<Undo2 className="size-4" />
 														Reset to Default
 													</Button>
 												</PopoverContent>
@@ -869,43 +880,44 @@ export default function Json({ games }: { games: Game }) {
 						</div>
 					</div>
 
-					<div className="hidden lg:flex flex-1 flex-col">
-						<ScrollArea className="flex-1 p-6">
-							<div className="space-y-4">
-								<div className="flex gap-2">
-									<Button onClick={copyToClipboard} className="w-full" variant="outline">
-										{isCopied ? (
-											<Check className="size-4 mr-2" />
-										) : (
-											<ClipboardCopy className="size-4 mr-2" />
-										)}
-										Copy JSON
-									</Button>
-									<div className="relative flex w-full items-center gap-2 rounded-md border border-input p-2 shadow-sm shadow-black/5 has-[[data-state=checked]]:border-ring">
-										<Checkbox
-											id="discord"
-											checked={settings.showDiscordPreview}
-											onCheckedChange={checked => {
-												updateSetting('showDiscordPreview', checked as boolean)
-											}}
-											className="order-1 after:absolute after:inset-0"
-										/>
-										<div className="flex grow items-center gap-2">
-											<Discord />
-											<Label htmlFor="discord">Discord Preview</Label>
-										</div>
-									</div>
-								</div>
-
-								{settings.showDiscordPreview ? (
-									<DiscordPreview games={games} settings={settings} />
+					<div className="hidden lg:flex flex-col w-1/2">
+						<div className="flex gap-2 p-3 shrink-0">
+							<Button onClick={copyToClipboard} className="w-1/2" variant="outline">
+								{isCopied ? (
+									<Check className="size-4" />
 								) : (
-									<pre className="bg-secondary text-secondary-foreground p-4 rounded-md overflow-auto text-xs whitespace-pre-wrap break-all">
-										{JSON.stringify(jsonData, null, 2)}
-									</pre>
+									<ClipboardCopy className="size-4" />
 								)}
+								Copy JSON
+							</Button>
+							<div className="relative flex w-1/2 bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 transition-all items-center gap-2 rounded-md border border-input p-2">
+								<Checkbox
+									id="discord"
+									checked={settings.showDiscordPreview}
+									onCheckedChange={checked => {
+										updateSetting('showDiscordPreview', checked as boolean)
+									}}
+									className="order-1 after:absolute after:inset-0"
+								/>
+								<div className="flex grow items-center gap-2">
+									<Discord />
+									<Label htmlFor="discord">Discord Preview</Label>
+								</div>
 							</div>
-						</ScrollArea>
+						</div>
+						<div className="overflow-hidden flex-grow">
+							<ScrollArea className="h-[calc(90vh-56px)]">
+								<div className="space-y-4">
+									{settings.showDiscordPreview ? (
+										<DiscordPreview games={games} settings={settings} />
+									) : (
+										<pre className="bg-secondary text-secondary-foreground p-4 overflow-auto text-xs whitespace-pre-wrap break-all">
+											{JSON.stringify(jsonData, null, 2)}
+										</pre>
+									)}
+								</div>
+							</ScrollArea>
+						</div>
 					</div>
 				</div>
 			</DialogContent>

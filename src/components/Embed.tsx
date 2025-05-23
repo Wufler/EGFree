@@ -38,7 +38,7 @@ export default function DiscordPreview({
 	}
 
 	return (
-		<div className="bg-[#ffffff] dark:bg-[#313338] dark:text-white rounded-md p-4 [overflow-wrap:anywhere]">
+		<div className="bg-[#ffffff] dark:bg-[#313338] dark:text-white p-4 [overflow-wrap:anywhere] w-full">
 			<div className="flex gap-4">
 				<div className="flex-shrink-0">
 					<div className="dark:bg-[#6263ed] bg-[#5865f2] rounded-full size-10 mt-1 flex items-center justify-center">
@@ -52,7 +52,7 @@ export default function DiscordPreview({
 							APP
 						</div>
 						<div className="text-xs ml-1 mt-0.5 text-[#616366] dark:text-[#949b9d]">
-							Today at {format(new Date(), 'HH:mm')}
+							{format(new Date(), 'HH:mm')}
 						</div>
 					</div>
 					<div className="mb-2 text-sm">
