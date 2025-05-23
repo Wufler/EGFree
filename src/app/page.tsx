@@ -13,20 +13,20 @@ export default async function Home() {
 	const games = await getEpicFreeGames()
 
 	return (
-		<main className="flex min-h-dvh flex-col bg-epic-black dark:bg-epic-black text-foreground dark:text-white">
-			<div className="container mx-auto flex flex-grow flex-col">
-				<header className="z-50 border-b border-gray-200/80 dark:border-white/10 bg-epic-black/95 dark:bg-epic-black/95 px-4 backdrop-blur-md">
-					<div className="container mx-auto flex flex-col sm:flex-row h-auto sm:h-20 items-center justify-between py-5 sm:py-0 gap-4 sm:gap-0">
+		<main className="flex min-h-dvh flex-col bg-white dark:bg-epic-black text-foreground dark:text-white">
+			<div className="w-full mx-auto flex flex-grow flex-col">
+				<header className="z-50 border-b border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black px-0 sm:px-8 backdrop-blur-md">
+					<div className="container mx-auto flex flex-col md:flex-row h-auto md:h-20 items-center justify-between py-4 md:py-0 gap-4 md:gap-0">
 						<Link
 							href="https://store.epicgames.com/free-games"
 							target="_blank"
 							className="group flex items-center text-center"
 						>
-							<h1 className="text-xl sm:text-2xl font-bold text-epic-blue dark:text-epic-blue transition-colors duration-200 group-hover:text-foreground dark:group-hover:text-white">
+							<h1 className="text-xl md:text-2xl font-bold text-epic-blue transition-colors duration-200 group-hover:text-foreground dark:group-hover:text-white">
 								Epic Games
 							</h1>
-							<div className="ml-2 sm:ml-4 h-6 w-[1px] bg-gray-200 dark:bg-white/10" />
-							<span className="ml-2 sm:ml-4 text-base sm:text-lg font-medium text-epic-light-gray dark:text-epic-light-gray">
+							<div className="ml-2 md:ml-4 h-6 w-[1px] bg-gray-200 dark:bg-white/10" />
+							<span className="ml-2 md:ml-4 text-base md:text-lg font-medium dark:text-white text-epic-gray">
 								Free Games
 							</span>
 						</Link>
@@ -38,27 +38,25 @@ export default async function Home() {
 								</Link>
 							</Button>
 							<Json games={games} />
-							<div className="h-6 w-[1px] bg-gray-200 dark:bg-white/10" />
-							<Theme />
-							<Button asChild variant="ghost" size="icon" className="rounded-full">
-								<Link href="https://github.com/WoIfey/epicfreegames" target="_blank">
-									<Github className="!size-5 dark:invert-0 invert" />
-								</Link>
-							</Button>
 						</div>
 					</div>
 				</header>
 
 				<List games={games} />
 
-				<footer className="px-4 mt-auto border-t border-gray-200/80 dark:border-white/10 py-5 text-center">
-					<div className="text-sm text-epic-light-gray dark:text-epic-light-gray">
+				<footer className="px-4 mt-auto border-t border-gray-200/80 dark:border-white/10 text-center py-4">
+					<div className="pb-1">
+						<Theme />
+						<Button asChild variant="ghost" size="icon" className="rounded-full">
+							<Link href="https://github.com/WoIfey/epicfreegames" target="_blank">
+								<Github className="!size-5 dark:invert-0 invert" />
+							</Link>
+						</Button>
+					</div>
+					<div className="text-sm text-epic-gray dark:text-muted-foreground">
 						2025, Wolfey
 					</div>
-					<div className="mt-1 text-xs text-epic-light-gray/70 dark:text-epic-light-gray/70">
-						Offers may vary from what is shown.
-					</div>
-					<div className="mt-1 text-xs text-epic-light-gray/70 dark:text-epic-light-gray/70">
+					<div className="mt-1 text-xs text-epic-gray dark:text-muted-foreground">
 						This website is not affiliated with, endorsed by, or connected to Epic
 						Games, Inc.
 					</div>

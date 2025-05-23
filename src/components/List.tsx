@@ -78,8 +78,8 @@ export default function List({ games }: { games: Game }) {
 		}
 
 		const cardContent = (
-			<Card className="group relative h-full overflow-hidden border-0 bg-epic-black dark:bg-epic-black transition-all duration-300 hover:scale-[1.02] shadow-none">
-				<div className="relative aspect-[16/9] overflow-hidden rounded-lg">
+			<Card className="rounded-none sm:rounded-lg p-0 group relative overflow-hidden border-0">
+				<div className="relative aspect-[16/9] overflow-hidden sm:rounded-lg">
 					{isAddOn && (
 						<div className="absolute right-2 top-2 z-10 flex items-center rounded-sm bg-epic-blue/80 dark:bg-epic-blue/80 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
 							ADD-ON
@@ -104,7 +104,7 @@ export default function List({ games }: { games: Game }) {
 							height={720}
 							priority
 							alt={game.title}
-							className={`h-full w-full object-cover transition-all duration-500 group-hover:scale-105 ${
+							className={`h-full w-full object-cover transition-all duration-300 group-hover:scale-103 ${
 								timeLeft[game.id] === 'Expired' ? 'grayscale' : ''
 							}`}
 						/>
@@ -113,7 +113,7 @@ export default function List({ games }: { games: Game }) {
 							<Gift className="size-20 text-epic-blue" />
 						</div>
 					)}
-					<div className="absolute inset-0 bg-gradient-to-t from-epic-black via-epic-black/60" />
+					<div className="absolute inset-0 bg-gradient-to-t from-black via-black/40" />
 				</div>
 
 				<CardContent className="absolute bottom-0 left-0 right-0 p-4">
@@ -121,7 +121,7 @@ export default function List({ games }: { games: Game }) {
 						{isCurrentGame ? (
 							<TimeDisplay gameId={game.id} />
 						) : (
-							<div className="flex items-center text-epic-light-gray">
+							<div className="flex items-center text-gray-400">
 								<Calendar className="mr-1.5 size-4" />
 								<span className="text-sm font-medium">
 									{format(getGameDate(game), 'MMM d')}
@@ -129,21 +129,17 @@ export default function List({ games }: { games: Game }) {
 							</div>
 						)}
 					</div>
-					<div className="flex justify-between items-center pb-5">
+					<div className="flex justify-between items-center">
 						<div>
-							<p className="line-clamp-1 text-lg font-bold text-foreground transition-colors duration-200 group-hover:text-epic-blue dark:group-hover:text-epic-blue">
+							<p className="line-clamp-1 text-lg font-bold text-white transition-colors duration-200 group-hover:text-epic-blue dark:group-hover:text-epic-blue">
 								{game.title}
 							</p>
 							{game.seller?.name !== 'Epic Dev Test Account' && (
-								<p className="line-clamp-1 text-sm text-epic-light-gray">
-									{game.seller?.name}
-								</p>
+								<p className="line-clamp-1 text-sm text-white">{game.seller?.name}</p>
 							)}
 						</div>
 						<div className="flex flex-col items-end">
-							{isCurrentGame && (
-								<span className="font-bold text-foreground">Free</span>
-							)}
+							{isCurrentGame && <span className="font-bold text-white">Free</span>}
 							{game.price.totalPrice.originalPrice !== 0 && (
 								<>
 									{!isCurrentGame &&
@@ -154,7 +150,7 @@ export default function List({ games }: { games: Game }) {
 											</span>
 										)}
 									<span
-										className={`text-sm text-epic-light-gray ${
+										className={`text-sm ${
 											isCurrentGame ||
 											game.price.totalPrice.discountPrice !==
 												game.price.totalPrice.originalPrice
@@ -202,16 +198,16 @@ export default function List({ games }: { games: Game }) {
 	const isTwoCurrentGames = games.currentGames.length <= 2
 	const isTwoUpcomingGames = games.nextGames.length <= 2
 
-	const gridClassName = `grid gap-4 lg:gap-6 ${
+	const gridClassName = `grid gap-4 ${
 		isSingleGame
-			? 'grid-cols-1 sm:grid-cols-2'
+			? 'grid-cols-1 lg:grid-cols-2'
 			: isTwoCurrentGames && isTwoUpcomingGames
-			? 'grid-cols-1 sm:grid-cols-2'
-			: 'grid-cols-1 sm:grid-cols-3'
+			? 'grid-cols-1 lg:grid-cols-2'
+			: 'grid-cols-1 lg:grid-cols-3'
 	}`
 
 	return (
-		<div className="min-h-[50vh] rounded-none bg-epic-black dark:bg-epic-black p-4 lg:rounded-lg lg:p-8">
+		<div className="dark:bg-epic-black lg:px-8 lg:py-6 py-0">
 			{isSingleGame ? (
 				<div className={gridClassName}>
 					{games.currentGames.map(game => renderGameCard(game, true))}
@@ -219,54 +215,52 @@ export default function List({ games }: { games: Game }) {
 				</div>
 			) : (
 				<>
-					<Tabs defaultValue="current" className="w-full sm:hidden">
-						<TabsList className="w-full h-auto rounded-none bg-transparent !pb-2 p-0">
+					<Tabs defaultValue="current" className="w-full lg:hidden gap-0 sm:gap-4">
+						<TabsList className="w-full h-auto rounded-none bg-transparent p-0">
 							<TabsTrigger
 								value="current"
-								className="flex-1 relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
+								className="flex-1 !text-epic-blue relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
 							>
-								Free Now
+								<Gem className="size-4" /> Free Now
 							</TabsTrigger>
 							<TabsTrigger
 								value="upcoming"
 								className="flex-1 relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
 							>
-								Coming Soon
+								<Calendar className="size-4" /> Coming Soon
 							</TabsTrigger>
 						</TabsList>
 						<TabsContent value="current">
-							<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 sm:gap-4 gap-0 sm:px-4 px-0">
 								{games.currentGames.map(game => renderGameCard(game, true))}
 							</div>
 						</TabsContent>
 						<TabsContent value="upcoming">
-							<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 sm:gap-4 gap-0 sm:px-4 px-0">
 								{games.nextGames.map(game => renderGameCard(game, false))}
 							</div>
 						</TabsContent>
 					</Tabs>
 
-					<div className="hidden sm:block">
-						<section>
-							<div className="space-y-4">
-								<div>
-									<h3 className="text-lg font-medium text-epic-blue dark:text-epic-blue flex items-center">
-										<Gem className="mr-2 size-4" /> Free Now
-									</h3>
-									<div className={gridClassName}>
-										{games.currentGames.map(game => renderGameCard(game, true))}
-									</div>
-								</div>
-								<div>
-									<h3 className="text-lg font-medium text-epic-light-gray dark:text-epic-light-gray flex items-center">
-										<Calendar className="mr-2 size-4" /> Coming Soon
-									</h3>
-									<div className={gridClassName}>
-										{games.nextGames.map(game => renderGameCard(game, false))}
-									</div>
+					<div className="hidden lg:block">
+						<div className="space-y-6 container mx-auto">
+							<div>
+								<h3 className="pb-4	text-lg font-medium text-epic-blue dark:text-epic-blue flex items-center">
+									<Gem className="mr-2 size-4" /> Free Now
+								</h3>
+								<div className={gridClassName}>
+									{games.currentGames.map(game => renderGameCard(game, true))}
 								</div>
 							</div>
-						</section>
+							<div>
+								<h3 className="pb-4	text-lg font-medium flex items-center">
+									<Calendar className="mr-2 size-4" /> Coming Soon
+								</h3>
+								<div className={gridClassName}>
+									{games.nextGames.map(game => renderGameCard(game, false))}
+								</div>
+							</div>
+						</div>
 					</div>
 				</>
 			)}
