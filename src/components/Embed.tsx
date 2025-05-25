@@ -192,7 +192,7 @@ export default function DiscordPreview({
 													: isBundleGame
 													? 'Claim Bundle'
 													: 'Claim Game'
-												: 'Store Page'}
+												: ''}
 										</a>
 										{settings.includeImage && imageUrl && (
 											<Image
@@ -215,7 +215,7 @@ export default function DiscordPreview({
 						)
 					})}
 
-					{games.currentGames.length > 0 && settings.includeClaimAll && (
+					{games.currentGames.length > 0 && settings.includeCheckout && (
 						<div
 							className="flex mt-1 rounded-sm overflow-hidden"
 							style={{ borderLeft: `4px solid ${settings.embedColor}` }}

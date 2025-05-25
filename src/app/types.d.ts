@@ -89,7 +89,8 @@ type EgFreeSettings = {
     includeFooter: boolean
     includePrice: boolean
     includeImage: boolean
-    includeClaimAll: boolean
+    includeCheckout: boolean
     webhookUrl: string
     showDiscordPreview: boolean
+    messageId: string
 }

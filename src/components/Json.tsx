@@ -11,9 +11,12 @@ import {
 	Save,
 	ExternalLink,
 	X,
+	DollarSign,
+	Image as ImageIcon,
+	Clock,
+	ShoppingCart,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import {
@@ -46,41 +49,13 @@ import { Checkbox } from './ui/checkbox'
 import Discord from './ui/discord'
 import Link from 'next/link'
 
-function Switches({
-	id,
-	checked,
-	onCheckedChange,
-	disabled,
-	label,
-}: {
-	id: string
-	checked: boolean
-	onCheckedChange: (checked: boolean) => void
-	disabled?: boolean
-	label: string
-}) {
-	return (
-		<div className="relative flex w-full bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 transition-all items-center gap-2 rounded-md border border-input p-3">
-			<Switch
-				id={id}
-				checked={checked}
-				onCheckedChange={onCheckedChange}
-				disabled={disabled}
-				className="order-1 h-4 w-6 after:absolute after:inset-0 [&_span]:size-3 [&_span]:data-[state=checked]:translate-x-2 rtl:[&_span]:data-[state=checked]:-translate-x-2"
-			/>
-			<div className="grid grow gap-2">
-				<Label htmlFor={id}>{label}</Label>
-			</div>
-		</div>
-	)
-}
-
 const defaultColor = '#85ce4b'
 const defaultContent = '<@&847939354978811924>'
 
 export default function Json({ games }: { games: Game }) {
 	const [jsonData, setJsonData] = useState({})
 	const [webhookUrl, setWebhookUrl] = useState('')
+	const [messageId, setMessageId] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
 	const [isVisible, setIsVisible] = useState(false)
 	const [isCopied, setIsCopied] = useState(false)
@@ -91,9 +66,10 @@ export default function Json({ games }: { games: Game }) {
 		includeFooter: true,
 		includePrice: true,
 		includeImage: true,
-		includeClaimAll: true,
+		includeCheckout: true,
 		webhookUrl: '',
 		showDiscordPreview: true,
+		messageId: '',
 	})
 
 	useEffect(() => {
@@ -136,8 +112,10 @@ export default function Json({ games }: { games: Game }) {
 							...parsed,
 							selectedGames: cleanedSelectedGames,
 							webhookUrl: decryptedWebhook,
+							messageId: parsed.messageId || '',
 						})
 						setWebhookUrl(decryptedWebhook)
+						setMessageId(parsed.messageId || '')
 					} catch (error) {
 						console.error('Failed to load settings:', error)
 					}
@@ -336,10 +314,10 @@ export default function Json({ games }: { games: Game }) {
 
 			if (
 				games.currentGames.length > 0 &&
-				settings.includeClaimAll &&
+				settings.includeCheckout &&
 				!mysteryGames
 			) {
-				const claimAllEmbed = {
+				const checkoutEmbed = {
 					color: parseInt(settings.embedColor.replace('#', ''), 16),
 					fields: [
 						{
@@ -357,7 +335,7 @@ export default function Json({ games }: { games: Game }) {
 						icon_url: 'https://wolfey.s-ul.eu/YcyMXrI1',
 					},
 				}
-				embeds.push(claimAllEmbed)
+				embeds.push(checkoutEmbed)
 			}
 
 			setJsonData({
@@ -393,11 +371,20 @@ export default function Json({ games }: { games: Game }) {
 				headers: {
 					'Content-Type': 'application/json',
 				},
-				body: JSON.stringify({ webhookUrl, jsonData }),
+				body: JSON.stringify({ webhookUrl, jsonData, messageId }),
 			})
 
 			if (response.ok) {
-				toast.success('Successfully sent data.')
+				const responseData = await response.json()
+				if (messageId) {
+					toast.success('Successfully updated message.')
+				} else {
+					toast.success('Successfully sent data.')
+					if (responseData.messageId) {
+						setMessageId(responseData.messageId)
+						updateSetting('messageId', responseData.messageId)
+					}
+				}
 			} else {
 				const errorData = await response.json()
 				throw new Error(errorData.message || 'Failed to send JSON Data.')
@@ -426,34 +413,58 @@ export default function Json({ games }: { games: Game }) {
 	}: {
 		games: GameItem[]
 		type: string
-	}) => (
-		<div className="space-y-2">
-			<Label className="text-sm font-medium">{type}</Label>
-			{games.map(game => (
-				<div
-					key={game.id}
-					className="relative flex w-full bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 transition-all items-center gap-2 rounded-md border border-input p-3"
-				>
-					<Checkbox
-						id={game.id}
-						checked={settings.selectedGames[game.id] ?? false}
-						onCheckedChange={checked => {
-							updateSetting('selectedGames', {
-								...settings.selectedGames,
-								[game.id]: checked as boolean,
-							})
-						}}
-						className="order-1 after:absolute after:inset-0"
-					/>
-					<div className="grid grow gap-1">
-						<Label htmlFor={game.id} className="cursor-pointer">
-							{game.title}
-						</Label>
-					</div>
+	}) => {
+		const allSelected = games.every(game => settings.selectedGames[game.id])
+
+		const handleToggleAll = () => {
+			const newSelectedGames = { ...settings.selectedGames }
+			const shouldSelectAll = !allSelected
+
+			games.forEach(game => {
+				newSelectedGames[game.id] = shouldSelectAll
+			})
+			updateSetting('selectedGames', newSelectedGames)
+		}
+
+		return (
+			<div className="space-y-2">
+				<div className="flex items-center justify-between">
+					<Label className="text-sm font-medium">{type}</Label>
+					<Button
+						variant="ghost"
+						size="sm"
+						onClick={handleToggleAll}
+						className="h-6 px-2 text-xs"
+					>
+						{allSelected ? 'Deselect All' : 'Select All'}
+					</Button>
 				</div>
-			))}
-		</div>
-	)
+				{games.map(game => (
+					<div
+						key={game.id}
+						className="relative flex w-full bg-background shadow-xs gap-2 rounded-md border border-input p-3 has-data-[state=checked]:border-primary/50 cursor-pointer outline-none hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all"
+					>
+						<Checkbox
+							id={game.id}
+							checked={settings.selectedGames[game.id] ?? false}
+							onCheckedChange={checked => {
+								updateSetting('selectedGames', {
+									...settings.selectedGames,
+									[game.id]: checked as boolean,
+								})
+							}}
+							className="order-1 after:absolute after:inset-0"
+						/>
+						<div className="grid grow gap-1">
+							<Label htmlFor={game.id} className="cursor-pointer">
+								{game.title}
+							</Label>
+						</div>
+					</div>
+				))}
+			</div>
+		)
+	}
 
 	return (
 		<Dialog>
@@ -588,7 +599,7 @@ export default function Json({ games }: { games: Game }) {
 														) : (
 															<Send className="size-4" />
 														)}
-														Send
+														{messageId ? 'Edit Message' : 'Send'}
 													</Button>
 												</div>
 												<div className="space-y-3">
@@ -622,6 +633,41 @@ export default function Json({ games }: { games: Game }) {
 														</Button>
 													</div>
 												</div>
+												<div className="space-y-3">
+													<Label className="text-sm font-medium">
+														Message ID (Optional)
+													</Label>
+													<div className="flex items-center gap-2">
+														<Input
+															placeholder="Leave empty to send new message"
+															value={messageId}
+															onChange={e => {
+																setMessageId(e.target.value)
+																updateSetting('messageId', e.target.value)
+															}}
+														/>
+														<Button
+															variant="outline"
+															size="icon"
+															onClick={async () => {
+																try {
+																	const text = await navigator.clipboard.readText()
+																	if (/^\d+$/.test(text.trim())) {
+																		setMessageId(text.trim())
+																		updateSetting('messageId', text.trim())
+																	} else {
+																		toast.error('Message ID must contain only numbers')
+																	}
+																} catch (err) {
+																	console.error('Failed to read clipboard:', err)
+																	toast.error('Failed to read clipboard')
+																}
+															}}
+														>
+															<Clipboard className="size-4" />
+														</Button>
+													</div>
+												</div>
 
 												{games.currentGames.length > 0 && (
 													<GameSelectionList games={games.currentGames} type="Free Now" />
@@ -631,40 +677,102 @@ export default function Json({ games }: { games: Game }) {
 												)}
 
 												<div className="space-y-3">
-													<Label className="text-sm font-medium">Appearance</Label>
-													<div className="grid gap-2">
-														<Switches
-															id="include-price"
-															checked={settings.includePrice}
-															onCheckedChange={checked =>
-																updateSetting('includePrice', checked)
-															}
-															label="Show Price"
-														/>
-														<Switches
-															id="include-image"
-															checked={settings.includeImage}
-															onCheckedChange={checked =>
-																updateSetting('includeImage', checked)
-															}
-															label="Show Image"
-														/>
-														<Switches
-															id="include-footer"
-															checked={settings.includeFooter}
-															onCheckedChange={checked =>
-																updateSetting('includeFooter', checked)
-															}
-															label="Show Footer"
-														/>
-														<Switches
-															id="include-claim-all"
-															checked={settings.includeClaimAll}
-															onCheckedChange={checked =>
-																updateSetting('includeClaimAll', checked)
-															}
-															label="Show Claim All Games"
-														/>
+													<div className="flex items-center justify-between">
+														<Label className="text-sm font-medium">Appearance</Label>
+														<Button
+															variant="ghost"
+															size="sm"
+															onClick={() => {
+																const allSelected =
+																	settings.includePrice &&
+																	settings.includeImage &&
+																	settings.includeFooter &&
+																	settings.includeCheckout
+																const newValue = !allSelected
+																updateSetting('includePrice', newValue)
+																updateSetting('includeImage', newValue)
+																updateSetting('includeFooter', newValue)
+																updateSetting('includeCheckout', newValue)
+															}}
+															className="h-6 px-2 text-xs"
+														>
+															{settings.includePrice &&
+															settings.includeImage &&
+															settings.includeFooter &&
+															settings.includeCheckout
+																? 'Deselect All'
+																: 'Select All'}
+														</Button>
+													</div>
+													<div className="grid grid-cols-2 gap-3">
+														<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
+															<div className="flex justify-between gap-2">
+																<Checkbox
+																	id="include-price-mobile"
+																	checked={settings.includePrice}
+																	onCheckedChange={checked =>
+																		updateSetting('includePrice', checked as boolean)
+																	}
+																	className="order-1 after:absolute after:inset-0"
+																/>
+																<DollarSign
+																	className="opacity-60"
+																	size={16}
+																	aria-hidden="true"
+																/>
+															</div>
+															<Label htmlFor="include-price-mobile">Price</Label>
+														</div>
+														<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
+															<div className="flex justify-between gap-2">
+																<Checkbox
+																	id="include-image-mobile"
+																	checked={settings.includeImage}
+																	onCheckedChange={checked =>
+																		updateSetting('includeImage', checked as boolean)
+																	}
+																	className="order-1 after:absolute after:inset-0"
+																/>
+																<ImageIcon
+																	className="opacity-60"
+																	size={16}
+																	aria-hidden="true"
+																/>
+															</div>
+															<Label htmlFor="include-image-mobile">Images</Label>
+														</div>
+														<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
+															<div className="flex justify-between gap-2">
+																<Checkbox
+																	id="include-footer-mobile"
+																	checked={settings.includeFooter}
+																	onCheckedChange={checked =>
+																		updateSetting('includeFooter', checked as boolean)
+																	}
+																	className="order-1 after:absolute after:inset-0"
+																/>
+																<Clock className="opacity-60" size={16} aria-hidden="true" />
+															</div>
+															<Label htmlFor="include-footer-mobile">Footer</Label>
+														</div>
+														<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
+															<div className="flex justify-between gap-2">
+																<Checkbox
+																	id="include-checkout-mobile"
+																	checked={settings.includeCheckout}
+																	onCheckedChange={checked =>
+																		updateSetting('includeCheckout', checked as boolean)
+																	}
+																	className="order-1 after:absolute after:inset-0"
+																/>
+																<ShoppingCart
+																	className="opacity-60"
+																	size={16}
+																	aria-hidden="true"
+																/>
+															</div>
+															<Label htmlFor="include-checkout-mobile">Checkout</Label>
+														</div>
 													</div>
 												</div>
 
@@ -833,7 +941,7 @@ export default function Json({ games }: { games: Game }) {
 											) : (
 												<Send className="size-4" />
 											)}
-											Send
+											{messageId ? 'Edit Message' : 'Send'}
 										</Button>
 									</div>
 									<div className="space-y-2">
@@ -867,6 +975,39 @@ export default function Json({ games }: { games: Game }) {
 											</Button>
 										</div>
 									</div>
+									<div className="space-y-2">
+										<Label className="text-sm font-medium">Message ID (Optional)</Label>
+										<div className="flex items-center gap-2">
+											<Input
+												placeholder="Leave empty to send new message"
+												value={messageId}
+												onChange={e => {
+													setMessageId(e.target.value)
+													updateSetting('messageId', e.target.value)
+												}}
+											/>
+											<Button
+												variant="outline"
+												size="icon"
+												onClick={async () => {
+													try {
+														const text = await navigator.clipboard.readText()
+														if (/^\d+$/.test(text.trim())) {
+															setMessageId(text.trim())
+															updateSetting('messageId', text.trim())
+														} else {
+															toast.error('Message ID must contain only numbers')
+														}
+													} catch (err) {
+														console.error('Failed to read clipboard:', err)
+														toast.error('Failed to read clipboard')
+													}
+												}}
+											>
+												<Clipboard className="size-4" />
+											</Button>
+										</div>
+									</div>
 									{games.currentGames.length > 0 && (
 										<GameSelectionList games={games.currentGames} type="Free Now" />
 									)}
@@ -874,34 +1015,94 @@ export default function Json({ games }: { games: Game }) {
 										<GameSelectionList games={games.nextGames} type="Upcoming" />
 									)}
 									<div className="space-y-3">
-										<Label className="text-sm font-medium">Appearance</Label>
-										<div className="grid gap-2">
-											<Switches
-												id="include-price"
-												checked={settings.includePrice}
-												onCheckedChange={checked => updateSetting('includePrice', checked)}
-												label="Show Price"
-											/>
-											<Switches
-												id="include-image"
-												checked={settings.includeImage}
-												onCheckedChange={checked => updateSetting('includeImage', checked)}
-												label="Show Image"
-											/>
-											<Switches
-												id="include-footer"
-												checked={settings.includeFooter}
-												onCheckedChange={checked => updateSetting('includeFooter', checked)}
-												label="Show Footer"
-											/>
-											<Switches
-												id="include-claim-all"
-												checked={settings.includeClaimAll}
-												onCheckedChange={checked =>
-													updateSetting('includeClaimAll', checked)
-												}
-												label="Show Claim All Games"
-											/>
+										<div className="flex items-center justify-between">
+											<Label className="text-sm font-medium">Appearance</Label>
+											<Button
+												variant="ghost"
+												size="sm"
+												onClick={() => {
+													const allSelected =
+														settings.includePrice &&
+														settings.includeImage &&
+														settings.includeFooter &&
+														settings.includeCheckout
+													const newValue = !allSelected
+													updateSetting('includePrice', newValue)
+													updateSetting('includeImage', newValue)
+													updateSetting('includeFooter', newValue)
+													updateSetting('includeCheckout', newValue)
+												}}
+												className="h-6 px-2 text-xs"
+											>
+												{settings.includePrice &&
+												settings.includeImage &&
+												settings.includeFooter &&
+												settings.includeCheckout
+													? 'Deselect All'
+													: 'Select All'}
+											</Button>
+										</div>
+										<div className="grid grid-cols-2 gap-3">
+											<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
+												<div className="flex justify-between gap-2">
+													<Checkbox
+														id="include-price"
+														checked={settings.includePrice}
+														onCheckedChange={checked =>
+															updateSetting('includePrice', checked as boolean)
+														}
+														className="order-1 after:absolute after:inset-0"
+													/>
+													<DollarSign className="opacity-60" size={16} aria-hidden="true" />
+												</div>
+												<Label htmlFor="include-price">Price</Label>
+											</div>
+											<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
+												<div className="flex justify-between gap-2">
+													<Checkbox
+														id="include-image"
+														checked={settings.includeImage}
+														onCheckedChange={checked =>
+															updateSetting('includeImage', checked as boolean)
+														}
+														className="order-1 after:absolute after:inset-0"
+													/>
+													<ImageIcon className="opacity-60" size={16} aria-hidden="true" />
+												</div>
+												<Label htmlFor="include-image">Images</Label>
+											</div>
+											<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
+												<div className="flex justify-between gap-2">
+													<Checkbox
+														id="include-footer"
+														checked={settings.includeFooter}
+														onCheckedChange={checked =>
+															updateSetting('includeFooter', checked as boolean)
+														}
+														className="order-1 after:absolute after:inset-0"
+													/>
+													<Clock className="opacity-60" size={16} aria-hidden="true" />
+												</div>
+												<Label htmlFor="include-footer">Footer</Label>
+											</div>
+											<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
+												<div className="flex justify-between gap-2">
+													<Checkbox
+														id="include-checkout"
+														checked={settings.includeCheckout}
+														onCheckedChange={checked =>
+															updateSetting('includeCheckout', checked as boolean)
+														}
+														className="order-1 after:absolute after:inset-0"
+													/>
+													<ShoppingCart
+														className="opacity-60"
+														size={16}
+														aria-hidden="true"
+													/>
+												</div>
+												<Label htmlFor="include-checkout">Checkout</Label>
+											</div>
 										</div>
 									</div>
 									<div className="space-y-3 pb-2">
