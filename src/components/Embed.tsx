@@ -7,9 +7,11 @@ const defaultContent = '<@&847939354978811924>'
 export default function DiscordPreview({
 	games,
 	settings,
+	checkoutLink = '',
 }: {
 	games: Game
 	settings: EgFreeSettings
+	checkoutLink?: string
 }) {
 	const selectedGames = [...games.currentGames, ...games.nextGames].filter(
 		game => settings.selectedGames[game.id]
@@ -36,6 +38,32 @@ export default function DiscordPreview({
 	}
 
 	const bulkCheckoutUrl = generateBulkCheckoutUrl()
+
+	const normalizeCheckoutUrl = (url: string) => {
+		if (!url.trim()) return ''
+
+		try {
+			let fullUrl = url.trim()
+
+			if (fullUrl.startsWith('/purchase')) {
+				fullUrl = `https://store.epicgames.com${fullUrl}`
+			} else if (!fullUrl.startsWith('http')) {
+				fullUrl = `https://store.epicgames.com/${fullUrl}`
+			}
+
+			const urlObj = new URL(fullUrl)
+			const offers = urlObj.searchParams.getAll('offers')
+
+			if (offers.length === 0) return fullUrl
+
+			const offersParam = offers.map(offer => `offers=${offer}`).join('&')
+			return `https://store.epicgames.com/purchase?${offersParam}#/purchase/payment-methods`
+		} catch {
+			return url
+		}
+	}
+
+	const normalizedCheckoutLink = normalizeCheckoutUrl(checkoutLink)
 
 	const isCurrentlyFree = (game: GameItem) => {
 		const currentPromo =
@@ -223,7 +251,15 @@ export default function DiscordPreview({
 							<div className="max-w-md bg-[#f2f3f5] dark:bg-[#2B2D31] p-3.5 pr-4">
 								<div className="flex flex-col text-sm gap-0.5">
 									<h1 className="font-semibold">🛒 Checkout Link</h1>
-									{mysteryGames ? (
+									{normalizedCheckoutLink ? (
+										<a
+											href={normalizedCheckoutLink}
+											className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start font-medium"
+											target="_blank"
+										>
+											Claim All Games
+										</a>
+									) : mysteryGames ? (
 										<>
 											<span>Currently disabled due to mystery games</span>
 											<span className="text-xs text-gray-500 dark:text-gray-400">

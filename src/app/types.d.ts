@@ -92,5 +92,5 @@ type EgFreeSettings = {
     includeCheckout: boolean
     webhookUrl: string
     showDiscordPreview: boolean
-    messageId: string
+    openAccordions: string[]
 }

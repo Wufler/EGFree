@@ -15,9 +15,11 @@ import {
 	Image as ImageIcon,
 	Clock,
 	ShoppingCart,
+	AlertTriangle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import {
 	Dialog,
@@ -48,6 +50,12 @@ import DiscordPreview from './Embed'
 import { Checkbox } from './ui/checkbox'
 import Discord from './ui/discord'
 import Link from 'next/link'
+import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from '@/components/ui/accordion'
 
 const defaultColor = '#85ce4b'
 const defaultContent = '<@&847939354978811924>'
@@ -59,6 +67,8 @@ export default function Json({ games }: { games: Game }) {
 	const [isLoading, setIsLoading] = useState(false)
 	const [isVisible, setIsVisible] = useState(false)
 	const [isCopied, setIsCopied] = useState(false)
+	const [showWarning, setShowWarning] = useState(false)
+	const [checkoutLink, setCheckoutLink] = useState('')
 	const [settings, setSettings] = useState<EgFreeSettings>({
 		selectedGames: {},
 		embedContent: '',
@@ -69,7 +79,7 @@ export default function Json({ games }: { games: Game }) {
 		includeCheckout: true,
 		webhookUrl: '',
 		showDiscordPreview: true,
-		messageId: '',
+		openAccordions: [],
 	})
 
 	useEffect(() => {
@@ -112,10 +122,12 @@ export default function Json({ games }: { games: Game }) {
 							...parsed,
 							selectedGames: cleanedSelectedGames,
 							webhookUrl: decryptedWebhook,
-							messageId: parsed.messageId || '',
+							messageId: '',
+							checkoutLink: '',
+							openAccordions: parsed.openAccordions || [],
 						})
 						setWebhookUrl(decryptedWebhook)
-						setMessageId(parsed.messageId || '')
+						setMessageId('')
 					} catch (error) {
 						console.error('Failed to load settings:', error)
 					}
@@ -162,6 +174,10 @@ export default function Json({ games }: { games: Game }) {
 		value: EgFreeSettings[T]
 	) => {
 		setSettings(prev => ({ ...prev, [key]: value }))
+	}
+
+	const handleAccordionChange = (value: string[]) => {
+		updateSetting('openAccordions', value)
 	}
 
 	const handleColorChange = (color: string) => {
@@ -223,7 +239,32 @@ export default function Json({ games }: { games: Game }) {
 				return `https://store.epicgames.com/purchase?${offersParam}#/purchase/payment-methods`
 			}
 
+			const normalizeCheckoutUrl = (url: string) => {
+				if (!url.trim()) return ''
+
+				try {
+					let fullUrl = url.trim()
+
+					if (fullUrl.startsWith('/purchase')) {
+						fullUrl = `https://store.epicgames.com${fullUrl}`
+					} else if (!fullUrl.startsWith('http')) {
+						fullUrl = `https://store.epicgames.com/${fullUrl}`
+					}
+
+					const urlObj = new URL(fullUrl)
+					const offers = urlObj.searchParams.getAll('offers')
+
+					if (offers.length === 0) return fullUrl
+
+					const offersParam = offers.map(offer => `offers=${offer}`).join('&')
+					return `https://store.epicgames.com/purchase?${offersParam}#/purchase/payment-methods`
+				} catch {
+					return url
+				}
+			}
+
 			const bulkCheckoutUrl = generateBulkCheckoutUrl()
+			const normalizedCheckoutLink = normalizeCheckoutUrl(checkoutLink)
 
 			const embeds = selectedGames.map((game: GameItem) => {
 				const isCurrent = game.promotions.promotionalOffers.length > 0
@@ -312,40 +353,38 @@ export default function Json({ games }: { games: Game }) {
 				}
 			})
 
-			if (
-				games.currentGames.length > 0 &&
-				settings.includeCheckout &&
-				!mysteryGames
-			) {
-				const checkoutEmbed = {
-					color: parseInt(settings.embedColor.replace('#', ''), 16),
-					fields: [
-						{
-							name: '🛒 Checkout Link',
-							value: mysteryGames
-								? 'Currently disabled due to mystery games'
-								: bulkCheckoutUrl
-								? `[Claim All Games](${bulkCheckoutUrl})`
-								: 'No claimable games available',
+			if (games.currentGames.length > 0 && settings.includeCheckout) {
+				if (!mysteryGames || normalizedCheckoutLink) {
+					const checkoutEmbed = {
+						color: parseInt(settings.embedColor.replace('#', ''), 16),
+						fields: [
+							{
+								name: '🛒 Checkout Link',
+								value: normalizedCheckoutLink
+									? `[Claim All Games](${normalizedCheckoutLink})`
+									: bulkCheckoutUrl
+									? `[Claim All Games](${bulkCheckoutUrl})`
+									: 'No claimable games available',
+							},
+						],
+						author: {
+							name: 'Epic Games Store',
+							url: 'https://free.wolfey.me/',
+							icon_url: 'https://wolfey.s-ul.eu/YcyMXrI1',
 						},
-					],
-					author: {
-						name: 'Epic Games Store',
-						url: 'https://free.wolfey.me/',
-						icon_url: 'https://wolfey.s-ul.eu/YcyMXrI1',
-					},
+					}
+					embeds.push(checkoutEmbed)
 				}
-				embeds.push(checkoutEmbed)
 			}
 
 			setJsonData({
 				content: settings.embedContent || defaultContent,
-				embeds: embeds.length > 0 ? embeds : undefined,
+				embeds: embeds,
 			})
 		}
 
 		generateJson()
-	}, [games, settings])
+	}, [games, settings, checkoutLink])
 
 	const copyToClipboard = async () => {
 		try {
@@ -364,8 +403,15 @@ export default function Json({ games }: { games: Game }) {
 			return
 		}
 
+		if (!showWarning) {
+			setShowWarning(true)
+			setTimeout(() => setShowWarning(false), 3000)
+			return
+		}
+
 		try {
 			setIsLoading(true)
+			setShowWarning(false)
 			const response = await fetch('/api/webhook', {
 				method: 'POST',
 				headers: {
@@ -382,7 +428,6 @@ export default function Json({ games }: { games: Game }) {
 					toast.success('Successfully sent data.')
 					if (responseData.messageId) {
 						setMessageId(responseData.messageId)
-						updateSetting('messageId', responseData.messageId)
 					}
 				}
 			} else {
@@ -484,7 +529,7 @@ export default function Json({ games }: { games: Game }) {
 						<div className="p-6 pb-4 lg:border-b shrink-0">
 							<div className="flex items-center justify-between">
 								<DialogTitle className="flex items-center gap-2">
-									JSON Data
+									JSON Builder
 									<Link href="https://builder.wolfey.me">
 										<ExternalLink className="size-4" />
 									</Link>
@@ -521,94 +566,112 @@ export default function Json({ games }: { games: Game }) {
 								>
 									<ScrollArea className="h-[calc(90vh-150px)]">
 										<div className="space-y-6 p-4 pt-2">
-											<div className="space-y-6">
-												<div className="space-y-3">
-													<Label className="text-sm font-medium">Webhook URL</Label>
-													<div className="flex items-center gap-2">
-														<div className="flex-grow flex">
-															<Input
-																type={isVisible ? 'text' : 'password'}
-																onFocus={() => setIsVisible(true)}
-																onBlur={() => setIsVisible(false)}
-																placeholder="https://"
-																value={webhookUrl}
-																onChange={e => setWebhookUrl(e.target.value)}
-																className="rounded-r-none border-r-0"
-															/>
-															<AlertDialog>
-																<AlertDialogTrigger asChild>
-																	<Button
-																		variant="outline"
-																		size="icon"
-																		className="px-2 rounded-none border-l-0 border-r-0 disabled:opacity-100 disabled:text-muted-foreground"
-																		disabled={!webhookUrl.trim()}
-																	>
-																		<Save className="size-4" />
-																	</Button>
-																</AlertDialogTrigger>
-																<AlertDialogContent>
-																	<AlertDialogHeader>
-																		<AlertDialogTitle>Warning</AlertDialogTitle>
-																		<AlertDialogDescription className="space-y-2" asChild>
-																			<div>
-																				<p>
-																					This will encrypt and save your webhook in your browsers
-																					local storage and will automatically be in the URL input.
-																				</p>
-																				<p className="font-medium">
-																					⚠️ This might not be secure. Consider manually pasting the
-																					webhook instead.
-																				</p>
-																			</div>
-																		</AlertDialogDescription>
-																	</AlertDialogHeader>
-																	<AlertDialogFooter>
-																		<AlertDialogCancel className="sm:w-1/2">
-																			Cancel
-																		</AlertDialogCancel>
-																		<AlertDialogAction
-																			className="dark:text-black sm:w-1/2"
-																			onClick={() => {
-																				updateSetting('webhookUrl', webhookUrl)
-																				toast.success('Webhook saved locally')
-																			}}
-																		>
-																			Save Anyway
-																		</AlertDialogAction>
-																	</AlertDialogFooter>
-																</AlertDialogContent>
-															</AlertDialog>
-															<Button
-																variant="outline"
-																size="icon"
-																className="px-2 rounded-l-none border-l-0"
-																onClick={handlePaste}
-															>
-																<Clipboard className="size-4" />
-															</Button>
-														</div>
-													</div>
-													<Button
-														onClick={handleWebhook}
-														className="w-full dark:text-black"
-														size="sm"
-														disabled={isLoading}
-													>
-														{isLoading ? (
-															<Loader2 className="size-4 animate-spin" />
-														) : (
-															<Send className="size-4" />
-														)}
-														{messageId ? 'Edit Message' : 'Send'}
-													</Button>
-												</div>
-												<div className="space-y-3">
-													<Label className="text-sm font-medium">Message Content</Label>
-													<div className="flex items-center gap-2">
+											<div className="space-y-3">
+												<Label htmlFor="webhook-url" className="text-sm font-medium">
+													Webhook URL
+												</Label>
+												<div className="flex items-center gap-2">
+													<div className="flex-grow flex">
 														<Input
+															id="webhook-url"
+															type={isVisible ? 'text' : 'password'}
+															onFocus={() => setIsVisible(true)}
+															onBlur={() => setIsVisible(false)}
+															placeholder="https://"
+															value={webhookUrl}
+															onChange={e => setWebhookUrl(e.target.value)}
+															className="rounded-r-none border-r-0 text-sm"
+														/>
+														<AlertDialog>
+															<AlertDialogTrigger asChild>
+																<Button
+																	variant="outline"
+																	size="icon"
+																	className="px-2 rounded-none border-l-0 border-r-0 disabled:opacity-100 disabled:text-muted-foreground"
+																	disabled={!webhookUrl.trim()}
+																>
+																	<Save className="size-4" />
+																</Button>
+															</AlertDialogTrigger>
+															<AlertDialogContent>
+																<AlertDialogHeader>
+																	<AlertDialogTitle>Warning</AlertDialogTitle>
+																	<AlertDialogDescription className="space-y-2" asChild>
+																		<div>
+																			<p>
+																				This will encrypt and save your webhook in your browsers
+																				local storage and will automatically be in the URL input.
+																			</p>
+																			<p className="font-medium">
+																				⚠️ This might not be secure. Consider manually pasting the
+																				webhook instead.
+																			</p>
+																		</div>
+																	</AlertDialogDescription>
+																</AlertDialogHeader>
+																<AlertDialogFooter>
+																	<AlertDialogCancel className="sm:w-1/2">
+																		Cancel
+																	</AlertDialogCancel>
+																	<AlertDialogAction
+																		className="dark:text-black sm:w-1/2"
+																		onClick={() => {
+																			updateSetting('webhookUrl', webhookUrl)
+																			toast.success('Webhook saved locally')
+																		}}
+																	>
+																		Save Anyway
+																	</AlertDialogAction>
+																</AlertDialogFooter>
+															</AlertDialogContent>
+														</AlertDialog>
+														<Button
+															variant="outline"
+															size="icon"
+															className="px-2 rounded-l-none border-l-0"
+															onClick={handlePaste}
+														>
+															<Clipboard className="size-4" />
+														</Button>
+													</div>
+												</div>
+												<Button
+													onClick={handleWebhook}
+													className={`w-full ${
+														showWarning
+															? 'bg-yellow-500 hover:bg-yellow-600 text-black'
+															: 'dark:text-black'
+													}`}
+													size="sm"
+													disabled={isLoading}
+												>
+													{isLoading ? (
+														<Loader2 className="size-4 animate-spin" />
+													) : showWarning ? (
+														<AlertTriangle className="size-4" />
+													) : (
+														<Send className="size-4" />
+													)}
+													{showWarning
+														? 'Click again to confirm'
+														: messageId
+														? 'Edit Message'
+														: 'Send'}
+												</Button>
+											</div>
+
+											<div className="space-y-3">
+												<div className="space-y-2">
+													<Label htmlFor="message-content" className="text-sm font-medium">
+														Message Content
+													</Label>
+													<div className="flex items-center gap-2">
+														<Textarea
+															id="message-content"
 															placeholder={defaultContent}
 															value={settings.embedContent}
 															onChange={e => updateSetting('embedContent', e.target.value)}
+															className="min-h-[38px] max-h-[100px] text-sm"
 														/>
 														<Button
 															variant="outline"
@@ -633,18 +696,19 @@ export default function Json({ games }: { games: Game }) {
 														</Button>
 													</div>
 												</div>
-												<div className="space-y-3">
-													<Label className="text-sm font-medium">
+												<div className="space-y-2">
+													<Label htmlFor="message-id" className="text-sm font-medium">
 														Message ID (Optional)
 													</Label>
 													<div className="flex items-center gap-2">
 														<Input
+															id="message-id"
 															placeholder="Leave empty to send new message"
 															value={messageId}
 															onChange={e => {
 																setMessageId(e.target.value)
-																updateSetting('messageId', e.target.value)
 															}}
+															className="text-sm"
 														/>
 														<Button
 															variant="outline"
@@ -654,7 +718,6 @@ export default function Json({ games }: { games: Game }) {
 																	const text = await navigator.clipboard.readText()
 																	if (/^\d+$/.test(text.trim())) {
 																		setMessageId(text.trim())
-																		updateSetting('messageId', text.trim())
 																	} else {
 																		toast.error('Message ID must contain only numbers')
 																	}
@@ -668,147 +731,197 @@ export default function Json({ games }: { games: Game }) {
 														</Button>
 													</div>
 												</div>
+											</div>
 
-												{games.currentGames.length > 0 && (
-													<GameSelectionList games={games.currentGames} type="Free Now" />
-												)}
-												{games.nextGames.length > 0 && (
-													<GameSelectionList games={games.nextGames} type="Upcoming" />
+											<Accordion
+												type="multiple"
+												className="space-y-2"
+												value={settings.openAccordions}
+												onValueChange={handleAccordionChange}
+											>
+												{(games.currentGames.length > 0 || games.nextGames.length > 0) && (
+													<AccordionItem value="game-visibility">
+														<AccordionTrigger className="text-sm font-medium">
+															Game Visibility
+														</AccordionTrigger>
+														<AccordionContent className="space-y-4 pt-2">
+															{games.currentGames.length > 0 && (
+																<GameSelectionList
+																	games={games.currentGames}
+																	type="💎 Free Now"
+																/>
+															)}
+															{games.nextGames.length > 0 && (
+																<GameSelectionList games={games.nextGames} type="📅 Upcoming" />
+															)}
+														</AccordionContent>
+													</AccordionItem>
 												)}
 
-												<div className="space-y-3">
-													<div className="flex items-center justify-between">
-														<Label className="text-sm font-medium">Appearance</Label>
-														<Button
-															variant="ghost"
-															size="sm"
-															onClick={() => {
-																const allSelected =
-																	settings.includePrice &&
+												<AccordionItem value="appearance">
+													<AccordionTrigger className="text-sm font-medium">
+														Appearance
+													</AccordionTrigger>
+													<AccordionContent className="space-y-3 pt-2">
+														<div className="space-y-3">
+															<div className="flex items-center justify-between">
+																<Label className="text-sm font-medium">Options</Label>
+																<Button
+																	variant="ghost"
+																	size="sm"
+																	onClick={() => {
+																		const allSelected =
+																			settings.includePrice &&
+																			settings.includeImage &&
+																			settings.includeFooter &&
+																			settings.includeCheckout
+																		const newValue = !allSelected
+																		updateSetting('includePrice', newValue)
+																		updateSetting('includeImage', newValue)
+																		updateSetting('includeFooter', newValue)
+																		updateSetting('includeCheckout', newValue)
+																	}}
+																	className="h-6 px-2 text-xs"
+																>
+																	{settings.includePrice &&
 																	settings.includeImage &&
 																	settings.includeFooter &&
 																	settings.includeCheckout
-																const newValue = !allSelected
-																updateSetting('includePrice', newValue)
-																updateSetting('includeImage', newValue)
-																updateSetting('includeFooter', newValue)
-																updateSetting('includeCheckout', newValue)
-															}}
-															className="h-6 px-2 text-xs"
-														>
-															{settings.includePrice &&
-															settings.includeImage &&
-															settings.includeFooter &&
-															settings.includeCheckout
-																? 'Deselect All'
-																: 'Select All'}
-														</Button>
-													</div>
-													<div className="grid grid-cols-2 gap-3">
-														<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
-															<div className="flex justify-between gap-2">
-																<Checkbox
-																	id="include-price-mobile"
-																	checked={settings.includePrice}
-																	onCheckedChange={checked =>
-																		updateSetting('includePrice', checked as boolean)
-																	}
-																	className="order-1 after:absolute after:inset-0"
-																/>
-																<DollarSign
-																	className="opacity-60"
-																	size={16}
-																	aria-hidden="true"
-																/>
-															</div>
-															<Label htmlFor="include-price-mobile">Price</Label>
-														</div>
-														<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
-															<div className="flex justify-between gap-2">
-																<Checkbox
-																	id="include-image-mobile"
-																	checked={settings.includeImage}
-																	onCheckedChange={checked =>
-																		updateSetting('includeImage', checked as boolean)
-																	}
-																	className="order-1 after:absolute after:inset-0"
-																/>
-																<ImageIcon
-																	className="opacity-60"
-																	size={16}
-																	aria-hidden="true"
-																/>
-															</div>
-															<Label htmlFor="include-image-mobile">Images</Label>
-														</div>
-														<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
-															<div className="flex justify-between gap-2">
-																<Checkbox
-																	id="include-footer-mobile"
-																	checked={settings.includeFooter}
-																	onCheckedChange={checked =>
-																		updateSetting('includeFooter', checked as boolean)
-																	}
-																	className="order-1 after:absolute after:inset-0"
-																/>
-																<Clock className="opacity-60" size={16} aria-hidden="true" />
-															</div>
-															<Label htmlFor="include-footer-mobile">Footer</Label>
-														</div>
-														<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
-															<div className="flex justify-between gap-2">
-																<Checkbox
-																	id="include-checkout-mobile"
-																	checked={settings.includeCheckout}
-																	onCheckedChange={checked =>
-																		updateSetting('includeCheckout', checked as boolean)
-																	}
-																	className="order-1 after:absolute after:inset-0"
-																/>
-																<ShoppingCart
-																	className="opacity-60"
-																	size={16}
-																	aria-hidden="true"
-																/>
-															</div>
-															<Label htmlFor="include-checkout-mobile">Checkout</Label>
-														</div>
-													</div>
-												</div>
-
-												<div className="space-y-3 pb-2">
-													<Label className="text-sm font-medium">Embed Color</Label>
-													<div className="flex items-center gap-2">
-														<Popover>
-															<PopoverTrigger asChild>
-																<Button style={{ backgroundColor: settings.embedColor }} />
-															</PopoverTrigger>
-															<PopoverContent className="w-full p-3" align="start">
-																<HexColorPicker
-																	color={settings.embedColor}
-																	onChange={handleColorChange}
-																	className="w-full mb-2"
-																/>
-																<Button
-																	onClick={() => handleColorChange(defaultColor)}
-																	variant="outline"
-																	size="sm"
-																	className="w-full"
-																>
-																	<Undo2 className="size-4" />
-																	Reset to Default
+																		? 'Deselect All'
+																		: 'Select All'}
 																</Button>
-															</PopoverContent>
-														</Popover>
-														<Input
-															value={settings.embedColor}
-															onChange={e => handleColorChange(e.target.value)}
-															maxLength={7}
-															className="font-mono"
-														/>
-													</div>
-												</div>
-											</div>
+															</div>
+															<div className="grid grid-cols-2 gap-3">
+																<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
+																	<div className="flex justify-between gap-2">
+																		<Checkbox
+																			id="include-price-mobile"
+																			checked={settings.includePrice}
+																			onCheckedChange={checked =>
+																				updateSetting('includePrice', checked as boolean)
+																			}
+																			className="order-1 after:absolute after:inset-0"
+																		/>
+																		<DollarSign
+																			className="opacity-60"
+																			size={16}
+																			aria-hidden="true"
+																		/>
+																	</div>
+																	<Label htmlFor="include-price-mobile">Price</Label>
+																</div>
+																<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
+																	<div className="flex justify-between gap-2">
+																		<Checkbox
+																			id="include-image-mobile"
+																			checked={settings.includeImage}
+																			onCheckedChange={checked =>
+																				updateSetting('includeImage', checked as boolean)
+																			}
+																			className="order-1 after:absolute after:inset-0"
+																		/>
+																		<ImageIcon
+																			className="opacity-60"
+																			size={16}
+																			aria-hidden="true"
+																		/>
+																	</div>
+																	<Label htmlFor="include-image-mobile">Images</Label>
+																</div>
+																<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
+																	<div className="flex justify-between gap-2">
+																		<Checkbox
+																			id="include-footer-mobile"
+																			checked={settings.includeFooter}
+																			onCheckedChange={checked =>
+																				updateSetting('includeFooter', checked as boolean)
+																			}
+																			className="order-1 after:absolute after:inset-0"
+																		/>
+																		<Clock className="opacity-60" size={16} aria-hidden="true" />
+																	</div>
+																	<Label htmlFor="include-footer-mobile">Footer</Label>
+																</div>
+																<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
+																	<div className="flex justify-between gap-2">
+																		<Checkbox
+																			id="include-checkout-mobile"
+																			checked={settings.includeCheckout}
+																			onCheckedChange={checked =>
+																				updateSetting('includeCheckout', checked as boolean)
+																			}
+																			className="order-1 after:absolute after:inset-0"
+																		/>
+																		<ShoppingCart
+																			className="opacity-60"
+																			size={16}
+																			aria-hidden="true"
+																		/>
+																	</div>
+																	<Label htmlFor="include-checkout-mobile">Checkout</Label>
+																</div>
+															</div>
+															{settings.includeCheckout && (
+																<div className="space-y-2">
+																	<Label htmlFor="checkout-link" className="text-sm font-medium">
+																		Manual Checkout Link (Optional)
+																	</Label>
+																	<Textarea
+																		id="checkout-link"
+																		placeholder="https://store.epicgames.com/purchase?offers=1-{namespace}-{id}-#/purchase/payment-methods"
+																		value={checkoutLink}
+																		onChange={e => setCheckoutLink(e.target.value)}
+																		className="max-h-[100px] text-sm"
+																	/>
+																	<a
+																		href="https://wolfey.s-ul.eu/D3RfQGJZ"
+																		target="_blank"
+																		className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+																	>
+																		Image on how to get link <ExternalLink className="size-3" />
+																	</a>
+																</div>
+															)}
+														</div>
+
+														<div className="space-y-3">
+															<Label htmlFor="embed-color" className="text-sm font-medium">
+																Embed Color
+															</Label>
+															<div className="flex items-center gap-2">
+																<Popover>
+																	<PopoverTrigger asChild>
+																		<Button style={{ backgroundColor: settings.embedColor }} />
+																	</PopoverTrigger>
+																	<PopoverContent className="w-full p-3" align="start">
+																		<HexColorPicker
+																			color={settings.embedColor}
+																			onChange={handleColorChange}
+																			className="w-full mb-2"
+																		/>
+																		<Button
+																			onClick={() => handleColorChange(defaultColor)}
+																			variant="outline"
+																			size="sm"
+																			className="w-full"
+																		>
+																			<Undo2 className="size-4" />
+																			Reset to Default
+																		</Button>
+																	</PopoverContent>
+																</Popover>
+																<Input
+																	id="embed-color"
+																	value={settings.embedColor}
+																	onChange={e => handleColorChange(e.target.value)}
+																	maxLength={7}
+																	className="text-sm"
+																/>
+															</div>
+														</div>
+													</AccordionContent>
+												</AccordionItem>
+											</Accordion>
 										</div>
 									</ScrollArea>
 								</TabsContent>
@@ -848,7 +961,11 @@ export default function Json({ games }: { games: Game }) {
 													</div>
 												</div>
 												{settings.showDiscordPreview ? (
-													<DiscordPreview games={games} settings={settings} />
+													<DiscordPreview
+														games={games}
+														settings={settings}
+														checkoutLink={checkoutLink}
+													/>
 												) : (
 													<pre className="bg-secondary text-secondary-foreground p-4 overflow-auto text-xs whitespace-pre-wrap break-all">
 														{JSON.stringify(jsonData, null, 2)}
@@ -865,17 +982,20 @@ export default function Json({ games }: { games: Game }) {
 							<ScrollArea className="h-full">
 								<div className="space-y-6 p-6">
 									<div className="space-y-3">
-										<Label className="text-sm font-medium">Webhook URL</Label>
+										<Label htmlFor="webhook-url" className="text-sm font-medium">
+											Webhook URL
+										</Label>
 										<div className="flex items-center gap-2">
 											<div className="flex-grow flex">
 												<Input
+													id="webhook-url"
 													type={isVisible ? 'text' : 'password'}
 													onFocus={() => setIsVisible(true)}
 													onBlur={() => setIsVisible(false)}
 													placeholder="https://"
 													value={webhookUrl}
 													onChange={e => setWebhookUrl(e.target.value)}
-													className="rounded-r-none border-r-0"
+													className="rounded-r-none border-r-0 text-sm"
 												/>
 
 												<AlertDialog>
@@ -933,210 +1053,289 @@ export default function Json({ games }: { games: Game }) {
 										</div>
 										<Button
 											onClick={handleWebhook}
-											className="w-full dark:text-black"
+											className={`w-full ${
+												showWarning
+													? 'bg-yellow-500 hover:bg-yellow-600 text-black'
+													: 'dark:text-black'
+											}`}
 											disabled={isLoading}
 										>
 											{isLoading ? (
 												<Loader2 className="size-4 animate-spin" />
+											) : showWarning ? (
+												<AlertTriangle className="size-4" />
 											) : (
 												<Send className="size-4" />
 											)}
-											{messageId ? 'Edit Message' : 'Send'}
+											{showWarning
+												? 'Click again to confirm'
+												: messageId
+												? 'Edit Message'
+												: 'Send'}
 										</Button>
 									</div>
-									<div className="space-y-2">
-										<Label className="text-sm font-medium">Message Content</Label>
-										<div className="flex items-center gap-2">
-											<Input
-												placeholder={defaultContent}
-												value={settings.embedContent}
-												onChange={e => updateSetting('embedContent', e.target.value)}
-											/>
-											<Button
-												variant="outline"
-												onClick={async () => {
-													try {
-														const text = await navigator.clipboard.readText()
-														if (/^\d+$/.test(text)) {
-															updateSetting(
-																'embedContent',
-																`${settings.embedContent}<@&${text}>`
-															)
-														} else {
-															toast.error('Clipboard content must be a role ID')
-														}
-													} catch (err) {
-														console.error('Failed to read clipboard:', err)
-														toast.error('Failed to read clipboard')
-													}
-												}}
-											>
-												@&
-											</Button>
-										</div>
-									</div>
-									<div className="space-y-2">
-										<Label className="text-sm font-medium">Message ID (Optional)</Label>
-										<div className="flex items-center gap-2">
-											<Input
-												placeholder="Leave empty to send new message"
-												value={messageId}
-												onChange={e => {
-													setMessageId(e.target.value)
-													updateSetting('messageId', e.target.value)
-												}}
-											/>
-											<Button
-												variant="outline"
-												size="icon"
-												onClick={async () => {
-													try {
-														const text = await navigator.clipboard.readText()
-														if (/^\d+$/.test(text.trim())) {
-															setMessageId(text.trim())
-															updateSetting('messageId', text.trim())
-														} else {
-															toast.error('Message ID must contain only numbers')
-														}
-													} catch (err) {
-														console.error('Failed to read clipboard:', err)
-														toast.error('Failed to read clipboard')
-													}
-												}}
-											>
-												<Clipboard className="size-4" />
-											</Button>
-										</div>
-									</div>
-									{games.currentGames.length > 0 && (
-										<GameSelectionList games={games.currentGames} type="Free Now" />
-									)}
-									{games.nextGames.length > 0 && (
-										<GameSelectionList games={games.nextGames} type="Upcoming" />
-									)}
+
 									<div className="space-y-3">
-										<div className="flex items-center justify-between">
-											<Label className="text-sm font-medium">Appearance</Label>
-											<Button
-												variant="ghost"
-												size="sm"
-												onClick={() => {
-													const allSelected =
-														settings.includePrice &&
-														settings.includeImage &&
-														settings.includeFooter &&
-														settings.includeCheckout
-													const newValue = !allSelected
-													updateSetting('includePrice', newValue)
-													updateSetting('includeImage', newValue)
-													updateSetting('includeFooter', newValue)
-													updateSetting('includeCheckout', newValue)
-												}}
-												className="h-6 px-2 text-xs"
-											>
-												{settings.includePrice &&
-												settings.includeImage &&
-												settings.includeFooter &&
-												settings.includeCheckout
-													? 'Deselect All'
-													: 'Select All'}
-											</Button>
+										<div className="space-y-2">
+											<Label htmlFor="message-content" className="text-sm font-medium">
+												Message Content
+											</Label>
+											<div className="flex items-center gap-2">
+												<Textarea
+													id="message-content"
+													placeholder={defaultContent}
+													value={settings.embedContent}
+													onChange={e => updateSetting('embedContent', e.target.value)}
+													className="min-h-[38px] max-h-[100px] text-sm"
+												/>
+												<Button
+													variant="outline"
+													onClick={async () => {
+														try {
+															const text = await navigator.clipboard.readText()
+															if (/^\d+$/.test(text)) {
+																updateSetting(
+																	'embedContent',
+																	`${settings.embedContent}<@&${text}>`
+																)
+															} else {
+																toast.error('Clipboard content must be a role ID')
+															}
+														} catch (err) {
+															console.error('Failed to read clipboard:', err)
+															toast.error('Failed to read clipboard')
+														}
+													}}
+												>
+													@&
+												</Button>
+											</div>
 										</div>
-										<div className="grid grid-cols-2 gap-3">
-											<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
-												<div className="flex justify-between gap-2">
-													<Checkbox
-														id="include-price"
-														checked={settings.includePrice}
-														onCheckedChange={checked =>
-															updateSetting('includePrice', checked as boolean)
+										<div className="space-y-2">
+											<Label htmlFor="message-id" className="text-sm font-medium">
+												Message ID (Optional)
+											</Label>
+											<div className="flex items-center gap-2">
+												<Input
+													id="message-id"
+													placeholder="Leave empty to send new message"
+													value={messageId}
+													onChange={e => {
+														setMessageId(e.target.value)
+													}}
+													className="text-sm"
+												/>
+												<Button
+													variant="outline"
+													size="icon"
+													onClick={async () => {
+														try {
+															const text = await navigator.clipboard.readText()
+															if (/^\d+$/.test(text.trim())) {
+																setMessageId(text.trim())
+															} else {
+																toast.error('Message ID must contain only numbers')
+															}
+														} catch (err) {
+															console.error('Failed to read clipboard:', err)
+															toast.error('Failed to read clipboard')
 														}
-														className="order-1 after:absolute after:inset-0"
-													/>
-													<DollarSign className="opacity-60" size={16} aria-hidden="true" />
-												</div>
-												<Label htmlFor="include-price">Price</Label>
-											</div>
-											<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
-												<div className="flex justify-between gap-2">
-													<Checkbox
-														id="include-image"
-														checked={settings.includeImage}
-														onCheckedChange={checked =>
-															updateSetting('includeImage', checked as boolean)
-														}
-														className="order-1 after:absolute after:inset-0"
-													/>
-													<ImageIcon className="opacity-60" size={16} aria-hidden="true" />
-												</div>
-												<Label htmlFor="include-image">Images</Label>
-											</div>
-											<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
-												<div className="flex justify-between gap-2">
-													<Checkbox
-														id="include-footer"
-														checked={settings.includeFooter}
-														onCheckedChange={checked =>
-															updateSetting('includeFooter', checked as boolean)
-														}
-														className="order-1 after:absolute after:inset-0"
-													/>
-													<Clock className="opacity-60" size={16} aria-hidden="true" />
-												</div>
-												<Label htmlFor="include-footer">Footer</Label>
-											</div>
-											<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
-												<div className="flex justify-between gap-2">
-													<Checkbox
-														id="include-checkout"
-														checked={settings.includeCheckout}
-														onCheckedChange={checked =>
-															updateSetting('includeCheckout', checked as boolean)
-														}
-														className="order-1 after:absolute after:inset-0"
-													/>
-													<ShoppingCart
-														className="opacity-60"
-														size={16}
-														aria-hidden="true"
-													/>
-												</div>
-												<Label htmlFor="include-checkout">Checkout</Label>
+													}}
+												>
+													<Clipboard className="size-4" />
+												</Button>
 											</div>
 										</div>
 									</div>
-									<div className="space-y-3 pb-2">
-										<Label className="text-sm font-medium">Embed Color</Label>
-										<div className="flex items-center gap-2">
-											<Popover>
-												<PopoverTrigger asChild>
-													<Button style={{ backgroundColor: settings.embedColor }} />
-												</PopoverTrigger>
-												<PopoverContent className="w-full p-3" align="start">
-													<HexColorPicker
-														color={settings.embedColor}
-														onChange={handleColorChange}
-														className="w-full mb-2"
-													/>
-													<Button
-														onClick={() => handleColorChange(defaultColor)}
-														variant="outline"
-														size="sm"
-														className="w-full px-8"
-													>
-														<Undo2 className="size-4" />
-														Reset to Default
-													</Button>
-												</PopoverContent>
-											</Popover>
-											<Input
-												value={settings.embedColor}
-												onChange={e => handleColorChange(e.target.value)}
-												maxLength={7}
-												className="font-mono"
-											/>
-										</div>
-									</div>
+
+									<Accordion
+										type="multiple"
+										className="space-y-2"
+										value={settings.openAccordions}
+										onValueChange={handleAccordionChange}
+									>
+										{(games.currentGames.length > 0 || games.nextGames.length > 0) && (
+											<AccordionItem value="game-visibility">
+												<AccordionTrigger className="text-sm font-medium">
+													Game Visibility
+												</AccordionTrigger>
+												<AccordionContent className="space-y-4 pt-2">
+													{games.currentGames.length > 0 && (
+														<GameSelectionList
+															games={games.currentGames}
+															type="💎 Free Now"
+														/>
+													)}
+													{games.nextGames.length > 0 && (
+														<GameSelectionList games={games.nextGames} type="📅 Upcoming" />
+													)}
+												</AccordionContent>
+											</AccordionItem>
+										)}
+
+										<AccordionItem value="appearance">
+											<AccordionTrigger className="text-sm font-medium">
+												Appearance
+											</AccordionTrigger>
+											<AccordionContent className="space-y-3 pt-2">
+												<div className="space-y-3">
+													<div className="flex items-center justify-between">
+														<Label className="text-sm font-medium">Options</Label>
+														<Button
+															variant="ghost"
+															size="sm"
+															onClick={() => {
+																const allSelected =
+																	settings.includePrice &&
+																	settings.includeImage &&
+																	settings.includeFooter &&
+																	settings.includeCheckout
+																const newValue = !allSelected
+																updateSetting('includePrice', newValue)
+																updateSetting('includeImage', newValue)
+																updateSetting('includeFooter', newValue)
+																updateSetting('includeCheckout', newValue)
+															}}
+															className="h-6 px-2 text-xs"
+														>
+															{settings.includePrice &&
+															settings.includeImage &&
+															settings.includeFooter &&
+															settings.includeCheckout
+																? 'Deselect All'
+																: 'Select All'}
+														</Button>
+													</div>
+													<div className="grid grid-cols-2 gap-3">
+														<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
+															<div className="flex justify-between gap-2">
+																<Checkbox
+																	id="include-price"
+																	checked={settings.includePrice}
+																	onCheckedChange={checked =>
+																		updateSetting('includePrice', checked as boolean)
+																	}
+																	className="order-1 after:absolute after:inset-0"
+																/>
+																<DollarSign
+																	className="opacity-60"
+																	size={16}
+																	aria-hidden="true"
+																/>
+															</div>
+															<Label htmlFor="include-price">Price</Label>
+														</div>
+														<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
+															<div className="flex justify-between gap-2">
+																<Checkbox
+																	id="include-image"
+																	checked={settings.includeImage}
+																	onCheckedChange={checked =>
+																		updateSetting('includeImage', checked as boolean)
+																	}
+																	className="order-1 after:absolute after:inset-0"
+																/>
+																<ImageIcon
+																	className="opacity-60"
+																	size={16}
+																	aria-hidden="true"
+																/>
+															</div>
+															<Label htmlFor="include-image">Images</Label>
+														</div>
+														<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
+															<div className="flex justify-between gap-2">
+																<Checkbox
+																	id="include-footer"
+																	checked={settings.includeFooter}
+																	onCheckedChange={checked =>
+																		updateSetting('includeFooter', checked as boolean)
+																	}
+																	className="order-1 after:absolute after:inset-0"
+																/>
+																<Clock className="opacity-60" size={16} aria-hidden="true" />
+															</div>
+															<Label htmlFor="include-footer">Footer</Label>
+														</div>
+														<div className="border-input has-data-[state=checked]:border-primary/50 relative flex cursor-pointer flex-col gap-4 rounded-md border p-4 shadow-xs outline-none w-full bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50 transition-all">
+															<div className="flex justify-between gap-2">
+																<Checkbox
+																	id="include-checkout"
+																	checked={settings.includeCheckout}
+																	onCheckedChange={checked =>
+																		updateSetting('includeCheckout', checked as boolean)
+																	}
+																	className="order-1 after:absolute after:inset-0"
+																/>
+																<ShoppingCart
+																	className="opacity-60"
+																	size={16}
+																	aria-hidden="true"
+																/>
+															</div>
+															<Label htmlFor="include-checkout">Checkout</Label>
+														</div>
+													</div>
+													{settings.includeCheckout && (
+														<div className="space-y-2">
+															<Label htmlFor="checkout-link" className="text-sm font-medium">
+																Manual Checkout Link (Optional)
+															</Label>
+															<Textarea
+																id="checkout-link"
+																placeholder="https://store.epicgames.com/purchase?offers=1-{namespace}-{id}-#/purchase/payment-methods"
+																value={checkoutLink}
+																onChange={e => setCheckoutLink(e.target.value)}
+																className="max-h-[100px] text-sm"
+															/>
+															<a
+																href="https://wolfey.s-ul.eu/D3RfQGJZ"
+																target="_blank"
+																className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+															>
+																Image on how to get link <ExternalLink className="size-3" />
+															</a>
+														</div>
+													)}
+												</div>
+												<div className="space-y-3">
+													<Label htmlFor="embed-color" className="text-sm font-medium">
+														Embed Color
+													</Label>
+													<div className="flex items-center gap-2">
+														<Popover>
+															<PopoverTrigger asChild>
+																<Button style={{ backgroundColor: settings.embedColor }} />
+															</PopoverTrigger>
+															<PopoverContent className="w-full p-3" align="start">
+																<HexColorPicker
+																	color={settings.embedColor}
+																	onChange={handleColorChange}
+																	className="w-full mb-2"
+																/>
+																<Button
+																	onClick={() => handleColorChange(defaultColor)}
+																	variant="outline"
+																	size="sm"
+																	className="w-full px-8"
+																>
+																	<Undo2 className="size-4" />
+																	Reset to Default
+																</Button>
+															</PopoverContent>
+														</Popover>
+														<Input
+															id="embed-color"
+															value={settings.embedColor}
+															onChange={e => handleColorChange(e.target.value)}
+															maxLength={7}
+															className="font-mono"
+														/>
+													</div>
+												</div>
+											</AccordionContent>
+										</AccordionItem>
+									</Accordion>
 								</div>
 							</ScrollArea>
 						</div>
@@ -1171,7 +1370,11 @@ export default function Json({ games }: { games: Game }) {
 							<ScrollArea className="h-[calc(90vh-56px)]">
 								<div className="space-y-4">
 									{settings.showDiscordPreview ? (
-										<DiscordPreview games={games} settings={settings} />
+										<DiscordPreview
+											games={games}
+											settings={settings}
+											checkoutLink={checkoutLink}
+										/>
 									) : (
 										<pre className="bg-secondary text-secondary-foreground p-4 overflow-auto text-xs whitespace-pre-wrap break-all">
 											{JSON.stringify(jsonData, null, 2)}
