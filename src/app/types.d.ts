@@ -94,3 +94,14 @@ type EgFreeSettings = {
     showDiscordPreview: boolean
     openAccordions: string[]
 }
+
+type DiscordEmbed = {
+    color: number
+    title?: string
+    description?: string
+    fields: { name: string; value: string }[]
+    author?: { name: string; url: string; icon_url: string }
+    footer?: { text: string }
+    timestamp?: string
+    image?: { url: string }
+}

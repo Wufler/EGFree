@@ -266,7 +266,7 @@ export default function Json({ games }: { games: Game }) {
 			const bulkCheckoutUrl = generateBulkCheckoutUrl()
 			const normalizedCheckoutLink = normalizeCheckoutUrl(checkoutLink)
 
-			const embeds = selectedGames.map((game: GameItem) => {
+			const embeds: DiscordEmbed[] = selectedGames.map((game: GameItem) => {
 				const isCurrent = game.promotions.promotionalOffers.length > 0
 				const dateInfo = isCurrent
 					? game.promotions.promotionalOffers[0].promotionalOffers[0].endDate
@@ -357,21 +357,13 @@ export default function Json({ games }: { games: Game }) {
 				if (!mysteryGames || normalizedCheckoutLink) {
 					const checkoutEmbed = {
 						color: parseInt(settings.embedColor.replace('#', ''), 16),
-						fields: [
-							{
-								name: '🛒 Checkout Link',
-								value: normalizedCheckoutLink
-									? `[Claim All Games](${normalizedCheckoutLink})`
-									: bulkCheckoutUrl
-									? `[Claim All Games](${bulkCheckoutUrl})`
-									: 'No claimable games available',
-							},
-						],
-						author: {
-							name: 'Epic Games Store',
-							url: 'https://free.wolfey.me/',
-							icon_url: 'https://wolfey.s-ul.eu/YcyMXrI1',
-						},
+						title: '🛒 Checkout Link',
+						description: normalizedCheckoutLink
+							? `[Claim All Games](${normalizedCheckoutLink})`
+							: bulkCheckoutUrl
+							? `[Claim All Games](${bulkCheckoutUrl})`
+							: 'No claimable games available',
+						fields: [],
 					}
 					embeds.push(checkoutEmbed)
 				}
@@ -565,7 +557,7 @@ export default function Json({ games }: { games: Game }) {
 									className="overflow-hidden mt-0 pb-0 border-0"
 								>
 									<ScrollArea className="h-[calc(90vh-150px)]">
-										<div className="space-y-6 p-4 pt-2">
+										<div className="space-y-4 p-4 pt-2">
 											<div className="space-y-3">
 												<Label htmlFor="webhook-url" className="text-sm font-medium">
 													Webhook URL
@@ -698,7 +690,7 @@ export default function Json({ games }: { games: Game }) {
 												</div>
 												<div className="space-y-2">
 													<Label htmlFor="message-id" className="text-sm font-medium">
-														Message ID (Optional)
+														Message ID
 													</Label>
 													<div className="flex items-center gap-2">
 														<Input
@@ -864,7 +856,7 @@ export default function Json({ games }: { games: Game }) {
 															{settings.includeCheckout && (
 																<div className="space-y-2">
 																	<Label htmlFor="checkout-link" className="text-sm font-medium">
-																		Manual Checkout Link (Optional)
+																		Manual Checkout Link
 																	</Label>
 																	<Textarea
 																		id="checkout-link"
@@ -873,20 +865,23 @@ export default function Json({ games }: { games: Game }) {
 																		onChange={e => setCheckoutLink(e.target.value)}
 																		className="max-h-[100px] text-sm"
 																	/>
-																	<a
-																		href="https://wolfey.s-ul.eu/D3RfQGJZ"
-																		target="_blank"
-																		className="text-xs text-blue-500 hover:underline flex items-center gap-1"
-																	>
-																		Image on how to get link <ExternalLink className="size-3" />
-																	</a>
+																	<div className="flex items-center gap-1 text-xs text-muted-foreground">
+																		<a
+																			href="https://wolfey.s-ul.eu/D3RfQGJZ"
+																			target="_blank"
+																			className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+																		>
+																			Image on how to get link <ExternalLink className="size-3" />
+																		</a>
+																		or leave empty to use automatic link
+																	</div>
 																</div>
 															)}
 														</div>
 
 														<div className="space-y-3">
-															<Label htmlFor="embed-color" className="text-sm font-medium">
-																Embed Color
+															<Label htmlFor="sidebar-color" className="text-sm font-medium">
+																Sidebar Color
 															</Label>
 															<div className="flex items-center gap-2">
 																<Popover>
@@ -911,7 +906,7 @@ export default function Json({ games }: { games: Game }) {
 																	</PopoverContent>
 																</Popover>
 																<Input
-																	id="embed-color"
+																	id="sidebar-color"
 																	value={settings.embedColor}
 																	onChange={e => handleColorChange(e.target.value)}
 																	maxLength={7}
@@ -980,7 +975,7 @@ export default function Json({ games }: { games: Game }) {
 
 						<div className="hidden lg:block overflow-hidden">
 							<ScrollArea className="h-full">
-								<div className="space-y-6 p-6">
+								<div className="space-y-4 p-6">
 									<div className="space-y-3">
 										<Label htmlFor="webhook-url" className="text-sm font-medium">
 											Webhook URL
@@ -1113,7 +1108,7 @@ export default function Json({ games }: { games: Game }) {
 										</div>
 										<div className="space-y-2">
 											<Label htmlFor="message-id" className="text-sm font-medium">
-												Message ID (Optional)
+												Message ID
 											</Label>
 											<div className="flex items-center gap-2">
 												<Input
@@ -1279,7 +1274,7 @@ export default function Json({ games }: { games: Game }) {
 													{settings.includeCheckout && (
 														<div className="space-y-2">
 															<Label htmlFor="checkout-link" className="text-sm font-medium">
-																Manual Checkout Link (Optional)
+																Manual Checkout Link
 															</Label>
 															<Textarea
 																id="checkout-link"
@@ -1288,19 +1283,22 @@ export default function Json({ games }: { games: Game }) {
 																onChange={e => setCheckoutLink(e.target.value)}
 																className="max-h-[100px] text-sm"
 															/>
-															<a
-																href="https://wolfey.s-ul.eu/D3RfQGJZ"
-																target="_blank"
-																className="text-xs text-blue-500 hover:underline flex items-center gap-1"
-															>
-																Image on how to get link <ExternalLink className="size-3" />
-															</a>
+															<div className="flex items-center gap-1 text-xs text-muted-foreground">
+																<a
+																	href="https://wolfey.s-ul.eu/D3RfQGJZ"
+																	target="_blank"
+																	className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+																>
+																	Image on how to get link <ExternalLink className="size-3" />
+																</a>
+																or leave empty to use automatic link
+															</div>
 														</div>
 													)}
 												</div>
 												<div className="space-y-3">
-													<Label htmlFor="embed-color" className="text-sm font-medium">
-														Embed Color
+													<Label htmlFor="sidebar-color" className="text-sm font-medium">
+														Sidebar Color
 													</Label>
 													<div className="flex items-center gap-2">
 														<Popover>
@@ -1325,7 +1323,7 @@ export default function Json({ games }: { games: Game }) {
 															</PopoverContent>
 														</Popover>
 														<Input
-															id="embed-color"
+															id="sidebar-color"
 															value={settings.embedColor}
 															onChange={e => handleColorChange(e.target.value)}
 															maxLength={7}
