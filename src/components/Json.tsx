@@ -357,13 +357,16 @@ export default function Json({ games }: { games: Game }) {
 				if (!mysteryGames || normalizedCheckoutLink) {
 					const checkoutEmbed = {
 						color: parseInt(settings.embedColor.replace('#', ''), 16),
-						title: '🛒 Checkout Link',
-						description: normalizedCheckoutLink
-							? `[Claim All Games](${normalizedCheckoutLink})`
-							: bulkCheckoutUrl
-							? `[Claim All Games](${bulkCheckoutUrl})`
-							: 'No claimable games available',
-						fields: [],
+						fields: [
+							{
+								name: '🛒 Checkout Link',
+								value: normalizedCheckoutLink
+									? `[Claim All Games](${normalizedCheckoutLink})`
+									: bulkCheckoutUrl
+									? `[Claim All Games](${bulkCheckoutUrl})`
+									: 'No claimable games available',
+							},
+						],
 					}
 					embeds.push(checkoutEmbed)
 				}
@@ -663,7 +666,7 @@ export default function Json({ games }: { games: Game }) {
 															placeholder={defaultContent}
 															value={settings.embedContent}
 															onChange={e => updateSetting('embedContent', e.target.value)}
-															className="min-h-[38px] max-h-[100px] text-sm"
+															className="min-h-[38px] max-h-[100px] text-sm wrap-anywhere"
 														/>
 														<Button
 															variant="outline"
@@ -863,7 +866,7 @@ export default function Json({ games }: { games: Game }) {
 																		placeholder="https://store.epicgames.com/purchase?offers=1-{namespace}-{id}-#/purchase/payment-methods"
 																		value={checkoutLink}
 																		onChange={e => setCheckoutLink(e.target.value)}
-																		className="max-h-[100px] text-sm"
+																		className="max-h-[100px] text-sm wrap-anywhere"
 																	/>
 																	<div className="flex items-center gap-1 text-xs text-muted-foreground">
 																		<a
@@ -1081,7 +1084,7 @@ export default function Json({ games }: { games: Game }) {
 													placeholder={defaultContent}
 													value={settings.embedContent}
 													onChange={e => updateSetting('embedContent', e.target.value)}
-													className="min-h-[38px] max-h-[100px] text-sm"
+													className="min-h-[38px] max-h-[100px] text-sm wrap-anywhere"
 												/>
 												<Button
 													variant="outline"
@@ -1281,7 +1284,7 @@ export default function Json({ games }: { games: Game }) {
 																placeholder="https://store.epicgames.com/purchase?offers=1-{namespace}-{id}-#/purchase/payment-methods"
 																value={checkoutLink}
 																onChange={e => setCheckoutLink(e.target.value)}
-																className="max-h-[100px] text-sm"
+																className="max-h-[100px] text-sm wrap-anywhere"
 															/>
 															<div className="flex items-center gap-1 text-xs text-muted-foreground">
 																<a
