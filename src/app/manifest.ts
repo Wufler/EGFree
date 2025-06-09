@@ -11,14 +11,14 @@ export default function manifest(): MetadataRoute.Manifest {
         theme_color: '#121212',
         icons: [
             {
-                src: 'https://wolfey.s-ul.eu/rvPn6iwt',
+                src: 'https://wolfey.s-ul.eu/lfBMCvMe',
                 sizes: '512x512',
-                type: 'image/svg+xml',
+                type: 'image/png',
             },
             {
-                src: "https://wolfey.s-ul.eu/ktNjedec",
+                src: "https://wolfey.s-ul.eu/Cog7XGVP",
                 sizes: "192x192",
-                type: "image/svg+xml",
+                type: "image/png",
                 purpose: "maskable"
             },
         ],
