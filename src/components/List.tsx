@@ -166,13 +166,15 @@ export default function List({ games }: { games: Game }) {
 							</div>
 						)}
 					</div>
-					<div className="flex justify-between items-center">
+					<div className="flex justify-between items-end">
 						<div>
 							<p className="line-clamp-1 text-lg font-bold text-white transition-colors duration-200 group-hover:text-epic-blue dark:group-hover:text-epic-blue">
 								{game.title}
 							</p>
 							{game.seller?.name !== 'Epic Dev Test Account' && (
-								<p className="line-clamp-1 text-sm text-white">{game.seller?.name}</p>
+								<p className="line-clamp-1 text-sm text-gray-400">
+									{game.seller?.name}
+								</p>
 							)}
 						</div>
 						<div className="flex flex-col items-end">
@@ -187,7 +189,7 @@ export default function List({ games }: { games: Game }) {
 											</span>
 										)}
 									<span
-										className={`text-sm ${
+										className={`text-sm text-white ${
 											isCurrentGame ||
 											game.price.totalPrice.discountPrice !==
 												game.price.totalPrice.originalPrice

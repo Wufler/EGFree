@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'EG Free Games',
+        name: 'EGFree',
         short_name: 'EGFree',
-        description: 'Claimable free games for the Epic Games Store',
+        description: 'Permanently claimable free games for the Epic Games Store',
         start_url: '/',
         display: 'standalone',
         background_color: '#121212',
