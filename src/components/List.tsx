@@ -298,30 +298,51 @@ export default function List({ games }: { games: Game }) {
 
 				<div className="hidden lg:block">
 					<div className="space-y-6 container mx-auto">
-						<div>
-							<h3 className="pb-4	text-lg font-medium text-epic-blue dark:text-epic-blue flex items-center">
-								<Gem className="mr-2 size-4" /> Free Now
-							</h3>
-							{games.currentGames.length > 0 ? (
+						{isSingleGame ? (
+							<div>
 								<div className={gridClassName}>
-									{games.currentGames.map(game => renderGameCard(game, true))}
+									<div>
+										<div className="pb-4 text-lg font-medium text-epic-blue dark:text-epic-blue flex items-center">
+											<Gem className="mr-2 size-4" /> Free Now
+										</div>
+										{games.currentGames.map(game => renderGameCard(game, true))}
+									</div>
+									<div>
+										<div className="pb-4 text-lg font-medium flex items-center">
+											<Calendar className="mr-2 size-4" /> Upcoming
+										</div>
+										{games.nextGames.map(game => renderGameCard(game, false))}
+									</div>
 								</div>
-							) : (
-								<NoOffers />
-							)}
-						</div>
-						<div>
-							<h3 className="pb-4	text-lg font-medium flex items-center">
-								<Calendar className="mr-2 size-4" /> Upcoming
-							</h3>
-							{games.nextGames.length > 0 ? (
-								<div className={gridClassName}>
-									{games.nextGames.map(game => renderGameCard(game, false))}
+							</div>
+						) : (
+							<>
+								<div>
+									<h3 className="pb-4 text-lg font-medium text-epic-blue dark:text-epic-blue flex items-center">
+										<Gem className="mr-2 size-4" /> Free Now
+									</h3>
+									{games.currentGames.length > 0 ? (
+										<div className={gridClassName}>
+											{games.currentGames.map(game => renderGameCard(game, true))}
+										</div>
+									) : (
+										<NoOffers />
+									)}
 								</div>
-							) : (
-								<NoOffers />
-							)}
-						</div>
+								<div>
+									<h3 className="pb-4 text-lg font-medium flex items-center">
+										<Calendar className="mr-2 size-4" /> Upcoming
+									</h3>
+									{games.nextGames.length > 0 ? (
+										<div className={gridClassName}>
+											{games.nextGames.map(game => renderGameCard(game, false))}
+										</div>
+									) : (
+										<NoOffers />
+									)}
+								</div>
+							</>
+						)}
 					</div>
 				</div>
 			</>

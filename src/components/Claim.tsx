@@ -71,7 +71,7 @@ export default function ClaimLinks({ games }: { games: Game }) {
 				</div>
 			) : (
 				<>
-					{bulkCheckoutUrl && (
+					{bulkCheckoutUrl && games.currentGames.length > 1 && (
 						<div className="p-4 bg-epic-blue/10 rounded-lg border border-epic-blue/20">
 							<h4 className="font-semibold text-epic-blue mb-2">
 								Claim All Free Games
