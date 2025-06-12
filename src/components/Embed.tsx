@@ -144,6 +144,13 @@ export default function DiscordPreview({
 								img.type === 'DieselGameBoxWide'
 						)?.url
 						const isAddOn = game.offerType === 'ADD_ON'
+
+						const getCheckoutUrl = (game: GameItem) => {
+							if (!game.namespace || !game.id) return null
+							const offerParam = `offers=1-${game.namespace}-${game.id}-`
+							return `https://store.epicgames.com/purchase?${offerParam}#/purchase/payment-methods`
+						}
+
 						return (
 							<div
 								key={game.id}
@@ -164,9 +171,13 @@ export default function DiscordPreview({
 										</p>
 									</div>
 									<div className="flex flex-col text-sm gap-0.5">
-										<h1 className="font-semibold flex items-center gap-1">
+										<a
+											href={`https://store.epicgames.com/${linkPrefix}${pageSlug}`}
+											className="font-semibold flex items-center mb-2 text-[16px] text-[#4e80eb] dark:text-[#00A8FC] hover:underline"
+											target="_blank"
+										>
 											{game.title}
-										</h1>
+										</a>
 										{settings.includePrice &&
 											(!isCurrent ? (
 												<span>
@@ -209,19 +220,22 @@ export default function DiscordPreview({
 													)}
 												</>
 											))}
-										<a
-											href={`https://store.epicgames.com/${linkPrefix}${pageSlug}`}
-											className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
-											target="_blank"
-										>
-											{isCurrent && isCurrentlyFree(game)
-												? isAddOn
+										{isCurrent && isCurrentlyFree(game) && settings.includeClaimGame && (
+											<a
+												href={
+													getCheckoutUrl(game) ||
+													`https://store.epicgames.com/${linkPrefix}${pageSlug}`
+												}
+												className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
+												target="_blank"
+											>
+												{isAddOn
 													? 'Claim Add-on'
 													: isBundleGame
 													? 'Claim Bundle'
-													: 'Claim Game'
-												: ''}
-										</a>
+													: 'Claim Game'}
+											</a>
+										)}
 										{settings.includeImage && imageUrl && (
 											<Image
 												width={1280}
@@ -243,7 +257,7 @@ export default function DiscordPreview({
 						)
 					})}
 
-					{games.currentGames.length > 0 && settings.includeCheckout && (
+					{games.currentGames.length > 1 && settings.includeCheckout && (
 						<div
 							className="flex mt-1 rounded-sm overflow-hidden"
 							style={{ borderLeft: `4px solid ${settings.embedColor}` }}
@@ -257,7 +271,7 @@ export default function DiscordPreview({
 											className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start font-medium"
 											target="_blank"
 										>
-											Claim All Games
+											{settings.includeClaimGame ? 'Claim All Games' : 'Checkout'}
 										</a>
 									) : mysteryGames ? (
 										<>
@@ -272,7 +286,7 @@ export default function DiscordPreview({
 											className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start font-medium"
 											target="_blank"
 										>
-											Claim All Games
+											{settings.includeClaimGame ? 'Claim All Games' : 'Checkout'}
 										</a>
 									) : (
 										<span className="text-gray-500 dark:text-gray-400">

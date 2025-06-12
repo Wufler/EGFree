@@ -77,6 +77,7 @@ export default function Json({ games }: { games: Game }) {
 		includePrice: true,
 		includeImage: true,
 		includeCheckout: true,
+		includeClaimGame: true,
 		webhookUrl: '',
 		showDiscordPreview: true,
 		openAccordions: [],
@@ -287,26 +288,36 @@ export default function Json({ games }: { games: Game }) {
 						? 'Claim Bundle'
 						: 'Claim Game'
 
-				const fieldValue = isCurrent
+				const getCheckoutUrl = (game: GameItem) => {
+					if (!game.namespace || !game.id) return null
+					const offerParam = `offers=1-${game.namespace}-${game.id}-`
+					return `https://store.epicgames.com/purchase?${offerParam}#/purchase/payment-methods`
+				}
+
+				const description = isCurrent
 					? game.title.toLowerCase().includes('mystery')
 						? ''
 						: `${
 								settings.includePrice
 									? isCurrentlyFree(game)
 										? isPermanentlyFree(game)
-											? `Free\n[${getClaimText(
-													game
-											  )}](https://store.epicgames.com/${linkPrefix}${pageSlug})`
-											: `~~${
-													game.price.totalPrice.fmtPrice.originalPrice
-											  }~~ **Free**\n[${getClaimText(
-													game
-											  )}](https://store.epicgames.com/${linkPrefix}${pageSlug})`
+											? `Free${
+													settings.includeClaimGame
+														? `\n[${getClaimText(
+																game
+														  )}](https://store.epicgames.com/${linkPrefix}${pageSlug})`
+														: ''
+											  }`
+											: `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **Free**${
+													settings.includeClaimGame
+														? `\n[${getClaimText(game)}](${getCheckoutUrl(game)})`
+														: ''
+											  }`
 										: isDiscountedGame(game)
 										? `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **${game.price.totalPrice.fmtPrice.discountPrice}**\n[Store Page](https://store.epicgames.com/${linkPrefix}${pageSlug})`
-										: `${game.price.totalPrice.fmtPrice.originalPrice}\n[${getClaimText(
-												game
-										  )}](https://store.epicgames.com/${linkPrefix}${pageSlug})`
+										: `${game.price.totalPrice.fmtPrice.originalPrice}\n[${
+												settings.includeClaimGame ? getClaimText(game) : 'Store Page'
+										  }](https://store.epicgames.com/${linkPrefix}${pageSlug})`
 									: ''
 						  }`
 					: game.title.toLowerCase().includes('mystery')
@@ -331,17 +342,14 @@ export default function Json({ games }: { games: Game }) {
 
 				return {
 					color: parseInt(settings.embedColor.replace('#', ''), 16),
-					fields: [
-						{
-							name: game.title,
-							value: fieldValue,
-						},
-					],
 					author: {
 						name: 'Epic Games Store',
 						url: 'https://free.wolfey.me/',
 						icon_url: 'https://wolfey.s-ul.eu/YcyMXrI1',
 					},
+					title: game.title,
+					url: `https://store.epicgames.com/${linkPrefix}${pageSlug}`,
+					description,
 					...(settings.includeFooter && {
 						footer: {
 							text: isCurrent ? 'Offer ends' : 'Offer starts',
@@ -353,20 +361,16 @@ export default function Json({ games }: { games: Game }) {
 				}
 			})
 
-			if (games.currentGames.length > 0 && settings.includeCheckout) {
+			if (games.currentGames.length > 1 && settings.includeCheckout) {
 				if (!mysteryGames || normalizedCheckoutLink) {
 					const checkoutEmbed = {
 						color: parseInt(settings.embedColor.replace('#', ''), 16),
-						fields: [
-							{
-								name: '🛒 Checkout Link',
-								value: normalizedCheckoutLink
-									? `[Claim All Games](${normalizedCheckoutLink})`
-									: bulkCheckoutUrl
-									? `[Claim All Games](${bulkCheckoutUrl})`
-									: 'No claimable games available',
-							},
-						],
+						title: '🛒 Checkout Link',
+						description: normalizedCheckoutLink
+							? `[Claim All Games](${normalizedCheckoutLink})`
+							: bulkCheckoutUrl
+							? `[Claim All Games](${bulkCheckoutUrl})`
+							: 'No claimable games available',
 					}
 					embeds.push(checkoutEmbed)
 				}
@@ -769,19 +773,22 @@ export default function Json({ games }: { games: Game }) {
 																			settings.includePrice &&
 																			settings.includeImage &&
 																			settings.includeFooter &&
-																			settings.includeCheckout
+																			settings.includeCheckout &&
+																			settings.includeClaimGame
 																		const newValue = !allSelected
 																		updateSetting('includePrice', newValue)
 																		updateSetting('includeImage', newValue)
 																		updateSetting('includeFooter', newValue)
 																		updateSetting('includeCheckout', newValue)
+																		updateSetting('includeClaimGame', newValue)
 																	}}
 																	className="h-6 px-2 text-xs"
 																>
 																	{settings.includePrice &&
 																	settings.includeImage &&
 																	settings.includeFooter &&
-																	settings.includeCheckout
+																	settings.includeCheckout &&
+																	settings.includeClaimGame
 																		? 'Deselect All'
 																		: 'Select All'}
 																</Button>
@@ -846,6 +853,7 @@ export default function Json({ games }: { games: Game }) {
 																				updateSetting('includeCheckout', checked as boolean)
 																			}
 																			className="order-1 after:absolute after:inset-0"
+																			disabled={games.currentGames.length <= 1}
 																		/>
 																		<ShoppingCart
 																			className="opacity-60"
@@ -856,11 +864,28 @@ export default function Json({ games }: { games: Game }) {
 																	<Label htmlFor="include-checkout-mobile">Checkout</Label>
 																</div>
 															</div>
-															{settings.includeCheckout && (
+															<div className="flex items-center justify-end gap-2">
+																<Label htmlFor="include-claim" className="text-sm">
+																	Claim Links
+																</Label>
+																<Checkbox
+																	id="include-claim"
+																	checked={settings.includeClaimGame}
+																	onCheckedChange={checked =>
+																		updateSetting('includeClaimGame', checked as boolean)
+																	}
+																/>
+															</div>
+															{settings.includeCheckout && games.currentGames.length > 1 && (
 																<div className="space-y-2">
-																	<Label htmlFor="checkout-link" className="text-sm font-medium">
-																		Manual Checkout Link
-																	</Label>
+																	<div className="flex items-center justify-between">
+																		<Label
+																			htmlFor="checkout-link"
+																			className="text-sm font-medium"
+																		>
+																			Manual Checkout Link
+																		</Label>
+																	</div>
 																	<Textarea
 																		id="checkout-link"
 																		placeholder="https://store.epicgames.com/purchase?offers=1-{namespace}-{id}-#/purchase/payment-methods"
@@ -1187,19 +1212,22 @@ export default function Json({ games }: { games: Game }) {
 																	settings.includePrice &&
 																	settings.includeImage &&
 																	settings.includeFooter &&
-																	settings.includeCheckout
+																	settings.includeCheckout &&
+																	settings.includeClaimGame
 																const newValue = !allSelected
 																updateSetting('includePrice', newValue)
 																updateSetting('includeImage', newValue)
 																updateSetting('includeFooter', newValue)
 																updateSetting('includeCheckout', newValue)
+																updateSetting('includeClaimGame', newValue)
 															}}
 															className="h-6 px-2 text-xs"
 														>
 															{settings.includePrice &&
 															settings.includeImage &&
 															settings.includeFooter &&
-															settings.includeCheckout
+															settings.includeCheckout &&
+															settings.includeClaimGame
 																? 'Deselect All'
 																: 'Select All'}
 														</Button>
@@ -1264,6 +1292,7 @@ export default function Json({ games }: { games: Game }) {
 																		updateSetting('includeCheckout', checked as boolean)
 																	}
 																	className="order-1 after:absolute after:inset-0"
+																	disabled={games.currentGames.length <= 1}
 																/>
 																<ShoppingCart
 																	className="opacity-60"
@@ -1274,11 +1303,25 @@ export default function Json({ games }: { games: Game }) {
 															<Label htmlFor="include-checkout">Checkout</Label>
 														</div>
 													</div>
-													{settings.includeCheckout && (
+													<div className="flex items-center justify-end gap-2">
+														<Label htmlFor="include-claim" className="text-sm">
+															Claim Links
+														</Label>
+														<Checkbox
+															id="include-claim"
+															checked={settings.includeClaimGame}
+															onCheckedChange={checked =>
+																updateSetting('includeClaimGame', checked as boolean)
+															}
+														/>
+													</div>
+													{settings.includeCheckout && games.currentGames.length > 1 && (
 														<div className="space-y-2">
-															<Label htmlFor="checkout-link" className="text-sm font-medium">
-																Manual Checkout Link
-															</Label>
+															<div className="flex items-center justify-between">
+																<Label htmlFor="checkout-link" className="text-sm font-medium">
+																	Manual Checkout Link
+																</Label>
+															</div>
 															<Textarea
 																id="checkout-link"
 																placeholder="https://store.epicgames.com/purchase?offers=1-{namespace}-{id}-#/purchase/payment-methods"

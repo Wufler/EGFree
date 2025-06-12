@@ -93,13 +93,15 @@ type EgFreeSettings = {
     webhookUrl: string
     showDiscordPreview: boolean
     openAccordions: string[]
+    includeClaimGame: boolean
 }
 
 type DiscordEmbed = {
     color: number
-    title?: string
-    description?: string
-    fields: { name: string; value: string }[]
+    title: string
+    description: string
+    url?: string
+    fields?: { name: string; value: string }[]
     author?: { name: string; url: string; icon_url: string }
     footer?: { text: string }
     timestamp?: string
