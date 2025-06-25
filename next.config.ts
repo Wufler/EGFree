@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'wolfey.s-ul.eu'
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.discordapp.com'
       }
     ],
     minimumCacheTTL: 604800,

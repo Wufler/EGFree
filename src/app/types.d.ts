@@ -91,6 +91,8 @@ type EgFreeSettings = {
     includeImage: boolean
     includeCheckout: boolean
     webhookUrl: string
+    webhookName?: string
+    webhookAvatar?: string
     showDiscordPreview: boolean
     openAccordions: string[]
     includeClaimGame: boolean

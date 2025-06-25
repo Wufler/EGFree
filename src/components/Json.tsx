@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
 	ClipboardCopy,
 	FileJson2,
@@ -79,6 +79,8 @@ export default function Json({ games }: { games: Game }) {
 		includeCheckout: true,
 		includeClaimGame: true,
 		webhookUrl: '',
+		webhookName: undefined,
+		webhookAvatar: undefined,
 		showDiscordPreview: true,
 		openAccordions: [],
 	})
@@ -123,6 +125,8 @@ export default function Json({ games }: { games: Game }) {
 							...parsed,
 							selectedGames: cleanedSelectedGames,
 							webhookUrl: decryptedWebhook,
+							webhookName: parsed.webhookName,
+							webhookAvatar: parsed.webhookAvatar,
 							messageId: '',
 							checkoutLink: '',
 							openAccordions: parsed.openAccordions || [],
@@ -397,9 +401,20 @@ export default function Json({ games }: { games: Game }) {
 		}
 	}
 
+	const isValidDiscordWebhook = (url: string) => {
+		const webhookPattern =
+			/^https:\/\/(?:discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+\/?$/
+		return webhookPattern.test(url.trim())
+	}
+
 	const handleWebhook = async () => {
 		if (!webhookUrl) {
 			toast.error('Insert a webhook.')
+			return
+		}
+
+		if (!isValidDiscordWebhook(webhookUrl)) {
+			toast.error('Invalid Discord webhook URL format.')
 			return
 		}
 
@@ -443,10 +458,46 @@ export default function Json({ games }: { games: Game }) {
 		setIsLoading(false)
 	}
 
+	const fetchWebhookInfo = async (url: string) => {
+		try {
+			const response = await fetch('/api/webhook-info', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ webhookUrl: url }),
+			})
+
+			if (response.ok) {
+				const webhookInfo = await response.json()
+				updateSetting('webhookName', webhookInfo.name)
+				updateSetting('webhookAvatar', webhookInfo.avatar)
+			} else {
+				const errorText = await response.text()
+				console.error('Failed to fetch webhook info:', errorText)
+				updateSetting('webhookName', undefined)
+				updateSetting('webhookAvatar', undefined)
+			}
+		} catch (error) {
+			console.error('Failed to fetch webhook info:', error)
+		}
+	}
+
+	const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+	const debouncedFetchWebhookInfo = (url: string) => {
+		if (timeoutRef.current) {
+			clearTimeout(timeoutRef.current)
+		}
+		timeoutRef.current = setTimeout(() => {
+			fetchWebhookInfo(url)
+		}, 500)
+	}
+
 	const handlePaste = async () => {
 		try {
 			const text = await navigator.clipboard.readText()
 			setWebhookUrl(text)
+			debouncedFetchWebhookInfo(text)
 		} catch {
 			console.error('Failed to paste text')
 		}
@@ -577,10 +628,17 @@ export default function Json({ games }: { games: Game }) {
 															type={isVisible ? 'text' : 'password'}
 															onFocus={() => setIsVisible(true)}
 															onBlur={() => setIsVisible(false)}
-															placeholder="https://"
+															placeholder="https://discord.com/api/webhooks/..."
 															value={webhookUrl}
-															onChange={e => setWebhookUrl(e.target.value)}
-															className="rounded-r-none border-r-0 text-sm"
+															onChange={e => {
+																setWebhookUrl(e.target.value)
+																debouncedFetchWebhookInfo(e.target.value)
+															}}
+															className={`rounded-r-none border-r-0 text-sm ${
+																webhookUrl && !isValidDiscordWebhook(webhookUrl)
+																	? 'border-red-500 focus:border-red-500'
+																	: ''
+															}`}
 														/>
 														<AlertDialog>
 															<AlertDialogTrigger asChild>
@@ -617,6 +675,7 @@ export default function Json({ games }: { games: Game }) {
 																		className="dark:text-black sm:w-1/2"
 																		onClick={() => {
 																			updateSetting('webhookUrl', webhookUrl)
+																			fetchWebhookInfo(webhookUrl)
 																			toast.success('Webhook saved locally')
 																		}}
 																	>
@@ -643,7 +702,7 @@ export default function Json({ games }: { games: Game }) {
 															: 'dark:text-black'
 													}`}
 													size="sm"
-													disabled={isLoading}
+													disabled={isLoading || !isValidDiscordWebhook(webhookUrl)}
 												>
 													{isLoading ? (
 														<Loader2 className="size-4 animate-spin" />
@@ -1016,10 +1075,17 @@ export default function Json({ games }: { games: Game }) {
 													type={isVisible ? 'text' : 'password'}
 													onFocus={() => setIsVisible(true)}
 													onBlur={() => setIsVisible(false)}
-													placeholder="https://"
+													placeholder="https://discord.com/api/webhooks/..."
 													value={webhookUrl}
-													onChange={e => setWebhookUrl(e.target.value)}
-													className="rounded-r-none border-r-0 text-sm"
+													onChange={e => {
+														setWebhookUrl(e.target.value)
+														debouncedFetchWebhookInfo(e.target.value)
+													}}
+													className={`rounded-r-none border-r-0 text-sm ${
+														webhookUrl && !isValidDiscordWebhook(webhookUrl)
+															? 'border-red-500 focus:border-red-500'
+															: ''
+													}`}
 												/>
 
 												<AlertDialog>
@@ -1057,6 +1123,7 @@ export default function Json({ games }: { games: Game }) {
 																className="dark:text-black sm:w-1/2"
 																onClick={() => {
 																	updateSetting('webhookUrl', webhookUrl)
+																	fetchWebhookInfo(webhookUrl)
 																	toast.success('Webhook saved locally')
 																}}
 															>
@@ -1082,7 +1149,7 @@ export default function Json({ games }: { games: Game }) {
 													? 'bg-yellow-500 hover:bg-yellow-600 text-black'
 													: 'dark:text-black'
 											}`}
-											disabled={isLoading}
+											disabled={isLoading || !isValidDiscordWebhook(webhookUrl)}
 										>
 											{isLoading ? (
 												<Loader2 className="size-4 animate-spin" />

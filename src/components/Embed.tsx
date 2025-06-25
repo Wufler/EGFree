@@ -91,13 +91,23 @@ export default function DiscordPreview({
 		<div className="bg-[#ffffff] dark:bg-[#313338] dark:text-white p-4 wrap-anywhere w-full">
 			<div className="flex gap-4">
 				<div className="flex-shrink-0">
-					<div className="dark:bg-[#6263ed] bg-[#5865f2] rounded-full size-10 mt-1 flex items-center justify-center">
-						<Discord className="filter invert brightness-0 size-[23px]" />
-					</div>
+					{settings.webhookAvatar ? (
+						<img
+							src={settings.webhookAvatar}
+							alt="Webhook Avatar"
+							className="rounded-full size-10 mt-1"
+						/>
+					) : (
+						<div className="dark:bg-[#6263ed] bg-[#5865f2] rounded-full size-10 mt-1 flex items-center justify-center">
+							<Discord className="filter invert brightness-0 size-[23px]" />
+						</div>
+					)}
 				</div>
 				<div className="flex-grow">
 					<div className="flex items-center gap-1 mb-1">
-						<div className="font-medium">Captain Hook</div>
+						<div className="font-medium">
+							{settings.webhookName || 'Captain Hook'}
+						</div>
 						<div className="dark:bg-[#6263ed] bg-[#5865f2] ml-0.5 text-white rounded-sm px-[5px] font-semibold text-xs mt-0.5">
 							APP
 						</div>

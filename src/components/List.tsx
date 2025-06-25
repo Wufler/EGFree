@@ -303,14 +303,24 @@ export default function List({ games }: { games: Game }) {
 							<div>
 								<div className={gridClassName}>
 									<div>
-										<div className="pb-4 text-lg font-medium text-epic-blue dark:text-epic-blue flex items-center">
-											<Gem className="mr-2 size-4" /> Free Now
+										<div className="mb-4 flex items-center gap-3">
+											<div className="rounded-lg bg-epic-blue/10 p-2">
+												<Gem className="size-5 text-epic-blue" />
+											</div>
+											<div>
+												<h2 className="text-2xl font-bold text-epic-blue">Free Now</h2>
+											</div>
 										</div>
 										{games.currentGames.map(game => renderGameCard(game, true))}
 									</div>
 									<div>
-										<div className="pb-4 text-lg font-medium flex items-center">
-											<Calendar className="mr-2 size-4" /> Upcoming
+										<div className="mb-4 flex items-center gap-3">
+											<div className="rounded-lg bg-muted p-2">
+												<Calendar className="size-5" />
+											</div>
+											<div>
+												<h2 className="text-2xl font-bold">Upcoming</h2>
+											</div>
 										</div>
 										{games.nextGames.map(game => renderGameCard(game, false))}
 									</div>
@@ -319,9 +329,14 @@ export default function List({ games }: { games: Game }) {
 						) : (
 							<>
 								<div>
-									<h3 className="pb-4 text-lg font-medium text-epic-blue dark:text-epic-blue flex items-center">
-										<Gem className="mr-2 size-4" /> Free Now
-									</h3>
+									<div className="mb-4 flex items-center gap-3">
+										<div className="rounded-lg bg-epic-blue/10 p-2">
+											<Gem className="size-5 text-epic-blue" />
+										</div>
+										<div>
+											<h2 className="text-2xl font-bold text-epic-blue">Free Now</h2>
+										</div>
+									</div>
 									{games.currentGames.length > 0 ? (
 										<div className={gridClassName}>
 											{games.currentGames.map(game => renderGameCard(game, true))}
@@ -331,9 +346,14 @@ export default function List({ games }: { games: Game }) {
 									)}
 								</div>
 								<div>
-									<h3 className="pb-4 text-lg font-medium flex items-center">
-										<Calendar className="mr-2 size-4" /> Upcoming
-									</h3>
+									<div className="mb-4 flex items-center gap-3">
+										<div className="rounded-lg bg-muted p-2">
+											<Calendar className="size-5" />
+										</div>
+										<div>
+											<h2 className="text-2xl font-bold">Upcoming</h2>
+										</div>
+									</div>
 									{games.nextGames.length > 0 ? (
 										<div className={gridClassName}>
 											{games.nextGames.map(game => renderGameCard(game, false))}
