@@ -97,8 +97,9 @@ export default function List({ games }: { games: Game }) {
 	}
 
 	const renderGameCard = (game: GameItem, isCurrentGame: boolean) => {
-		const pageSlug =
+		const rawPageSlug =
 			game.productSlug || game.offerMappings?.[0]?.pageSlug || game.urlSlug
+		const pageSlug = rawPageSlug?.replace(/\/[^/]*$/, '') || rawPageSlug
 		const isBundleGame = game.categories?.some(
 			category => category.path === 'bundles'
 		)

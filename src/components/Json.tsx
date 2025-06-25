@@ -274,8 +274,9 @@ export default function Json({ games }: { games: Game }) {
 					: game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0]
 							.startDate
 				const endDate = new Date(dateInfo)
-				const pageSlug =
+				const rawPageSlug =
 					game.productSlug || game.offerMappings?.[0]?.pageSlug || game.urlSlug
+				const pageSlug = rawPageSlug?.replace(/\/[^/]*$/, '') || rawPageSlug
 				const isBundleGame = game.categories?.some(
 					(category: { path: string }) => category.path === 'bundles'
 				)
@@ -325,12 +326,12 @@ export default function Json({ games }: { games: Game }) {
 					: `${
 							settings.includePrice
 								? isPermanentlyFree(game)
-									? 'Free\n'
+									? 'Free'
 									: isUpcomingFree(game)
-									? `${game.price.totalPrice.fmtPrice.originalPrice}\n`
-									: `${game.price.totalPrice.fmtPrice.originalPrice}\n`
+									? game.price.totalPrice.fmtPrice.originalPrice
+									: game.price.totalPrice.fmtPrice.originalPrice
 								: ''
-					  }[Store Page](https://store.epicgames.com/${linkPrefix}${pageSlug})`
+					  }`
 
 				const imageUrl = game.keyImages.find(
 					(img: { type: string; url: string }) =>
