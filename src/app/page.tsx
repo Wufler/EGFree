@@ -14,7 +14,7 @@ export default async function Home() {
 	const games = await getEpicFreeGames()
 
 	return (
-		<main className="flex min-h-dvh flex-col bg-white dark:bg-epic-black text-foreground dark:text-white">
+		<main className="flex min-h-dvh flex-col bg-gradient-to-br from-blue-50/50 via-blue-100/50 to-blue-200/50 dark:from-slate-950/80 dark:via-slate-900/80 dark:to-slate-800/80 text-foreground dark:text-white">
 			<div className="w-full mx-auto flex flex-grow flex-col">
 				<header className="z-50 border-b border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black px-8 backdrop-blur-md">
 					<div className="container mx-auto flex h-14 sm:h-20 items-center justify-between py-4 sm:py-0 gap-4 md:gap-0">
@@ -42,7 +42,7 @@ export default async function Home() {
 
 				<List games={games} />
 
-				<footer className="px-4 mt-auto border-t border-gray-200/80 dark:border-white/10 text-center py-4">
+				<footer className="px-4 mt-auto border-t border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black text-center py-4">
 					<div className="text-sm text-epic-gray dark:text-muted-foreground">
 						2025, Wolfey
 					</div>

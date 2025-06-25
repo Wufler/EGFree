@@ -49,7 +49,7 @@ export default function ClaimTab({ games }: { games: Game }) {
 	const bulkCheckoutUrl = generateBulkCheckoutUrl()
 
 	return (
-		<Card className="rounded-none border-none">
+		<Card className="rounded-none border-none bg-transparent shadow-none">
 			<CardContent className="px-4">
 				<div className="space-y-4">
 					{mysteryGames ? (

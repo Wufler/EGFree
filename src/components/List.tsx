@@ -247,7 +247,7 @@ export default function List({ games }: { games: Game }) {
 	}`
 
 	return (
-		<div className="dark:bg-epic-black lg:px-8 lg:py-6 py-0">
+		<div className="lg:px-8 lg:py-6 py-0">
 			<>
 				<Tabs defaultValue="current" className="w-full lg:hidden gap-0">
 					<TabsList className="w-full h-auto rounded-none bg-transparent p-0">
