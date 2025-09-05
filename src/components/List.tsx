@@ -18,7 +18,7 @@ export default function List({ games }: { games: Game }) {
 	const hasToastShown = useRef(false)
 
 	const NoOffers = () => (
-		<div className="pb-2 text-lg font-medium">
+		<div className="pb-2 lg:p-0 p-4 text-lg font-medium">
 			<div className="text-lg">If offers are not showing up, try refreshing.</div>
 			<div className="text-sm text-muted-foreground">
 				You can also check if the offers are at the{' '}

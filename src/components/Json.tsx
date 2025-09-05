@@ -581,9 +581,6 @@ export default function Json({ games }: { games: Game }) {
 							<div className="flex items-center justify-between">
 								<DialogTitle className="flex items-center gap-2">
 									JSON Builder
-									<Link href="https://builder.wolfey.me">
-										<ExternalLink className="size-4" />
-									</Link>
 								</DialogTitle>
 								<DialogClose className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
 									<X className="size-4" />

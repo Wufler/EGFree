@@ -52,11 +52,6 @@ export default async function Home() {
 					<div className="mt-2 flex items-center justify-center gap-1 text-epic-gray dark:text-muted-foreground">
 						<Theme />
 						<Button variant="ghost" size="icon" className="rounded-full" asChild>
-							<Link href="https://builder.wolfey.me" target="_blank">
-								<Hammer className="size-5" />
-							</Link>
-						</Button>
-						<Button variant="ghost" size="icon" className="rounded-full" asChild>
 							<Link href="https://github.com/Wufler/EGFree" target="_blank">
 								<Github className="size-5 dark:invert-[35%] invert" />
 							</Link>
