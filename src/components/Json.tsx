@@ -16,6 +16,7 @@ import {
 	Clock,
 	ShoppingCart,
 	AlertTriangle,
+	Hammer,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -366,7 +367,11 @@ export default function Json({ games }: { games: Game }) {
 				}
 			})
 
-			if (games.currentGames.length > 1 && settings.includeCheckout) {
+			const selectedCurrentGames = games.currentGames.filter(
+				game => settings.selectedGames[game.id]
+			)
+
+			if (selectedCurrentGames.length > 1 && settings.includeCheckout) {
 				if (!mysteryGames || normalizedCheckoutLink) {
 					const checkoutEmbed = {
 						color: parseInt(settings.embedColor.replace('#', ''), 16),
@@ -910,7 +915,11 @@ export default function Json({ games }: { games: Game }) {
 																				updateSetting('includeCheckout', checked as boolean)
 																			}
 																			className="order-1 after:absolute after:inset-0"
-																			disabled={games.currentGames.length <= 1}
+																			disabled={
+																				games.currentGames.filter(
+																					game => settings.selectedGames[game.id]
+																				).length <= 1
+																			}
 																		/>
 																		<ShoppingCart
 																			className="opacity-60"
@@ -933,35 +942,38 @@ export default function Json({ games }: { games: Game }) {
 																	}
 																/>
 															</div>
-															{settings.includeCheckout && games.currentGames.length > 1 && (
-																<div className="space-y-2">
-																	<div className="flex items-center justify-between">
-																		<Label
-																			htmlFor="checkout-link"
-																			className="text-sm font-medium"
-																		>
-																			Manual Checkout Link
-																		</Label>
+															{settings.includeCheckout &&
+																games.currentGames.filter(
+																	game => settings.selectedGames[game.id]
+																).length > 1 && (
+																	<div className="space-y-2">
+																		<div className="flex items-center justify-between">
+																			<Label
+																				htmlFor="checkout-link"
+																				className="text-sm font-medium"
+																			>
+																				Manual Checkout Link
+																			</Label>
+																		</div>
+																		<Textarea
+																			id="checkout-link"
+																			placeholder="https://store.epicgames.com/purchase?offers=1-{namespace}-{id}-#/purchase/payment-methods"
+																			value={checkoutLink}
+																			onChange={e => setCheckoutLink(e.target.value)}
+																			className="max-h-[100px] text-sm wrap-anywhere"
+																		/>
+																		<div className="flex items-center gap-1 text-xs text-muted-foreground">
+																			<a
+																				href="https://wolfey.s-ul.eu/D3RfQGJZ"
+																				target="_blank"
+																				className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+																			>
+																				Image on how to get link <ExternalLink className="size-3" />
+																			</a>
+																			or leave empty to use automatic link
+																		</div>
 																	</div>
-																	<Textarea
-																		id="checkout-link"
-																		placeholder="https://store.epicgames.com/purchase?offers=1-{namespace}-{id}-#/purchase/payment-methods"
-																		value={checkoutLink}
-																		onChange={e => setCheckoutLink(e.target.value)}
-																		className="max-h-[100px] text-sm wrap-anywhere"
-																	/>
-																	<div className="flex items-center gap-1 text-xs text-muted-foreground">
-																		<a
-																			href="https://wolfey.s-ul.eu/D3RfQGJZ"
-																			target="_blank"
-																			className="text-xs text-blue-500 hover:underline flex items-center gap-1"
-																		>
-																			Image on how to get link <ExternalLink className="size-3" />
-																		</a>
-																		or leave empty to use automatic link
-																	</div>
-																</div>
-															)}
+																)}
 														</div>
 
 														<div className="space-y-3">
@@ -1051,6 +1063,23 @@ export default function Json({ games }: { games: Game }) {
 														{JSON.stringify(jsonData, null, 2)}
 													</pre>
 												)}
+												<div className="flex justify-center pb-5">
+													<Link
+														href={`https://builder.wolfey.me/?data=${Buffer.from(
+															JSON.stringify(jsonData)
+														)
+															.toString('base64')
+															.replace(/\+/g, '-')
+															.replace(/\//g, '_')
+															.replace(/=+$/, '')}`}
+														target="_blank"
+													>
+														<div className="flex items-center gap-2 text-blue-500 hover:underline">
+															<Hammer className="size-5" />
+															<span>Open in Builder</span>
+														</div>
+													</Link>
+												</div>
 											</div>
 										</ScrollArea>
 									</div>
@@ -1357,7 +1386,11 @@ export default function Json({ games }: { games: Game }) {
 																		updateSetting('includeCheckout', checked as boolean)
 																	}
 																	className="order-1 after:absolute after:inset-0"
-																	disabled={games.currentGames.length <= 1}
+																	disabled={
+																		games.currentGames.filter(
+																			game => settings.selectedGames[game.id]
+																		).length <= 1
+																	}
 																/>
 																<ShoppingCart
 																	className="opacity-60"
@@ -1380,32 +1413,34 @@ export default function Json({ games }: { games: Game }) {
 															}
 														/>
 													</div>
-													{settings.includeCheckout && games.currentGames.length > 1 && (
-														<div className="space-y-2">
-															<div className="flex items-center justify-between">
-																<Label htmlFor="checkout-link" className="text-sm font-medium">
-																	Manual Checkout Link
-																</Label>
+													{settings.includeCheckout &&
+														games.currentGames.filter(game => settings.selectedGames[game.id])
+															.length > 1 && (
+															<div className="space-y-2">
+																<div className="flex items-center justify-between">
+																	<Label htmlFor="checkout-link" className="text-sm font-medium">
+																		Manual Checkout Link
+																	</Label>
+																</div>
+																<Textarea
+																	id="checkout-link"
+																	placeholder="https://store.epicgames.com/purchase?offers=1-{namespace}-{id}-#/purchase/payment-methods"
+																	value={checkoutLink}
+																	onChange={e => setCheckoutLink(e.target.value)}
+																	className="max-h-[100px] text-sm wrap-anywhere"
+																/>
+																<div className="flex items-center gap-1 text-xs text-muted-foreground">
+																	<a
+																		href="https://wolfey.s-ul.eu/D3RfQGJZ"
+																		target="_blank"
+																		className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+																	>
+																		Image on how to get link <ExternalLink className="size-3" />
+																	</a>
+																	or leave empty to use automatic link
+																</div>
 															</div>
-															<Textarea
-																id="checkout-link"
-																placeholder="https://store.epicgames.com/purchase?offers=1-{namespace}-{id}-#/purchase/payment-methods"
-																value={checkoutLink}
-																onChange={e => setCheckoutLink(e.target.value)}
-																className="max-h-[100px] text-sm wrap-anywhere"
-															/>
-															<div className="flex items-center gap-1 text-xs text-muted-foreground">
-																<a
-																	href="https://wolfey.s-ul.eu/D3RfQGJZ"
-																	target="_blank"
-																	className="text-xs text-blue-500 hover:underline flex items-center gap-1"
-																>
-																	Image on how to get link <ExternalLink className="size-3" />
-																</a>
-																or leave empty to use automatic link
-															</div>
-														</div>
-													)}
+														)}
 												</div>
 												<div className="space-y-3">
 													<Label htmlFor="sidebar-color" className="text-sm font-medium">
@@ -1489,6 +1524,23 @@ export default function Json({ games }: { games: Game }) {
 											{JSON.stringify(jsonData, null, 2)}
 										</pre>
 									)}
+								</div>
+								<div className="flex justify-center p-4 pb-6">
+									<Link
+										href={`https://builder.wolfey.me/?data=${Buffer.from(
+											JSON.stringify(jsonData)
+										)
+											.toString('base64')
+											.replace(/\+/g, '-')
+											.replace(/\//g, '_')
+											.replace(/=+$/, '')}`}
+										target="_blank"
+									>
+										<div className="flex items-center gap-2 text-blue-500 hover:underline">
+											<Hammer className="size-5" />
+											<span>Open in Builder</span>
+										</div>
+									</Link>
 								</div>
 							</ScrollArea>
 						</div>

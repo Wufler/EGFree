@@ -5,7 +5,6 @@ import Theme from '@/components/ui/Theme'
 import { Button } from '@/components/ui/button'
 import Github from '@/components/ui/github'
 import { getEpicFreeGames } from '@/lib/getGames'
-import { Hammer } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
