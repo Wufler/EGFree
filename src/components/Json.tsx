@@ -300,43 +300,55 @@ export default function Json({ games }: { games: Game }) {
 					return `https://store.epicgames.com/purchase?${offerParam}#/purchase/payment-methods`
 				}
 
-				const description = isCurrent
-					? game.title.toLowerCase().includes('mystery')
-						? ''
-						: `${
-								settings.includePrice
-									? isCurrentlyFree(game)
-										? isPermanentlyFree(game)
-											? `Free${
-													settings.includeClaimGame
-														? `\n[${getClaimText(
-																game
-														  )}](https://store.epicgames.com/${linkPrefix}${pageSlug})`
-														: ''
-											  }`
-											: `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **Free**${
-													settings.includeClaimGame
-														? `\n[${getClaimText(game)}](${getCheckoutUrl(game)})`
-														: ''
-											  }`
-										: isDiscountedGame(game)
-										? `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **${game.price.totalPrice.fmtPrice.discountPrice}**\n[Store Page](https://store.epicgames.com/${linkPrefix}${pageSlug})`
-										: `${game.price.totalPrice.fmtPrice.originalPrice}\n[${
-												settings.includeClaimGame ? getClaimText(game) : 'Store Page'
-										  }](https://store.epicgames.com/${linkPrefix}${pageSlug})`
-									: ''
-						  }`
-					: game.title.toLowerCase().includes('mystery')
-					? ''
-					: `${
-							settings.includePrice
-								? isPermanentlyFree(game)
-									? 'Free'
-									: isUpcomingFree(game)
-									? game.price.totalPrice.fmtPrice.originalPrice
-									: game.price.totalPrice.fmtPrice.originalPrice
-								: ''
-					  }`
+				const getPriceText = (game: GameItem) => {
+					if (!settings.includePrice) return ''
+
+					if (isCurrent) {
+						if (isCurrentlyFree(game)) {
+							return isPermanentlyFree(game)
+								? 'Free'
+								: `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **Free**`
+						} else if (isDiscountedGame(game)) {
+							return `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **${game.price.totalPrice.fmtPrice.discountPrice}**`
+						} else {
+							return game.price.totalPrice.fmtPrice.originalPrice
+						}
+					} else {
+						return isPermanentlyFree(game)
+							? 'Free'
+							: game.price.totalPrice.fmtPrice.originalPrice
+					}
+				}
+
+				const getClaimLink = (game: GameItem) => {
+					if (!settings.includeClaimGame) return ''
+
+					if (isCurrent) {
+						if (isCurrentlyFree(game)) {
+							const url = isPermanentlyFree(game)
+								? `https://store.epicgames.com/${linkPrefix}${pageSlug}`
+								: getCheckoutUrl(game)
+							return `[${getClaimText(game)}](${url})`
+						} else {
+							return `[${
+								isDiscountedGame(game) ? 'Store Page' : getClaimText(game)
+							}](https://store.epicgames.com/${linkPrefix}${pageSlug})`
+						}
+					}
+					return ''
+				}
+
+				const Description = () => {
+					if (game.title.toLowerCase().includes('mystery')) return ''
+
+					const priceText = getPriceText(game)
+					const claimLink = getClaimLink(game)
+
+					const parts = [priceText, claimLink].filter(Boolean)
+					return parts.join('\n')
+				}
+
+				const description = Description()
 
 				const imageUrl = game.keyImages.find(
 					(img: { type: string; url: string }) =>
