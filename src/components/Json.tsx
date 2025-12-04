@@ -680,8 +680,7 @@ export default function Json({ games }: { games: Game }) {
 																				local storage and will automatically be in the URL input.
 																			</p>
 																			<p className="font-medium">
-																				⚠️ This might not be secure. Consider manually pasting the
-																				webhook instead.
+																				⚠️ Consider manually pasting the webhook instead.
 																			</p>
 																		</div>
 																	</AlertDialogDescription>
@@ -1152,8 +1151,7 @@ export default function Json({ games }: { games: Game }) {
 																		storage and will automatically be in the URL input.
 																	</p>
 																	<p className="font-medium">
-																		⚠️ This might not be secure. Consider manually pasting the
-																		webhook instead.
+																		⚠️ Consider manually pasting the webhook instead.
 																	</p>
 																</div>
 															</AlertDialogDescription>
