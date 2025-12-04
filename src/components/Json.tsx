@@ -212,13 +212,6 @@ export default function Json({ games }: { games: Game }) {
 		)
 	}
 
-	const isUpcomingFree = (game: GameItem) => {
-		return Boolean(
-			game.promotions?.upcomingPromotionalOffers[0]?.promotionalOffers[0]
-				?.discountSetting?.discountPercentage === 0
-		)
-	}
-
 	useEffect(() => {
 		const generateJson = () => {
 			const selectedGames = [...games.currentGames, ...games.nextGames].filter(
@@ -282,6 +275,8 @@ export default function Json({ games }: { games: Game }) {
 				const rawPageSlug =
 					game.productSlug || game.offerMappings?.[0]?.pageSlug || game.urlSlug
 				const pageSlug = rawPageSlug?.replace(/\/[^/]*$/, '') || rawPageSlug
+				const isValidPageSlug =
+					pageSlug && pageSlug !== '[]' && pageSlug.trim() !== ''
 				const isBundleGame = game.categories?.some(
 					(category: { path: string }) => category.path === 'bundles'
 				)
@@ -320,16 +315,22 @@ export default function Json({ games }: { games: Game }) {
 					}
 				}
 
-				const getClaimLink = (game: GameItem) => {
+				const getClaimLink = (game: GameItem): string => {
 					if (!settings.includeClaimGame) return ''
 
 					if (isCurrent) {
 						if (isCurrentlyFree(game)) {
-							const url = isPermanentlyFree(game)
-								? `https://store.epicgames.com/${linkPrefix}${pageSlug}`
-								: getCheckoutUrl(game)
-							return `[${getClaimText(game)}](${url})`
+							const checkoutUrl = getCheckoutUrl(game)
+							if (isPermanentlyFree(game)) {
+								if (!isValidPageSlug) return ''
+								return `[${getClaimText(
+									game
+								)}](https://store.epicgames.com/${linkPrefix}${pageSlug})`
+							}
+							if (!checkoutUrl) return ''
+							return `[${getClaimText(game)}](${checkoutUrl})`
 						} else {
+							if (!isValidPageSlug) return ''
 							return `[${
 								isDiscountedGame(game) ? 'Store Page' : getClaimText(game)
 							}](https://store.epicgames.com/${linkPrefix}${pageSlug})`
@@ -358,6 +359,10 @@ export default function Json({ games }: { games: Game }) {
 						img.type === 'DieselGameBoxWide'
 				)?.url
 
+				const gameUrl = isValidPageSlug
+					? `https://store.epicgames.com/${linkPrefix}${pageSlug}`
+					: null
+
 				return {
 					color: parseInt(settings.embedColor.replace('#', ''), 16),
 					author: {
@@ -366,7 +371,7 @@ export default function Json({ games }: { games: Game }) {
 						icon_url: 'https://wolfey.s-ul.eu/YcyMXrI1',
 					},
 					title: game.title,
-					url: `https://store.epicgames.com/${linkPrefix}${pageSlug}`,
+					...(gameUrl && { url: gameUrl }),
 					description,
 					...(settings.includeFooter && {
 						footer: {
@@ -583,14 +588,14 @@ export default function Json({ games }: { games: Game }) {
 		<Dialog>
 			<DialogTrigger asChild>
 				<Button variant="ghost" className="rounded-full">
-					<FileJson2 className="!size-5" />
+					<FileJson2 className="size-5!" />
 					JSON
 				</Button>
 			</DialogTrigger>
 			<DialogContent
 				onOpenAutoFocus={e => e.preventDefault()}
 				hideCloseButton
-				className="!max-w-4xl overflow-hidden p-0"
+				className="max-w-4xl! overflow-hidden p-0"
 			>
 				<div className="flex h-[90vh] flex-col lg:flex-row">
 					<div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r flex flex-col">
@@ -636,7 +641,7 @@ export default function Json({ games }: { games: Game }) {
 													Webhook URL
 												</Label>
 												<div className="flex items-center gap-2">
-													<div className="flex-grow flex">
+													<div className="grow flex">
 														<Input
 															id="webhook-url"
 															type={isVisible ? 'text' : 'password'}
@@ -974,7 +979,7 @@ export default function Json({ games }: { games: Game }) {
 																			onChange={e => setCheckoutLink(e.target.value)}
 																			className="max-h-[100px] text-sm wrap-anywhere"
 																		/>
-																		<div className="flex items-center gap-1 text-xs text-muted-foreground">
+																		<div className="flex flex-col sm:flex-row sm:items-center gap-1 text-xs text-muted-foreground">
 																			<a
 																				href="https://wolfey.s-ul.eu/D3RfQGJZ"
 																				target="_blank"
@@ -1033,7 +1038,7 @@ export default function Json({ games }: { games: Game }) {
 									value="preview"
 									className="overflow-hidden mt-0 pb-0 border-0"
 								>
-									<div className="overflow-hidden flex-grow">
+									<div className="overflow-hidden grow">
 										<ScrollArea className="h-[calc(90vh-8rem)]">
 											<div className="space-y-4">
 												<div className="flex lg:flex-row flex-col gap-2 px-4 pt-2">
@@ -1107,7 +1112,7 @@ export default function Json({ games }: { games: Game }) {
 											Webhook URL
 										</Label>
 										<div className="flex items-center gap-2">
-											<div className="flex-grow flex">
+											<div className="grow flex">
 												<Input
 													id="webhook-url"
 													type={isVisible ? 'text' : 'password'}
@@ -1522,7 +1527,7 @@ export default function Json({ games }: { games: Game }) {
 								</div>
 							</div>
 						</div>
-						<div className="overflow-hidden flex-grow">
+						<div className="overflow-hidden grow">
 							<ScrollArea className="h-[calc(90vh-56px)]">
 								<div className="space-y-4">
 									{settings.showDiscordPreview ? (

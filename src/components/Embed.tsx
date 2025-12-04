@@ -90,7 +90,7 @@ export default function DiscordPreview({
 	return (
 		<div className="bg-[#ffffff] dark:bg-[#313338] dark:text-white p-4 wrap-anywhere w-full">
 			<div className="flex gap-4">
-				<div className="flex-shrink-0">
+				<div className="shrink-0">
 					{settings.webhookAvatar ? (
 						<img
 							src={settings.webhookAvatar}
@@ -103,7 +103,7 @@ export default function DiscordPreview({
 						</div>
 					)}
 				</div>
-				<div className="flex-grow">
+				<div className="grow">
 					<div className="flex items-center gap-1 mb-1">
 						<div className="font-medium">
 							{settings.webhookName || 'Captain Hook'}
@@ -143,6 +143,8 @@ export default function DiscordPreview({
 						const rawPageSlug =
 							game.productSlug || game.offerMappings?.[0]?.pageSlug || game.urlSlug
 						const pageSlug = rawPageSlug?.replace(/\/[^/]*$/, '') || rawPageSlug
+						const isValidPageSlug =
+							pageSlug && pageSlug !== '[]' && pageSlug.trim() !== ''
 						const isBundleGame = game.categories?.some(
 							(category: { path: string }) => category.path === 'bundles'
 						)
@@ -182,13 +184,19 @@ export default function DiscordPreview({
 										</p>
 									</div>
 									<div className="flex flex-col text-sm gap-0.5">
-										<a
-											href={`https://store.epicgames.com/${linkPrefix}${pageSlug}`}
-											className="font-semibold flex items-center mb-2 text-[16px] text-[#4e80eb] dark:text-[#00A8FC] hover:underline"
-											target="_blank"
-										>
-											{game.title}
-										</a>
+										{isValidPageSlug ? (
+											<a
+												href={`https://store.epicgames.com/${linkPrefix}${pageSlug}`}
+												className="font-semibold flex items-center mb-2 text-[16px] text-[#4e80eb] dark:text-[#00A8FC] hover:underline"
+												target="_blank"
+											>
+												{game.title}
+											</a>
+										) : (
+											<span className="font-semibold flex items-center mb-2 text-[16px]">
+												{game.title}
+											</span>
+										)}
 										{settings.includePrice &&
 											(!isCurrent ? (
 												<span>
@@ -231,22 +239,31 @@ export default function DiscordPreview({
 													)}
 												</>
 											))}
-										{isCurrent && isCurrentlyFree(game) && settings.includeClaimGame && (
-											<a
-												href={
-													getCheckoutUrl(game) ||
-													`https://store.epicgames.com/${linkPrefix}${pageSlug}`
-												}
-												className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
-												target="_blank"
-											>
-												{isAddOn
-													? 'Claim Add-on'
-													: isBundleGame
-													? 'Claim Bundle'
-													: 'Claim Game'}
-											</a>
-										)}
+										{isCurrent &&
+											isCurrentlyFree(game) &&
+											settings.includeClaimGame &&
+											(() => {
+												const checkoutUrl = getCheckoutUrl(game)
+												const claimUrl =
+													checkoutUrl ||
+													(isValidPageSlug
+														? `https://store.epicgames.com/${linkPrefix}${pageSlug}`
+														: null)
+												if (!claimUrl) return null
+												return (
+													<a
+														href={claimUrl}
+														className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
+														target="_blank"
+													>
+														{isAddOn
+															? 'Claim Add-on'
+															: isBundleGame
+															? 'Claim Bundle'
+															: 'Claim Game'}
+													</a>
+												)
+											})()}
 										{settings.includeImage && imageUrl && (
 											<Image
 												width={1280}
@@ -258,7 +275,7 @@ export default function DiscordPreview({
 										)}
 									</div>
 									{settings.includeFooter && (
-										<div className="text-xs font-light !mt-2">
+										<div className="text-xs font-light mt-2!">
 											{isCurrent ? 'Offer ends' : 'Offer starts'} •{' '}
 											{format(endDate, 'dd/MM/yyyy')}
 										</div>

@@ -207,7 +207,7 @@ export default function ClaimLinks({ games }: { games: Game }) {
 						all current free games.
 					</DialogDescription>
 				</DialogHeader>
-				<ClaimContent />
+				{ClaimContent()}
 			</DialogContent>
 		</Dialog>
 	)

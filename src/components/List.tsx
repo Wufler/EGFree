@@ -117,7 +117,7 @@ export default function List({ games }: { games: Game }) {
 
 		const cardContent = (
 			<Card className="rounded-none sm:rounded-lg p-0 group relative overflow-hidden border-0">
-				<div className="relative aspect-[16/9] overflow-hidden sm:rounded-lg">
+				<div className="relative aspect-video overflow-hidden sm:rounded-lg">
 					{isAddOn && (
 						<div className="absolute right-2 top-2 z-10 flex items-center rounded-sm bg-epic-blue/80 dark:bg-epic-blue/80 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
 							ADD-ON
@@ -127,7 +127,8 @@ export default function List({ games }: { games: Game }) {
 						img =>
 							img.type === 'OfferImageWide' ||
 							img.type === 'DieselStoreFrontWide' ||
-							img.type === 'DieselGameBoxWide'
+							img.type === 'DieselGameBoxWide' ||
+							img.type === 'VaultClosed'
 					) ? (
 						<Image
 							src={
@@ -135,7 +136,8 @@ export default function List({ games }: { games: Game }) {
 									img =>
 										img.type === 'OfferImageWide' ||
 										img.type === 'DieselStoreFrontWide' ||
-										img.type === 'DieselGameBoxWide'
+										img.type === 'DieselGameBoxWide' ||
+										img.type === 'VaultClosed'
 								)?.url || ''
 							}
 							width={1280}
@@ -151,7 +153,7 @@ export default function List({ games }: { games: Game }) {
 							<Gift className="size-20 text-epic-blue" />
 						</div>
 					)}
-					<div className="absolute inset-0 bg-gradient-to-t from-black via-black/40" />
+					<div className="absolute inset-0 bg-linear-to-t from-black via-black/40" />
 				</div>
 
 				<CardContent className="absolute bottom-0 left-0 right-0 p-4">
@@ -253,7 +255,7 @@ export default function List({ games }: { games: Game }) {
 					<TabsList className="w-full h-auto rounded-none bg-transparent p-0">
 						<TabsTrigger
 							value="current"
-							className="flex-1 !text-epic-blue relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
+							className="flex-1 text-epic-blue! relative rounded-none py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
 						>
 							<Gem className="size-4" /> Free Now
 						</TabsTrigger>
