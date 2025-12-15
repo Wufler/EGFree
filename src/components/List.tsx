@@ -1,9 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { motion } from 'motion/react'
-import { format } from 'date-fns'
-import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { calculateTimeLeft } from '@/lib/calculateTime'
 import { toast } from 'sonner'
@@ -13,59 +10,51 @@ import Image from 'next/image'
 import ClaimTab from '@/components/ClaimTab'
 
 export default function List({ games }: { games: Game }) {
-	const [timeLeft] = useState<{ [key: string]: string }>({})
 	const router = useRouter()
 	const hasToastShown = useRef(false)
 
 	const NoOffers = () => (
-		<div className="pb-2 lg:p-0 p-4 text-lg font-medium">
-			<div className="text-lg">If offers are not showing up, try refreshing.</div>
-			<div className="text-sm text-muted-foreground">
-				You can also check if the offers are at the{' '}
+		<div className="flex flex-col items-center justify-center py-12 text-center">
+			<div className="rounded-full bg-muted p-4 mb-4">
+				<Gift className="size-8 text-muted-foreground" />
+			</div>
+			<h3 className="text-lg font-semibold">No offers available</h3>
+			<p className="text-sm text-muted-foreground mt-2 max-w-xs mx-auto">
+				Check back later or visit the{' '}
 				<Link
 					href="https://store.epicgames.com/en-US/free-games"
-					className="text-epic-blue"
+					className="text-epic-blue hover:underline"
+					target="_blank"
 				>
 					Epic Games Store
 				</Link>
-			</div>
+			</p>
 		</div>
 	)
 
 	if (games.currentGames.length === 0 && games.nextGames.length === 0) {
 		return (
-			<div className="flex justify-center items-center h-[50vh] text-lg font-medium">
-				<div className="flex flex-col items-center">
-					<div className="text-lg font-medium">
-						If offers are not showing up, try refreshing.
-					</div>
-					<div className="text-sm text-muted-foreground">
-						You can also check if the offers are at the{' '}
-						<Link
-							href="https://store.epicgames.com/en-US/free-games"
-							className="text-epic-blue"
-						>
-							Epic Games Store
-						</Link>
-					</div>
-				</div>
+			<div className="flex justify-center items-center min-h-[50vh]">
+				<NoOffers />
 			</div>
 		)
 	}
 
-	const TimeDisplay = ({ gameId }: { gameId: string }) => {
-		const [gameTimeLeft, setGameTimeLeft] = useState<string>('Loading...')
+	const TimeDisplay = ({
+		date,
+		type,
+	}: {
+		date: Date
+		type: 'end' | 'start'
+	}) => {
+		const [timeLeft, setTimeLeft] = useState<string>('')
 
 		useEffect(() => {
-			const updateGameTime = () => {
-				const game = games.currentGames.find(g => g.id === gameId)
-				const endDate = new Date(
-					game?.promotions.promotionalOffers[0]?.promotionalOffers[0]?.endDate ?? ''
-				)
-				const timeLeftForGame = calculateTimeLeft(endDate)
-				setGameTimeLeft(timeLeftForGame)
+			const updateTime = () => {
+				const time = calculateTimeLeft(date)
+				setTimeLeft(time)
 
-				if (timeLeftForGame === 'Expired' && !hasToastShown.current) {
+				if (time === 'Expired' && !hasToastShown.current) {
 					hasToastShown.current = true
 					toast.promise(
 						new Promise(resolve => {
@@ -75,23 +64,29 @@ export default function List({ games }: { games: Game }) {
 							}, 5000)
 						}),
 						{
-							loading: 'Game offers expired, refreshing...',
-							success: 'Game offers updated successfully!',
-							error: 'Failed to update game offers. Please refresh manually.',
+							loading: 'Offers updating...',
+							success: 'Offers updated!',
+							error: 'Failed to update. Please refresh.',
 						}
 					)
 				}
 			}
 
-			updateGameTime()
-			const timer = setInterval(updateGameTime, 1000)
+			updateTime()
+			const timer = setInterval(updateTime, 1000)
 			return () => clearInterval(timer)
-		}, [gameId])
+		}, [date])
+
+		if (!timeLeft) return null
 
 		return (
-			<div className="flex items-center text-epic-blue">
-				<Clock className="mr-1.5 size-4" />
-				<span className="text-sm font-semibold">{gameTimeLeft}</span>
+			<div
+				className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm ${
+					type === 'end' ? 'bg-epic-blue/90 text-white' : 'bg-black/60 text-white'
+				}`}
+			>
+				<Clock className="size-3.5" />
+				<span>{timeLeft === 'Expired' ? 'Loading...' : timeLeft}</span>
 			</div>
 		)
 	}
@@ -108,18 +103,24 @@ export default function List({ games }: { games: Game }) {
 
 		const getGameDate = (game: GameItem) => {
 			if (isCurrentGame) {
-				return game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0]
-					?.endDate
+				return new Date(
+					game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0]?.endDate ??
+						''
+				)
 			}
-			return game.promotions?.upcomingPromotionalOffers?.[0]
-				?.promotionalOffers?.[0]?.startDate
+			return new Date(
+				game.promotions?.upcomingPromotionalOffers?.[0]?.promotionalOffers?.[0]
+					?.startDate ?? ''
+			)
 		}
 
+		const gameDate = getGameDate(game)
+
 		const cardContent = (
-			<Card className="rounded-none sm:rounded-lg p-0 group relative overflow-hidden border-0">
-				<div className="relative aspect-video overflow-hidden sm:rounded-lg">
+			<div className="h-full border-0 bg-transparent shadow-none group overflow-hidden">
+				<div className="relative aspect-video overflow-hidden lg:rounded-lg bg-muted shadow-md rounded-none">
 					{isAddOn && (
-						<div className="absolute right-2 top-2 z-10 flex items-center rounded-sm bg-epic-blue/80 dark:bg-epic-blue/80 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+						<div className="absolute right-2 top-2 z-10 flex items-center rounded-md bg-black/60 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md">
 							ADD-ON
 						</div>
 					)}
@@ -144,81 +145,69 @@ export default function List({ games }: { games: Game }) {
 							height={720}
 							priority
 							alt={game.title}
-							className={`h-full w-full object-cover transition-all duration-300 group-hover:scale-103 ${
-								timeLeft[game.id] === 'Expired' ? 'grayscale' : ''
-							}`}
+							className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-102"
 						/>
 					) : (
 						<div className="flex h-full w-full items-center justify-center bg-epic-dark-blue">
-							<Gift className="size-20 text-epic-blue" />
+							<Gift className="size-20 text-epic-blue/50" />
 						</div>
 					)}
-					<div className="absolute inset-0 bg-linear-to-t from-black via-black/40" />
-				</div>
 
-				<CardContent className="absolute bottom-0 left-0 right-0 p-4">
-					<div className="flex items-end justify-between mb-1">
-						{isCurrentGame ? (
-							<TimeDisplay gameId={game.id} />
-						) : (
-							<div className="flex items-center text-gray-400">
-								<Calendar className="mr-1.5 size-4" />
-								<span className="text-sm font-medium">
-									{format(getGameDate(game), 'MMM d')}
-								</span>
+					<div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/20 to-transparent transition-opacity duration-300 group-hover:opacity-0" />
+
+					<div className="absolute top-3 left-3 z-10">
+						<TimeDisplay date={gameDate} type={isCurrentGame ? 'end' : 'start'} />
+					</div>
+
+					<div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+						<div className="flex items-end justify-between gap-4">
+							<div className="flex-1 min-w-0">
+								<h3 className="truncate text-lg font-bold text-white group-hover:text-epic-blue transition-colors">
+									{game.title}
+								</h3>
+								{game.seller?.name !== 'Epic Dev Test Account' && (
+									<p className="truncate text-sm text-gray-300">{game.seller?.name}</p>
+								)}
 							</div>
-						)}
-					</div>
-					<div className="flex justify-between items-end">
-						<div>
-							<p className="line-clamp-1 text-lg font-bold text-white transition-colors duration-200 group-hover:text-epic-blue dark:group-hover:text-epic-blue">
-								{game.title}
-							</p>
-							{game.seller?.name !== 'Epic Dev Test Account' && (
-								<p className="line-clamp-1 text-sm text-gray-400">
-									{game.seller?.name}
-								</p>
-							)}
-						</div>
-						<div className="flex flex-col items-end">
-							{isCurrentGame && <span className="font-bold text-white">Free</span>}
-							{game.price.totalPrice.originalPrice !== 0 && (
-								<>
-									{!isCurrentGame &&
-										game.price.totalPrice.discountPrice !==
-											game.price.totalPrice.originalPrice && (
-											<span className="text-sm font-bold">
-												{game.price.totalPrice.fmtPrice.discountPrice}
-											</span>
-										)}
-									<span
-										className={`text-sm text-white ${
-											isCurrentGame ||
-											game.price.totalPrice.discountPrice !==
-												game.price.totalPrice.originalPrice
-												? 'line-through opacity-70'
-												: ''
-										}`}
-									>
-										{game.price.totalPrice.fmtPrice.originalPrice}
+							<div className="flex flex-col items-end shrink-0">
+								{isCurrentGame && (
+									<span className="rounded-md bg-epic-blue px-2 py-0.5 text-xs font-bold text-white shadow-sm">
+										FREE
 									</span>
-								</>
-							)}
+								)}
+								{game.price.totalPrice.originalPrice !== 0 && (
+									<div className="mt-1 flex items-center gap-1.5">
+										{!isCurrentGame &&
+											game.price.totalPrice.discountPrice !==
+												game.price.totalPrice.originalPrice && (
+												<span className="text-sm font-bold text-white">
+													{game.price.totalPrice.fmtPrice.discountPrice}
+												</span>
+											)}
+										<span
+											className={`text-xs font-medium text-gray-400 ${
+												isCurrentGame ||
+												game.price.totalPrice.discountPrice !==
+													game.price.totalPrice.originalPrice
+													? 'line-through'
+													: ''
+											}`}
+										>
+											{game.price.totalPrice.fmtPrice.originalPrice}
+										</span>
+									</div>
+								)}
+							</div>
 						</div>
 					</div>
-				</CardContent>
-			</Card>
+				</div>
+			</div>
 		)
 
 		return (
-			<motion.div
-				layout
+			<div
 				key={game.id}
-				initial={{ opacity: 0, y: 20 }}
-				animate={{ opacity: 1, y: 0 }}
-				exit={{ opacity: 0, y: 20 }}
-				transition={{ duration: 0.3 }}
-				className="h-full z-50"
+				className="h-full z-50 animate-in fade-in slide-in-from-bottom-4 duration-500"
 			>
 				{pageSlug && pageSlug !== '[]' ? (
 					<Link
@@ -231,7 +220,7 @@ export default function List({ games }: { games: Game }) {
 				) : (
 					cardContent
 				)}
-			</motion.div>
+			</div>
 		)
 	}
 
@@ -276,7 +265,7 @@ export default function List({ games }: { games: Game }) {
 					</TabsList>
 					<TabsContent value="current">
 						{games.currentGames.length > 0 ? (
-							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 sm:gap-4 gap-0 sm:px-4 px-0 sm:pb-4 pb-0 sm:pt-4 pt-0">
+							<div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-4 gap-0 lg:px-4 px-0 lg:pb-4 pb-0 lg:pt-4 pt-0">
 								{games.currentGames.map(game => renderGameCard(game, true))}
 							</div>
 						) : (
@@ -285,7 +274,7 @@ export default function List({ games }: { games: Game }) {
 					</TabsContent>
 					<TabsContent value="upcoming">
 						{games.nextGames.length > 0 ? (
-							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 sm:gap-4 gap-0 sm:px-4 px-0 sm:pb-4 pb-0 sm:pt-4 pt-0">
+							<div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-4 gap-0 lg:px-4 px-0 lg:pb-4 pb-0 lg:pt-4 pt-0">
 								{games.nextGames.map(game => renderGameCard(game, false))}
 							</div>
 						) : (
