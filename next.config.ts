@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'wolfey.s-ul.eu'
+        hostname: 'up.wolfey.me'
       },
       {
         protocol: 'https',

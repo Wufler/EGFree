@@ -368,7 +368,7 @@ export default function Json({ games }: { games: Game }) {
 					author: {
 						name: 'Epic Games Store',
 						url: 'https://free.wolfey.me/',
-						icon_url: 'https://wolfey.s-ul.eu/YcyMXrI1',
+						icon_url: 'https://up.wolfey.me/tTq6cwfU',
 					},
 					title: game.title,
 					...(gameUrl && { url: gameUrl }),
@@ -980,7 +980,7 @@ export default function Json({ games }: { games: Game }) {
 																		/>
 																		<div className="flex flex-col sm:flex-row sm:items-center gap-1 text-xs text-muted-foreground">
 																			<a
-																				href="https://wolfey.s-ul.eu/D3RfQGJZ"
+																				href="https://up.wolfey.me/milb5OsF"
 																				target="_blank"
 																				className="text-xs text-blue-500 hover:underline flex items-center gap-1"
 																			>
@@ -1446,7 +1446,7 @@ export default function Json({ games }: { games: Game }) {
 																/>
 																<div className="flex items-center gap-1 text-xs text-muted-foreground">
 																	<a
-																		href="https://wolfey.s-ul.eu/D3RfQGJZ"
+																		href="https://up.wolfey.me/milb5OsF"
 																		target="_blank"
 																		className="text-xs text-blue-500 hover:underline flex items-center gap-1"
 																	>

@@ -175,7 +175,7 @@ export default function DiscordPreview({
 										<Image
 											width={1280}
 											height={720}
-											src="https://wolfey.s-ul.eu/YcyMXrI1"
+											src="/epic.png"
 											alt="Epic Games Store"
 											className="size-7 rounded-full mr-2.5"
 										/>
