@@ -98,6 +98,18 @@ type EgFreeSettings = {
     includeClaimGame: boolean
 }
 
+type MobileGameDataLocal = {
+	title: string
+	namespace: string
+	imageUrl: string
+	originalPrice: number
+	currencyCode: string
+	promoEndDate: string
+	seller?: { name: string }
+	iosOffer: { id: string; pageSlug: string } | null
+	androidOffer: { id: string; pageSlug: string } | null
+}
+
 type DiscordEmbed = {
     color: number
     title: string

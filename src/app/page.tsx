@@ -1,5 +1,4 @@
-import ClaimLinks from '@/components/Claim'
-import Json from '@/components/Json'
+import Json from '@/components/Json/Builder'
 import List from '@/components/List'
 import Theme from '@/components/ui/Theme'
 import { Button } from '@/components/ui/button'
@@ -32,9 +31,6 @@ export default async function Home() {
 						</Link>
 						<div className="flex items-center gap-2">
 							<Json games={games} />
-							<div className="hidden lg:block">
-								<ClaimLinks games={games} />
-							</div>
 						</div>
 					</div>
 				</header>
@@ -43,7 +39,7 @@ export default async function Home() {
 
 				<footer className="px-4 mt-auto border-t border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black text-center py-4">
 					<div className="text-sm text-epic-gray dark:text-muted-foreground">
-						2025,{' '}
+						2026,{' '}
 						<Link href="https://wolfey.me" target="_blank">
 							wolfey.me
 						</Link>

@@ -3,36 +3,67 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Check, Copy, ExternalLink } from 'lucide-react'
+import { getMobileGameKey } from '@/lib/utils'
 import { toast } from 'sonner'
 
-export default function ClaimTab({ games }: { games: Game }) {
+const EMPTY_MOBILE_GAMES: MobileGameDataLocal[] = []
+
+export default function ClaimTab({
+	games,
+	parsedMobileGames = EMPTY_MOBILE_GAMES,
+}: {
+	games: Game
+	parsedMobileGames?: MobileGameDataLocal[]
+}) {
 	const [copiedUrl, setCopiedUrl] = useState('')
 
 	const mysteryGames = games.currentGames.some(
-		game => game.seller?.name === 'Epic Dev Test Account'
+		game => game.seller?.name === 'Epic Dev Test Account',
+	)
+
+	const now = new Date()
+	const activeMobileGames = parsedMobileGames.filter(
+		g => g.promoEndDate && new Date(g.promoEndDate) > now,
 	)
 
 	const generateCheckoutUrl = (game: GameItem) => {
 		if (!game.namespace || !game.id || mysteryGames) return null
 
 		const offerId = `1-${game.namespace}-${game.id}-`
-		return `https://store.epicgames.com/purchase?offers=${offerId}#/purchase/payment-methods`
+		return `https://store.epicgames.com/purchase?offers=${offerId}#`
+	}
+
+	const generateMobileCheckoutUrl = (mg: MobileGameDataLocal) => {
+		const offerParams: string[] = []
+		if (mg.iosOffer) offerParams.push(`1-${mg.namespace}-${mg.iosOffer.id}--`)
+		if (mg.androidOffer)
+			offerParams.push(`1-${mg.namespace}-${mg.androidOffer.id}--`)
+		if (offerParams.length === 0) return null
+		return `https://store.epicgames.com/purchase?offers=${offerParams.join('&offers=')}#/`
 	}
 
 	const generateBulkCheckoutUrl = () => {
 		if (mysteryGames) return null
 
-		const offers = games.currentGames
+		const pcOffers = games.currentGames
 			.map(game => {
 				if (!game.namespace || !game.id) return null
 				return `1-${game.namespace}-${game.id}-`
 			})
 			.filter(Boolean)
 
+		const mobileOffers = activeMobileGames.flatMap(mg => {
+			const offers: string[] = []
+			if (mg.iosOffer) offers.push(`1-${mg.namespace}-${mg.iosOffer.id}--`)
+			if (mg.androidOffer) offers.push(`1-${mg.namespace}-${mg.androidOffer.id}--`)
+			return offers
+		})
+
+		const offers = [...pcOffers, ...mobileOffers]
 		if (offers.length === 0) return null
 
 		const offersParam = offers.map(offer => `offers=${offer}`).join('&')
-		return `https://store.epicgames.com/purchase?${offersParam}#/purchase/payment-methods`
+		return `https://store.epicgames.com/purchase?${offersParam}#/`
 	}
 
 	const copyToClipboard = async (url: string) => {
@@ -60,38 +91,39 @@ export default function ClaimTab({ games }: { games: Game }) {
 						</div>
 					) : (
 						<>
-							{bulkCheckoutUrl && games.currentGames.length > 1 && (
-								<div className="p-4 bg-epic-blue/10 rounded-lg border border-epic-blue/20">
-									<h4 className="font-semibold text-epic-blue mb-2">
-										Claim All Free Games
-									</h4>
-									<div className="flex items-center gap-2">
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() => copyToClipboard(bulkCheckoutUrl)}
-											className="flex items-center gap-2"
-										>
-											{copiedUrl === bulkCheckoutUrl ? (
-												<Check className="size-4" />
-											) : (
-												<Copy className="size-4" />
-											)}
-											Copy
-										</Button>
-										<Button
-											size="sm"
-											className="flex items-center gap-2 bg-epic-blue hover:bg-epic-blue/90"
-											asChild
-										>
-											<a href={bulkCheckoutUrl} target="_blank" rel="noopener noreferrer">
-												<ExternalLink className="size-4" />
-												Claim All
-											</a>
-										</Button>
+							{bulkCheckoutUrl &&
+								games.currentGames.length + activeMobileGames.length > 1 && (
+									<div className="p-4 bg-epic-blue/10 rounded-lg border border-epic-blue/20">
+										<h4 className="font-semibold text-epic-blue mb-2">
+											Claim All Free Games
+										</h4>
+										<div className="flex items-center gap-2">
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => copyToClipboard(bulkCheckoutUrl)}
+												className="flex items-center gap-2"
+											>
+												{copiedUrl === bulkCheckoutUrl ? (
+													<Check className="size-4" />
+												) : (
+													<Copy className="size-4" />
+												)}
+												Copy
+											</Button>
+											<Button
+												size="sm"
+												className="flex items-center gap-2 bg-epic-blue hover:bg-epic-blue/90"
+												asChild
+											>
+												<a href={bulkCheckoutUrl} target="_blank" rel="noopener noreferrer">
+													<ExternalLink className="size-4" />
+													Claim All
+												</a>
+											</Button>
+										</div>
 									</div>
-								</div>
-							)}
+								)}
 
 							<div className="space-y-3">
 								{games.currentGames.map(game => {
@@ -116,6 +148,58 @@ export default function ClaimTab({ games }: { games: Game }) {
 										>
 											<span className="font-medium wrap-anywhere sm:pr-4">
 												{game.title}
+											</span>
+											<div className="flex items-center gap-2">
+												<Button
+													variant="outline"
+													size="sm"
+													onClick={() => copyToClipboard(checkoutUrl)}
+													className="flex items-center gap-2"
+												>
+													{copiedUrl === checkoutUrl ? (
+														<Check className="size-4" />
+													) : (
+														<Copy className="size-4" />
+													)}
+													Copy
+												</Button>
+												<Button
+													size="sm"
+													className="flex items-center gap-2 bg-epic-blue hover:bg-epic-blue/90"
+													asChild
+												>
+													<a href={checkoutUrl} target="_blank" rel="noopener noreferrer">
+														<ExternalLink className="size-4" />
+														Claim
+													</a>
+												</Button>
+											</div>
+										</div>
+									)
+								})}
+								{activeMobileGames.map(mg => {
+									const checkoutUrl = generateMobileCheckoutUrl(mg)
+									if (!checkoutUrl) return null
+									const platformLabel =
+										mg.iosOffer && mg.androidOffer
+											? 'iOS & Android'
+											: mg.iosOffer
+												? 'iOS'
+												: mg.androidOffer
+													? 'Android'
+													: ''
+									return (
+										<div
+											key={getMobileGameKey(mg)}
+											className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between p-3 border rounded-lg"
+										>
+											<span className="font-medium wrap-anywhere sm:pr-4">
+												{mg.title}
+												{platformLabel && (
+													<span className="text-xs text-muted-foreground ml-1">
+														({platformLabel})
+													</span>
+												)}
 											</span>
 											<div className="flex items-center gap-2">
 												<Button

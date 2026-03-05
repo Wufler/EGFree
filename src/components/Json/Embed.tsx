@@ -1,40 +1,60 @@
 import { format } from 'date-fns'
 import Image from 'next/image'
-import Discord from './ui/discord'
+import { getMobileGameKey } from '@/lib/utils'
+import Discord from '../ui/discord'
 
 const defaultContent = '<@&847939354978811924>'
+const EMPTY_MOBILE_GAMES: MobileGameDataLocal[] = []
 
 export default function DiscordPreview({
 	games,
 	settings,
 	checkoutLink = '',
+	parsedMobileGames = EMPTY_MOBILE_GAMES,
 }: {
 	games: Game
 	settings: EgFreeSettings
 	checkoutLink?: string
+	parsedMobileGames?: MobileGameDataLocal[]
 }) {
 	const selectedGames = [...games.currentGames, ...games.nextGames].filter(
-		game => settings.selectedGames[game.id]
+		game => settings.selectedGames[game.id],
 	)
 
 	const mysteryGames = games.currentGames.some(
-		game => game.seller?.name === 'Epic Dev Test Account'
+		game => game.seller?.name === 'Epic Dev Test Account',
 	)
+
+	const selectedMobileCount = parsedMobileGames.filter(
+		game => settings.selectedGames[getMobileGameKey(game)],
+	).length
 
 	const generateBulkCheckoutUrl = () => {
 		if (mysteryGames) return null
 
-		const offers = games.currentGames
+		const pcOffers = games.currentGames
+			.filter(game => settings.selectedGames[game.id])
 			.map(game => {
 				if (!game.namespace || !game.id) return null
 				return `1-${game.namespace}-${game.id}-`
 			})
 			.filter(Boolean)
 
+		const mobileOffers = parsedMobileGames
+			.filter(game => settings.selectedGames[getMobileGameKey(game)])
+			.flatMap(mg => {
+				const offers: string[] = []
+				if (mg.iosOffer) offers.push(`1-${mg.namespace}-${mg.iosOffer.id}--`)
+				if (mg.androidOffer)
+					offers.push(`1-${mg.namespace}-${mg.androidOffer.id}--`)
+				return offers
+			})
+
+		const offers = [...pcOffers, ...mobileOffers]
 		if (offers.length === 0) return null
 
 		const offersParam = offers.map(offer => `offers=${offer}`).join('&')
-		return `https://store.epicgames.com/purchase?${offersParam}#/purchase/payment-methods`
+		return `https://store.epicgames.com/purchase?${offersParam}#`
 	}
 
 	const bulkCheckoutUrl = generateBulkCheckoutUrl()
@@ -57,20 +77,23 @@ export default function DiscordPreview({
 			if (offers.length === 0) return fullUrl
 
 			const offersParam = offers.map(offer => `offers=${offer}`).join('&')
-			return `https://store.epicgames.com/purchase?${offersParam}#/purchase/payment-methods`
+			return `https://store.epicgames.com/purchase?${offersParam}#`
 		} catch {
 			return url
 		}
 	}
 
 	const normalizedCheckoutLink = normalizeCheckoutUrl(checkoutLink)
+	const selectedCurrentGamesCount = games.currentGames.filter(
+		game => settings.selectedGames[game.id],
+	).length
 
 	const isCurrentlyFree = (game: GameItem) => {
 		const currentPromo =
 			game.promotions?.promotionalOffers[0]?.promotionalOffers[0]
 		return Boolean(
 			currentPromo?.discountSetting?.discountPercentage === 0 &&
-				game.promotions?.promotionalOffers.length > 0
+			game.promotions?.promotionalOffers.length > 0,
 		)
 	}
 
@@ -83,7 +106,7 @@ export default function DiscordPreview({
 			game.promotions?.promotionalOffers[0]?.promotionalOffers[0]
 		return Boolean(
 			currentPromo?.discountSetting?.discountPercentage > 0 &&
-				game.promotions?.promotionalOffers.length > 0
+			game.promotions?.promotionalOffers.length > 0,
 		)
 	}
 
@@ -92,14 +115,17 @@ export default function DiscordPreview({
 			<div className="flex gap-4">
 				<div className="shrink-0">
 					{settings.webhookAvatar ? (
-						<img
+						<Image
 							src={settings.webhookAvatar}
 							alt="Webhook Avatar"
 							className="rounded-full size-10 mt-1"
+							width={40}
+							height={40}
+							unoptimized
 						/>
 					) : (
 						<div className="dark:bg-[#6263ed] bg-[#5865f2] rounded-full size-10 mt-1 flex items-center justify-center">
-							<Discord className="filter invert brightness-0 size-[23px]" />
+							<Discord className="filter invert brightness-0 size-5.75" />
 						</div>
 					)}
 				</div>
@@ -108,7 +134,7 @@ export default function DiscordPreview({
 						<div className="font-medium">
 							{settings.webhookName || 'Captain Hook'}
 						</div>
-						<div className="dark:bg-[#6263ed] bg-[#5865f2] ml-0.5 text-white rounded-sm px-[5px] font-semibold text-xs mt-0.5">
+						<div className="dark:bg-[#6263ed] bg-[#5865f2] ml-0.5 text-white rounded-sm px-1.25 font-semibold text-xs mt-0.5">
 							APP
 						</div>
 						<div className="text-xs ml-1 mt-0.5 text-[#616366] dark:text-[#949b9d]">
@@ -146,7 +172,7 @@ export default function DiscordPreview({
 						const isValidPageSlug =
 							pageSlug && pageSlug !== '[]' && pageSlug.trim() !== ''
 						const isBundleGame = game.categories?.some(
-							(category: { path: string }) => category.path === 'bundles'
+							(category: { path: string }) => category.path === 'bundles',
 						)
 						const linkPrefix = isBundleGame ? 'bundles/' : 'p/'
 						const imageUrl = game.keyImages.find(
@@ -154,14 +180,14 @@ export default function DiscordPreview({
 								img.type === 'VaultClosed' ||
 								img.type === 'DieselStoreFrontWide' ||
 								img.type === 'OfferImageWide' ||
-								img.type === 'DieselGameBoxWide'
+								img.type === 'DieselGameBoxWide',
 						)?.url
 						const isAddOn = game.offerType === 'ADD_ON'
 
 						const getCheckoutUrl = (game: GameItem) => {
 							if (!game.namespace || !game.id) return null
 							const offerParam = `offers=1-${game.namespace}-${game.id}-`
-							return `https://store.epicgames.com/purchase?${offerParam}#/purchase/payment-methods`
+							return `https://store.epicgames.com/purchase?${offerParam}#`
 						}
 
 						return (
@@ -244,7 +270,14 @@ export default function DiscordPreview({
 											settings.includeClaimGame &&
 											(() => {
 												const checkoutUrl = getCheckoutUrl(game)
+												const manualCheckoutUrl =
+													settings.includeCheckout &&
+													normalizedCheckoutLink &&
+													selectedCurrentGamesCount === 1
+														? normalizedCheckoutLink
+														: null
 												const claimUrl =
+													manualCheckoutUrl ||
 													checkoutUrl ||
 													(isValidPageSlug
 														? `https://store.epicgames.com/${linkPrefix}${pageSlug}`
@@ -259,8 +292,8 @@ export default function DiscordPreview({
 														{isAddOn
 															? 'Claim Add-on'
 															: isBundleGame
-															? 'Claim Bundle'
-															: 'Claim Game'}
+																? 'Claim Bundle'
+																: 'Claim Game'}
 													</a>
 												)
 											})()}
@@ -285,8 +318,134 @@ export default function DiscordPreview({
 						)
 					})}
 
-					{games.currentGames.filter(game => settings.selectedGames[game.id])
-						.length > 1 &&
+					{parsedMobileGames
+						.filter(game => settings.selectedGames[getMobileGameKey(game)])
+						.map(game => {
+							const endDate = game.promoEndDate ? new Date(game.promoEndDate) : null
+							const isCombined = Boolean(game.iosOffer && game.androidOffer)
+							const storeUrl = game.iosOffer?.pageSlug
+								? `https://store.epicgames.com/en-US/p/${game.iosOffer.pageSlug}`
+								: game.androidOffer?.pageSlug
+									? `https://store.epicgames.com/en-US/p/${game.androidOffer.pageSlug}`
+									: null
+							const iosLink = game.iosOffer?.pageSlug
+								? `https://store.epicgames.com/en-US/p/${game.iosOffer.pageSlug}`
+								: null
+							const androidLink = game.androidOffer?.pageSlug
+								? `https://store.epicgames.com/en-US/p/${game.androidOffer.pageSlug}`
+								: null
+
+							const offerParams: string[] = []
+							if (game.iosOffer)
+								offerParams.push(`1-${game.namespace}-${game.iosOffer.id}--`)
+							if (game.androidOffer)
+								offerParams.push(`1-${game.namespace}-${game.androidOffer.id}--`)
+							const checkoutUrl =
+								offerParams.length > 0
+									? `https://store.epicgames.com/purchase?offers=${offerParams.join('&offers=')}#/`
+									: null
+
+							const priceFormatted = new Intl.NumberFormat('en-US', {
+								style: 'currency',
+								currency: game.currencyCode,
+								minimumFractionDigits: 2,
+							}).format(game.originalPrice / 100)
+
+							return (
+								<div
+									key={getMobileGameKey(game)}
+									className="flex mt-1 rounded-sm overflow-hidden"
+									style={{
+										borderLeft: `4px solid ${settings.embedColor}`,
+									}}
+								>
+									<div className="max-w-md bg-[#f2f3f5] dark:bg-[#2B2D31] p-3.5 pr-4">
+										<div className="flex items-center mb-2">
+											<Image
+												width={1280}
+												height={720}
+												src="/epic.png"
+												alt="Epic Games Store Mobile"
+												className="size-7 rounded-full mr-2.5"
+											/>
+											<p className="hover:underline text-sm font-medium cursor-pointer">
+												Epic Games Store Mobile
+											</p>
+										</div>
+										<div className="flex flex-col text-sm gap-0.5">
+											{isCombined ? (
+												<span className="font-semibold flex items-center mb-2 text-[16px]">
+													{game.title}
+												</span>
+											) : storeUrl ? (
+												<a
+													href={storeUrl}
+													className="font-semibold flex items-center mb-2 text-[16px] text-[#4e80eb] dark:text-[#00A8FC] hover:underline"
+													target="_blank"
+												>
+													{game.title}
+												</a>
+											) : (
+												<span className="font-semibold flex items-center mb-2 text-[16px]">
+													{game.title}
+												</span>
+											)}
+											{checkoutUrl && settings.includeClaimGame && (
+												<a
+													href={checkoutUrl}
+													className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
+													target="_blank"
+												>
+													Claim Game
+												</a>
+											)}
+											{settings.includePrice && (
+												<span>
+													<span className="line-through font-extralight">
+														{priceFormatted}
+													</span>{' '}
+													<span className="font-semibold">Free</span>
+												</span>
+											)}
+											{isCombined && iosLink && (
+												<a
+													href={iosLink}
+													className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
+													target="_blank"
+												>
+													iOS
+												</a>
+											)}
+											{isCombined && androidLink && (
+												<a
+													href={androidLink}
+													className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
+													target="_blank"
+												>
+													Android
+												</a>
+											)}
+											{settings.includeImage && game.imageUrl && (
+												<Image
+													width={1280}
+													height={720}
+													src={game.imageUrl}
+													alt={game.title}
+													className="w-full h-full object-cover rounded-md mt-4"
+												/>
+											)}
+										</div>
+										{settings.includeFooter && endDate && (
+											<div className="text-xs font-light mt-2!">
+												Offer ends • {format(endDate, 'dd/MM/yyyy')}
+											</div>
+										)}
+									</div>
+								</div>
+							)
+						})}
+
+					{selectedCurrentGamesCount + selectedMobileCount > 1 &&
 						settings.includeCheckout && (
 							<div
 								className="flex mt-1 rounded-sm overflow-hidden"
