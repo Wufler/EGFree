@@ -24,23 +24,29 @@ export async function fetchMobileGameData(
     offerId: string,
 ): Promise<{ gameData: MobileGameData; enteredPlatform: 'ios' | 'android' | null } | null> {
     try {
-        console.log('Fetching mobile game data for offerId:', offerId)
+        const logs = false
+        if (logs) console.log('Fetching mobile game data for offerId:', offerId)
+
         const offerRes = await fetch(`${EGDATA_API}/offers/${offerId}`)
         if (!offerRes.ok) return null
         const offer: EgDataOffer = await offerRes.json()
-        console.log('Offer title:', offer.title)
-        const enteredPlatform = getPlatform(offer.tags)
+        if (logs) console.log('Offer title:', offer.title)
+        const enteredPlatform = getPlatform(offer.tags || [])
 
-        const priceRes = await fetch(`${EGDATA_API}/offers/${offerId}/price`)
+        const [priceRes, sandboxRes] = await Promise.all([
+            fetch(`${EGDATA_API}/offers/${offerId}/price`),
+            fetch(`${EGDATA_API}/sandboxes/${offer.namespace}/offers?offerType=BASE_GAME`)
+        ])
+
         if (!priceRes.ok) return null
         const priceData: EgDataPrice = await priceRes.json()
 
-        console.log('Price data appliedRules:', priceData.appliedRules)
+        if (logs) console.log('Price data appliedRules:', priceData.appliedRules)
 
         const freeRules = priceData.appliedRules.filter(rule =>
             rule.discountSetting.discountPercentage === 0
         )
-        console.log('Free rules found:', freeRules.length, freeRules)
+        if (logs) console.log('Free rules found:', freeRules.length, freeRules)
 
         const promoRule = freeRules.length > 0
             ? freeRules.reduce((latest, current) => {
@@ -49,35 +55,46 @@ export async function fetchMobileGameData(
                 return currentDate > latestDate ? current : latest
             })
             : null
-        console.log('Selected promo rule:', promoRule)
+        if (logs) console.log('Selected promo rule:', promoRule)
 
         const promoEndDate = promoRule?.endDate || ''
-        console.log('Final promoEndDate:', promoEndDate, promoEndDate ? new Date(promoEndDate).toISOString() : 'empty')
-
-        const sandboxRes = await fetch(
-            `${EGDATA_API}/sandboxes/${offer.namespace}/offers?offerType=BASE_GAME`
-        )
-        if (!sandboxRes.ok) return null
-        const sandboxData: EgDataSandboxResponse = await sandboxRes.json()
-
-        let iosOffer: MobileGameData['iosOffer'] = null
-        let androidOffer: MobileGameData['androidOffer'] = null
-
-        for (const item of sandboxData.elements) {
-            const platform = getPlatform(item.tags)
-            const pageSlug = item.offerMappings?.[0]?.pageSlug || ''
-
-            if (platform === 'ios' && !iosOffer) {
-                iosOffer = { id: item.id, pageSlug }
-            } else if (platform === 'android' && !androidOffer) {
-                androidOffer = { id: item.id, pageSlug }
-            }
+        if (logs) {
+            console.log('Final promoEndDate:', promoEndDate, promoEndDate ? new Date(promoEndDate).toISOString() : 'empty')
         }
 
-        const imageUrl = offer.keyImages.find(img =>
+        const fallbackPageSlug = offer.offerMappings?.[0]?.pageSlug || ''
+        let iosOffer: MobileGameData['iosOffer'] = enteredPlatform === 'ios'
+            ? { id: offer.id, pageSlug: fallbackPageSlug }
+            : null
+        let androidOffer: MobileGameData['androidOffer'] = enteredPlatform === 'android'
+            ? { id: offer.id, pageSlug: fallbackPageSlug }
+            : null
+
+        if (sandboxRes.ok) {
+            const sandboxData: EgDataSandboxResponse = await sandboxRes.json()
+
+            for (const item of sandboxData.elements || []) {
+                const platform = getPlatform(item.tags || [])
+                const pageSlug = item.offerMappings?.[0]?.pageSlug || ''
+
+                if (platform === 'ios' && !iosOffer) {
+                    iosOffer = { id: item.id, pageSlug }
+                } else if (platform === 'android' && !androidOffer) {
+                    androidOffer = { id: item.id, pageSlug }
+                }
+
+                if (iosOffer && androidOffer) break
+            }
+        } else {
+            console.warn(
+                `Sandbox lookup failed for namespace ${offer.namespace} (${sandboxRes.status}); using fallback offer mapping.`
+            )
+        }
+
+        const imageUrl = (offer.keyImages || []).find(img =>
             img.type === 'OfferImageWide' ||
             img.type === 'DieselStoreFrontWide'
-        )?.url || offer.keyImages[0]?.url || ''
+        )?.url || offer.keyImages?.[0]?.url || ''
 
         const gameData: MobileGameData = {
             title: offer.title,
@@ -90,7 +107,7 @@ export async function fetchMobileGameData(
             iosOffer,
             androidOffer
         }
-        console.log('Final gameData:', gameData)
+        if (logs) console.log('Final gameData:', gameData)
         return { gameData, enteredPlatform }
     } catch (error) {
         console.error('Error fetching mobile game data:', error)
