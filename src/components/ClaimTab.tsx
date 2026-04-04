@@ -134,7 +134,7 @@ export default function ClaimTab({
 										}}
 									>
 										{copiedUrl ===
-										mobileCheckoutUrlForPlatform(combinedDialogGame, 'ios') ? (
+											mobileCheckoutUrlForPlatform(combinedDialogGame, 'ios') ? (
 											<Check className="size-4" />
 										) : (
 											<Copy className="size-4" />
@@ -171,7 +171,7 @@ export default function ClaimTab({
 										}}
 									>
 										{copiedUrl ===
-										mobileCheckoutUrlForPlatform(combinedDialogGame, 'android') ? (
+											mobileCheckoutUrlForPlatform(combinedDialogGame, 'android') ? (
 											<Check className="size-4" />
 										) : (
 											<Copy className="size-4" />
@@ -209,7 +209,7 @@ export default function ClaimTab({
 						<>
 							{bulkCheckoutUrl &&
 								games.currentGames.length + activeMobileGames.length > 1 && (
-									<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between justify-start px-4 py-3 mb-3 gap-2 bg-epic-blue/10 rounded-lg border border-epic-blue/20">
+									<div className="bg-epic-blue/10 flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between p-3 border rounded-lg">
 										<h4 className="font-semibold text-epic-blue">
 											Claim All Free Games
 										</h4>
