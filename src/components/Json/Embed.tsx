@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
 import Image from 'next/image'
-import { getMobileGameKey } from '@/lib/utils'
+import { getEffectiveGames, getMobileGameKey } from '@/lib/utils'
 import Discord from '../ui/discord'
 
 const defaultContent = '<@&847939354978811924>'
@@ -17,11 +17,15 @@ export default function DiscordPreview({
 	checkoutLink?: string
 	parsedMobileGames?: MobileGameDataLocal[]
 }) {
-	const selectedGames = [...games.currentGames, ...games.nextGames].filter(
+	const effectiveGames = getEffectiveGames(games)
+	const selectedGames = [
+		...effectiveGames.currentGames,
+		...effectiveGames.nextGames,
+	].filter(
 		game => settings.selectedGames[game.id],
 	)
 
-	const mysteryGames = games.currentGames.some(
+	const mysteryGames = effectiveGames.currentGames.some(
 		game => game.seller?.name === 'Epic Dev Test Account',
 	)
 
@@ -32,7 +36,7 @@ export default function DiscordPreview({
 	const generateBulkCheckoutUrl = () => {
 		if (mysteryGames) return null
 
-		const pcOffers = games.currentGames
+		const pcOffers = effectiveGames.currentGames
 			.filter(game => settings.selectedGames[game.id])
 			.map(game => {
 				if (!game.namespace || !game.id) return null
@@ -84,7 +88,7 @@ export default function DiscordPreview({
 	}
 
 	const normalizedCheckoutLink = normalizeCheckoutUrl(checkoutLink)
-	const selectedCurrentGamesCount = games.currentGames.filter(
+	const selectedCurrentGamesCount = effectiveGames.currentGames.filter(
 		game => settings.selectedGames[game.id],
 	).length
 
@@ -164,7 +168,7 @@ export default function DiscordPreview({
 						const dateInfo = isCurrent
 							? game.promotions.promotionalOffers[0].promotionalOffers[0].endDate
 							: game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0]
-									.startDate
+								.startDate
 						const endDate = new Date(dateInfo)
 						const rawPageSlug =
 							game.productSlug || game.offerMappings?.[0]?.pageSlug || game.urlSlug
@@ -272,8 +276,8 @@ export default function DiscordPreview({
 												const checkoutUrl = getCheckoutUrl(game)
 												const manualCheckoutUrl =
 													settings.includeCheckout &&
-													normalizedCheckoutLink &&
-													selectedCurrentGamesCount === 1
+														normalizedCheckoutLink &&
+														selectedCurrentGamesCount === 1
 														? normalizedCheckoutLink
 														: null
 												const claimUrl =
@@ -290,10 +294,10 @@ export default function DiscordPreview({
 														target="_blank"
 													>
 														{isAddOn
-															? 'Claim Add-on'
+															? 'Claim Add-on ↗'
 															: isBundleGame
-																? 'Claim Bundle'
-																: 'Claim Game'}
+																? 'Claim Bundle ↗'
+																: 'Claim Game ↗'}
 													</a>
 												)
 											})()}
@@ -396,7 +400,7 @@ export default function DiscordPreview({
 													className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
 													target="_blank"
 												>
-													Claim Game
+													Claim Game ↗
 												</a>
 											)}
 											{settings.includePrice && (
@@ -460,7 +464,7 @@ export default function DiscordPreview({
 												className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start font-medium"
 												target="_blank"
 											>
-												{settings.includeClaimGame ? 'Claim All Games' : 'Checkout'}
+												{settings.includeClaimGame ? 'Claim All Games ↗' : 'Checkout ↗'}
 											</a>
 										) : mysteryGames ? (
 											<>
@@ -475,7 +479,7 @@ export default function DiscordPreview({
 												className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start font-medium"
 												target="_blank"
 											>
-												{settings.includeClaimGame ? 'Claim All Games' : 'Checkout'}
+												{settings.includeClaimGame ? 'Claim All Games ↗' : 'Checkout ↗'}
 											</a>
 										) : (
 											<span className="text-gray-500 dark:text-gray-400">

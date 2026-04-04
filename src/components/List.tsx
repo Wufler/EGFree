@@ -1,9 +1,9 @@
 'use client'
-import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from 'react'
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { calculateTimeLeft } from '@/lib/calculateTime'
-import { getMobileGameKey } from '@/lib/utils'
+import { getEffectiveGames, getMobileGameKey, mergeMobile } from '@/lib/utils'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import {
@@ -80,9 +80,8 @@ function TimeDisplay({
 
 	return (
 		<div
-			className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm ${
-				type === 'end' ? 'bg-epic-blue/90 text-white' : 'bg-black/60 text-white'
-			}`}
+			className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm ${type === 'end' ? 'bg-epic-blue/90 text-white' : 'bg-black/60 text-white'
+				}`}
 		>
 			<Clock className="size-3.5" />
 			<span>{timeLeft === 'Expired' ? 'Loading...' : timeLeft}</span>
@@ -102,9 +101,8 @@ function SectionHeader({
 	return (
 		<div className="mb-5 flex items-center gap-3">
 			<div
-				className={`rounded-xl p-2.5 shadow-sm ${
-					primary ? 'bg-epic-blue text-white' : 'bg-secondary text-foreground'
-				}`}
+				className={`rounded-xl p-2.5 shadow-sm ${primary ? 'bg-epic-blue text-white' : 'bg-secondary text-foreground'
+					}`}
 			>
 				<Icon className="size-5" />
 			</div>
@@ -137,7 +135,7 @@ function DesktopHome({
 		<div className="space-y-10">
 			{games.currentGames.length > 0 && (
 				<div>
-					<SectionHeader icon={Gem} title="Free Now" primary />
+					<SectionHeader icon={Gem} title="Free Now" />
 					<div className={gridClassName}>
 						{games.currentGames.map(game => renderGameCard(game, true))}
 					</div>
@@ -171,20 +169,32 @@ function DesktopHome({
 	)
 }
 
-export default function List({ games }: { games: Game }) {
+export default function List({
+	games,
+	mobile,
+}: {
+	games: Game
+	mobile: MobileGameData[]
+}) {
 	const router = useRouter()
 	const hasToastShown = useRef(false)
 	const [parsedMobileGames, setParsedMobileGames] = useState<
 		MobileGameDataLocal[]
 	>([])
-	const [activeTab, setActiveTab] = useState('current')
+	const [activeTab, setActiveTab] = useState('home')
+
+	const mobileGames = useMemo(
+		() => mergeMobile(mobile, parsedMobileGames),
+		[mobile, parsedMobileGames],
+	)
+	const effectiveGames = useMemo(() => getEffectiveGames(games), [games])
 
 	useEffect(() => {
 		if (typeof window === 'undefined') return
 		const checkDesktop = () => {
 			const isLg = window.innerWidth >= 1024
 			if (isLg && !localStorage.getItem('tabState')) {
-				setActiveTab(prev => (prev === 'current' ? 'home' : prev))
+				setActiveTab('home')
 			}
 		}
 
@@ -263,7 +273,7 @@ export default function List({ games }: { games: Game }) {
 			if (isCurrentGame) {
 				return new Date(
 					game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0]?.endDate ??
-						'',
+					'',
 				)
 			}
 			return new Date(
@@ -327,19 +337,18 @@ export default function List({ games }: { games: Game }) {
 									<div className="mt-1 flex items-center gap-1.5">
 										{!isCurrentGame &&
 											game.price.totalPrice.discountPrice !==
-												game.price.totalPrice.originalPrice && (
+											game.price.totalPrice.originalPrice && (
 												<span className="text-sm font-bold text-white">
 													{game.price.totalPrice.fmtPrice.discountPrice}
 												</span>
 											)}
 										<span
-											className={`text-xs font-medium text-gray-400 ${
-												isCurrentGame ||
+											className={`text-xs font-medium text-gray-400 ${isCurrentGame ||
 												game.price.totalPrice.discountPrice !==
-													game.price.totalPrice.originalPrice
-													? 'line-through'
-													: ''
-											}`}
+												game.price.totalPrice.originalPrice
+												? 'line-through'
+												: ''
+												}`}
 										>
 											{game.price.totalPrice.fmtPrice.originalPrice}
 										</span>
@@ -409,9 +418,8 @@ export default function List({ games }: { games: Game }) {
 							height={720}
 							priority
 							alt={game.title}
-							className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
-								isExpired ? 'grayscale' : ''
-							}`}
+							className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${isExpired ? 'grayscale' : ''
+								}`}
 						/>
 					) : (
 						<div className="flex h-full w-full items-center justify-center bg-epic-dark-blue">
@@ -452,7 +460,10 @@ export default function List({ games }: { games: Game }) {
 								)}
 								{game.originalPrice !== 0 && (
 									<div className="mt-1 flex items-center gap-1.5">
-										<span className="text-xs font-medium text-gray-400 line-through">
+										<span
+											className={`text-xs font-medium text-gray-400 ${!isExpired ? 'line-through' : ''
+												}`}
+										>
 											{new Intl.NumberFormat('en-US', {
 												style: 'currency',
 												currency: game.currencyCode,
@@ -512,38 +523,37 @@ export default function List({ games }: { games: Game }) {
 	}
 
 	const now = new Date()
-	const activeMobileGames = parsedMobileGames.filter(
+	const activeMobileGames = mobileGames.filter(
 		g => g.promoEndDate && new Date(g.promoEndDate) > now,
 	)
-	const expiredMobileGames = parsedMobileGames.filter(
+	const expiredMobileGames = mobileGames.filter(
 		g => !g.promoEndDate || new Date(g.promoEndDate) <= now,
 	)
 
-	const totalFreeNow = games.currentGames.length
-	const isSingleGame = totalFreeNow === 1 && games.nextGames.length === 1
+	const totalFreeNow = effectiveGames.currentGames.length
+	const isSingleGame = totalFreeNow === 1 && effectiveGames.nextGames.length === 1
 	const isTwoCurrentGames = totalFreeNow <= 2
-	const isTwoUpcomingGames = games.nextGames.length <= 2
+	const isTwoUpcomingGames = effectiveGames.nextGames.length <= 2
 
-	const gridClassName = `grid gap-4 ${
-		isSingleGame
+	const gridClassName = `grid gap-4 ${isSingleGame
+		? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2'
+		: isTwoCurrentGames && isTwoUpcomingGames
 			? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2'
-			: isTwoCurrentGames && isTwoUpcomingGames
-				? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2'
-				: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-	}`
+			: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+		}`
 
 	const mobileTabTriggerClass =
-		'shrink-0 relative rounded-none py-3 px-3 sm:px-4 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-epic-blue text-sm font-medium data-[state=active]:text-epic-blue text-muted-foreground'
+		'shrink-0 relative rounded-none py-3 px-3 sm:px-4 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-epic-blue text-sm font-medium data-[state=active]:text-epic-blue text-muted-foreground inline-flex items-center justify-center gap-2'
 
 	const desktopSidebarTriggerClass =
 		'w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground data-[state=active]:bg-accent data-[state=active]:text-foreground data-[state=active]:font-semibold'
 
-	const tabGridClass = 'grid grid-cols-1 md:grid-cols-2 gap-4 p-4 md:p-0'
+	const tabGridClass = 'grid grid-cols-1 md:grid-cols-2 gap-4'
 
 	const isEmpty =
-		games.currentGames.length === 0 &&
-		games.nextGames.length === 0 &&
-		parsedMobileGames.length === 0
+		effectiveGames.currentGames.length === 0 &&
+		effectiveGames.nextGames.length === 0 &&
+		mobileGames.length === 0
 
 	if (isEmpty) {
 		return (
@@ -556,9 +566,9 @@ export default function List({ games }: { games: Game }) {
 	const renderContent = (section: string) => {
 		switch (section) {
 			case 'current':
-				return games.currentGames.length > 0 ? (
+				return effectiveGames.currentGames.length > 0 ? (
 					<div className={tabGridClass}>
-						{games.currentGames.map(game => renderGameCard(game, true))}
+						{effectiveGames.currentGames.map(game => renderGameCard(game, true))}
 					</div>
 				) : (
 					<NoOffers />
@@ -572,9 +582,9 @@ export default function List({ games }: { games: Game }) {
 					<NoOffers />
 				)
 			case 'upcoming':
-				return games.nextGames.length > 0 ? (
+				return effectiveGames.nextGames.length > 0 ? (
 					<div className={tabGridClass}>
-						{games.nextGames.map(game => renderGameCard(game, false))}
+						{effectiveGames.nextGames.map(game => renderGameCard(game, false))}
 					</div>
 				) : (
 					<NoOffers />
@@ -588,16 +598,16 @@ export default function List({ games }: { games: Game }) {
 					<NoOffers />
 				)
 			case 'claim':
-				return <ClaimTab games={games} parsedMobileGames={activeMobileGames} />
+				return <ClaimTab games={effectiveGames} parsedMobileGames={activeMobileGames} />
 			default:
 				return null
 		}
 	}
 
 	return (
-		<div className="min-h-[calc(100vh-80px)]">
+		<div className="w-full min-w-0">
 			<Tabs
-				defaultValue="current"
+				defaultValue="home"
 				value={activeTab}
 				onValueChange={value => {
 					setActiveTab(value)
@@ -605,47 +615,58 @@ export default function List({ games }: { games: Game }) {
 						localStorage.setItem('tabState', value)
 					}
 				}}
-				className="flex flex-col lg:flex-row h-full"
+				className="w-full min-h-0 flex flex-col gap-0 lg:grid lg:grid-cols-[16rem_1fr]"
 			>
 				{/* Mobile Tabs */}
 				<div className="lg:hidden sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b">
-					<TabsList className="w-full h-auto rounded-none bg-transparent p-0 flex flex-nowrap justify-start overflow-x-auto [&::-webkit-scrollbar]:h-0">
+					<TabsList className="w-full h-auto rounded-none bg-transparent p-0 flex flex-nowrap justify-center overflow-x-auto [&::-webkit-scrollbar]:h-0">
+						<TabsTrigger value="home" className={mobileTabTriggerClass}>
+							<HomeIcon className="size-4" />
+							{activeTab === 'home' && <span>Home</span>}
+						</TabsTrigger>
 						<TabsTrigger value="current" className={mobileTabTriggerClass}>
-							<Gem className="size-4 mr-2" /> Free
+							<Gem className="size-4" />
+							{activeTab === 'current' && <span>Free Now</span>}
 						</TabsTrigger>
 						{activeMobileGames.length > 0 && (
 							<TabsTrigger value="mobile" className={mobileTabTriggerClass}>
-								<Smartphone className="size-4 mr-2" /> Mobile
+								<Smartphone className="size-4" />
+								{activeTab === 'mobile' && <span>Mobile Games</span>}
 							</TabsTrigger>
 						)}
 						<TabsTrigger value="upcoming" className={mobileTabTriggerClass}>
-							<Calendar className="size-4 mr-2" /> Upcoming
+							<Calendar className="size-4" />
+							{activeTab === 'upcoming' && <span>Upcoming</span>}
 						</TabsTrigger>
 						{expiredMobileGames.length > 0 && (
 							<TabsTrigger value="expired" className={mobileTabTriggerClass}>
-								<XCircle className="size-4 mr-2" /> Expired
+								<XCircle className="size-4" />
+								{activeTab === 'expired' && <span>Expired</span>}
 							</TabsTrigger>
 						)}
-						{(games.currentGames.length > 0 || activeMobileGames.length > 0) && (
+						{(effectiveGames.currentGames.length > 0 || activeMobileGames.length > 0) && (
 							<TabsTrigger value="claim" className={mobileTabTriggerClass}>
-								<ShoppingCart className="size-4 mr-2" /> Claim
+								<ShoppingCart className="size-4" />
+								{activeTab === 'claim' && <span>Claim Games</span>}
 							</TabsTrigger>
 						)}
 					</TabsList>
 				</div>
 
 				{/* Desktop Sidebar */}
-				<aside className="hidden lg:block w-64 shrink-0 border-r bg-background/50">
-					<div className="p-6 sticky top-0 h-[calc(100vh-80px)] overflow-y-auto">
+				<aside className="hidden lg:flex lg:flex-col border-r bg-background/50">
+					<div className="p-6 lg:sticky lg:top-0 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto">
 						<div className="space-y-6">
+							<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
+								<TabsTrigger value="home" className={desktopSidebarTriggerClass}>
+									<HomeIcon className="size-4" /> Home
+								</TabsTrigger>
+							</TabsList>
 							<div className="space-y-1">
 								<h4 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
 									Games
 								</h4>
 								<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
-									<TabsTrigger value="home" className={desktopSidebarTriggerClass}>
-										<HomeIcon className="size-4" /> Home
-									</TabsTrigger>
 									<TabsTrigger value="current" className={desktopSidebarTriggerClass}>
 										<Gem className="size-4" /> Free Now
 									</TabsTrigger>
@@ -690,14 +711,14 @@ export default function List({ games }: { games: Game }) {
 				</aside>
 
 				{/* Content Area */}
-				<main className="flex-1 p-4 lg:p-8 overflow-x-hidden">
+				<main className="min-w-0 flex-1 p-4 lg:p-8 overflow-x-hidden">
 					<div className="max-w-6xl mx-auto">
 						<TabsContent
 							value="home"
 							className="mt-0 outline-none animate-in fade-in duration-300"
 						>
 							<DesktopHome
-								games={games}
+								games={effectiveGames}
 								activeMobileGames={activeMobileGames}
 								expiredMobileGames={expiredMobileGames}
 								gridClassName={gridClassName}
@@ -711,7 +732,7 @@ export default function List({ games }: { games: Game }) {
 						>
 							<div className="lg:hidden">{renderContent('current')}</div>
 							<div className="hidden lg:block">
-								<SectionHeader icon={Gem} title="Free Now" primary />
+								<SectionHeader icon={Gem} title="Free Now" />
 								{renderContent('current')}
 							</div>
 						</TabsContent>
@@ -750,11 +771,11 @@ export default function List({ games }: { games: Game }) {
 							className="mt-0 outline-none animate-in fade-in duration-300"
 						>
 							<div className="lg:hidden">
-								<ClaimTab games={games} parsedMobileGames={activeMobileGames} />
+								<ClaimTab games={effectiveGames} parsedMobileGames={activeMobileGames} />
 							</div>
 							<div className="hidden lg:block max-w-2xl">
 								<SectionHeader icon={ShoppingCart} title="Claim Games" />
-								<ClaimTab games={games} parsedMobileGames={activeMobileGames} />
+								<ClaimTab games={effectiveGames} parsedMobileGames={activeMobileGames} />
 							</div>
 						</TabsContent>
 					</div>

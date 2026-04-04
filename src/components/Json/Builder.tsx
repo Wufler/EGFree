@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { FileJson2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -25,7 +25,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { encrypt, decrypt } from '@/lib/encryption'
 import { generateJsonPayload } from '@/lib/jsonBuilder'
-import { getMobileGameKey } from '@/lib/utils'
+import { getEffectiveGames, getMobileGameKey, mergeMobile } from '@/lib/utils'
 import JsonFormContent from './FormContent'
 import JsonPreviewContent, { JsonPreviewButtons } from './PreviewContent'
 
@@ -42,7 +42,13 @@ type ParseGameResponse = {
 	error?: string
 }
 
-export default function Json({ games }: { games: Game }) {
+export default function Json({
+	games,
+	mobile,
+}: {
+	games: Game
+	mobile: MobileGameData[]
+}) {
 	const [jsonData, setJsonData] = useState({})
 	const [webhookUrl, setWebhookUrl] = useState('')
 	const [messageId, setMessageId] = useState('')
@@ -64,6 +70,18 @@ export default function Json({ games }: { games: Game }) {
 	const [existingGameForCombine, setExistingGameForCombine] =
 		useState<MobileGameDataLocal | null>(null)
 	const [isPlatformPromptOpen, setIsPlatformPromptOpen] = useState(false)
+
+	const allMobileGames = useMemo(
+		() => mergeMobile(mobile, parsedMobileGames),
+		[mobile, parsedMobileGames],
+	)
+	const effectiveGames = useMemo(() => getEffectiveGames(games), [games])
+
+	const storedMobileGameKeys = useMemo(
+		() => new Set(parsedMobileGames.map(g => getMobileGameKey(g))),
+		[parsedMobileGames],
+	)
+
 	const [settings, setSettings] = useState<EgFreeSettings>({
 		selectedGames: {},
 		embedContent: '',
@@ -86,7 +104,9 @@ export default function Json({ games }: { games: Game }) {
 			const mobileParsed: MobileGameDataLocal[] = storedMobile
 				? JSON.parse(storedMobile)
 				: []
-			setParsedMobileGames(Array.isArray(mobileParsed) ? mobileParsed : [])
+			const storedList = Array.isArray(mobileParsed) ? mobileParsed : []
+			setParsedMobileGames(storedList)
+			const mergedMobile = mergeMobile(mobile, storedList)
 
 			const loadSettings = async () => {
 				const savedSettings = localStorage.getItem('egFreeSettings')
@@ -98,8 +118,8 @@ export default function Json({ games }: { games: Game }) {
 							: ''
 
 						const validGameIds = new Set([
-							...games.currentGames.map(game => game.id),
-							...games.nextGames.map(game => game.id),
+							...effectiveGames.currentGames.map(game => game.id),
+							...effectiveGames.nextGames.map(game => game.id),
 						])
 
 						const cleanedSelectedGames: Record<string, boolean> = {}
@@ -108,7 +128,7 @@ export default function Json({ games }: { games: Game }) {
 								if (validGameIds.has(gameId)) {
 									cleanedSelectedGames[gameId] = isSelected as boolean
 								} else if (gameId.startsWith('mobile-')) {
-									const mobileExists = mobileParsed.some(
+									const mobileExists = mergedMobile.some(
 										g => getMobileGameKey(g) === gameId,
 									)
 									if (mobileExists) {
@@ -118,17 +138,17 @@ export default function Json({ games }: { games: Game }) {
 							},
 						)
 
-						games.currentGames.forEach(game => {
+						effectiveGames.currentGames.forEach(game => {
 							if (cleanedSelectedGames[game.id] === undefined) {
 								cleanedSelectedGames[game.id] = true
 							}
 						})
-						games.nextGames.forEach(game => {
+						effectiveGames.nextGames.forEach(game => {
 							if (cleanedSelectedGames[game.id] === undefined) {
 								cleanedSelectedGames[game.id] = false
 							}
 						})
-						mobileParsed.forEach(game => {
+						mergedMobile.forEach(game => {
 							const key = getMobileGameKey(game)
 							if (cleanedSelectedGames[key] === undefined) {
 								cleanedSelectedGames[key] = true
@@ -152,13 +172,13 @@ export default function Json({ games }: { games: Game }) {
 					}
 				} else {
 					const initialSelectedGames: Record<string, boolean> = {}
-					games.currentGames.forEach(game => {
+					effectiveGames.currentGames.forEach(game => {
 						initialSelectedGames[game.id] = true
 					})
-					games.nextGames.forEach(game => {
+					effectiveGames.nextGames.forEach(game => {
 						initialSelectedGames[game.id] = false
 					})
-					mobileParsed.forEach(game => {
+					mergedMobile.forEach(game => {
 						initialSelectedGames[getMobileGameKey(game)] = true
 					})
 					setSettings(prev => ({
@@ -169,7 +189,7 @@ export default function Json({ games }: { games: Game }) {
 			}
 			loadSettings()
 		}
-	}, [games])
+	}, [games, mobile, effectiveGames])
 
 	useEffect(() => {
 		const saveSettings = async () => {
@@ -242,7 +262,7 @@ export default function Json({ games }: { games: Game }) {
 	}
 
 	const handleMobileParseResponse = (data: ParseGameResponse) => {
-		const existing = parsedMobileGames.find(
+		const existing = allMobileGames.find(
 			g =>
 				g.namespace === data.gameData.namespace && g.title === data.gameData.title,
 		)
@@ -287,9 +307,9 @@ export default function Json({ games }: { games: Game }) {
 
 	useEffect(() => {
 		setJsonData(
-			generateJsonPayload(games, settings, checkoutLink, parsedMobileGames),
+			generateJsonPayload(effectiveGames, settings, checkoutLink, allMobileGames),
 		)
-	}, [games, settings, checkoutLink, parsedMobileGames])
+	}, [effectiveGames, settings, checkoutLink, allMobileGames])
 
 	const copyToClipboard = async () => {
 		try {
@@ -429,12 +449,19 @@ export default function Json({ games }: { games: Game }) {
 		if (typeof window === 'undefined') return
 		try {
 			const removeKey = getMobileGameKey(gameData)
-			const filtered = parsedMobileGames.filter(
-				item => getMobileGameKey(item) !== removeKey,
+			const stored = localStorage.getItem('parsedMobileGames')
+			const parsed: MobileGameDataLocal[] = stored ? JSON.parse(stored) : []
+			const wasInStored = parsed.some(
+				item => getMobileGameKey(item) === removeKey,
 			)
-			localStorage.setItem('parsedMobileGames', JSON.stringify(filtered))
-			setParsedMobileGames(filtered)
-			window.dispatchEvent(new Event('parsedMobileGamesUpdated'))
+			if (wasInStored) {
+				const filtered = parsed.filter(
+					item => getMobileGameKey(item) !== removeKey,
+				)
+				localStorage.setItem('parsedMobileGames', JSON.stringify(filtered))
+				setParsedMobileGames(filtered)
+				window.dispatchEvent(new Event('parsedMobileGamesUpdated'))
+			}
 
 			const newSelected = { ...settings.selectedGames }
 			delete newSelected[removeKey]
@@ -510,9 +537,10 @@ export default function Json({ games }: { games: Game }) {
 	}
 
 	const formProps = {
-		games,
+		games: effectiveGames,
 		settings,
-		parsedMobileGames,
+		parsedMobileGames: allMobileGames,
+		storedMobileGameKeys,
 		webhookUrl,
 		setWebhookUrl,
 		messageId,
@@ -546,9 +574,9 @@ export default function Json({ games }: { games: Game }) {
 		updateSetting,
 		copyToClipboard,
 		isCopied,
-		games,
+		games: effectiveGames,
 		checkoutLink,
-		parsedMobileGames,
+		parsedMobileGames: allMobileGames,
 	}
 
 	return (

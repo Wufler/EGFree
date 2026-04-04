@@ -117,6 +117,7 @@ export default function JsonFormContent({
 	games,
 	settings,
 	parsedMobileGames,
+	storedMobileGameKeys,
 	webhookUrl,
 	setWebhookUrl,
 	messageId,
@@ -147,6 +148,7 @@ export default function JsonFormContent({
 	games: Game
 	settings: EgFreeSettings
 	parsedMobileGames: MobileGameDataLocal[]
+	storedMobileGameKeys?: ReadonlySet<string>
 	webhookUrl: string
 	setWebhookUrl: (v: string) => void
 	messageId: string
@@ -212,11 +214,10 @@ export default function JsonFormContent({
 								setWebhookUrl(e.target.value)
 								debouncedFetchWebhookInfo(e.target.value)
 							}}
-							className={`rounded-r-none border-r-0 text-sm ${
-								webhookUrl && !isValidDiscordWebhook(webhookUrl)
-									? 'border-red-500 focus:border-red-500'
-									: ''
-							}`}
+							className={`rounded-r-none border-r-0 text-sm ${webhookUrl && !isValidDiscordWebhook(webhookUrl)
+								? 'border-red-500 focus:border-red-500'
+								: ''
+								}`}
 						/>
 						<AlertDialog>
 							<AlertDialogTrigger asChild>
@@ -271,11 +272,10 @@ export default function JsonFormContent({
 				</div>
 				<Button
 					onClick={handleWebhook}
-					className={`w-full ${
-						showWarning
-							? 'bg-yellow-500 hover:bg-yellow-600 text-black'
-							: 'dark:text-black'
-					}`}
+					className={`w-full ${showWarning
+						? 'bg-yellow-500 hover:bg-yellow-600 text-black'
+						: 'dark:text-black'
+						}`}
 					size="sm"
 					disabled={isLoading || !isValidDiscordWebhook(webhookUrl)}
 				>
@@ -385,14 +385,6 @@ export default function JsonFormContent({
 									updateSetting={updateSetting}
 								/>
 							)}
-							{games.nextGames.length > 0 && (
-								<GameSelectionList
-									games={games.nextGames}
-									type="Upcoming"
-									settings={settings}
-									updateSetting={updateSetting}
-								/>
-							)}
 							{activeMobile.length > 0 && (
 								<GameSelectionList
 									games={activeMobile.map(g => ({
@@ -405,7 +397,15 @@ export default function JsonFormContent({
 													? ' (Android)'
 													: ''),
 									}))}
-									type="EGData"
+									type="Mobile"
+									settings={settings}
+									updateSetting={updateSetting}
+								/>
+							)}
+							{games.nextGames.length > 0 && (
+								<GameSelectionList
+									games={games.nextGames}
+									type="Upcoming"
 									settings={settings}
 									updateSetting={updateSetting}
 								/>
@@ -490,7 +490,7 @@ export default function JsonFormContent({
 												updateSetting('includeCheckout', checked as boolean)
 											}
 											className="order-1 after:absolute after:inset-0"
-											disabled={selectedCurrentCount <= 1}
+											disabled={selectedCurrentCount < 1}
 										/>
 										<ShoppingCart className="opacity-60" size={16} aria-hidden="true" />
 									</div>
@@ -509,7 +509,7 @@ export default function JsonFormContent({
 									}
 								/>
 							</div>
-							{settings.includeCheckout && selectedCurrentCount > 1 && (
+							{settings.includeCheckout && selectedCurrentCount >= 1 && (
 								<div className="space-y-2">
 									<div className="flex items-center justify-between">
 										<Label
@@ -636,14 +636,17 @@ export default function JsonFormContent({
 													? ' (Android)'
 													: ''}
 										</span>
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={() => removeParsedGame(game)}
-											className="h-6 px-1 shrink-0"
-										>
-											<X className="size-3" />
-										</Button>
+										{(!storedMobileGameKeys ||
+											storedMobileGameKeys.has(getMobileGameKey(game))) && (
+												<Button
+													variant="ghost"
+													size="sm"
+													onClick={() => removeParsedGame(game)}
+													className="h-6 px-1 shrink-0"
+												>
+													<X className="size-3" />
+												</Button>
+											)}
 									</div>
 								))}
 							</div>

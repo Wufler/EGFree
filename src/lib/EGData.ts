@@ -20,7 +20,11 @@ function getPlatform(tags: EgDataTag[]): 'ios' | 'android' | null {
     return null
 }
 
-export async function fetchMobileGameData(
+function isMobileTag(tags: EgDataTag[] | undefined): boolean {
+    return getPlatform(tags || []) !== null
+}
+
+export async function getMobileGame(
     offerId: string,
 ): Promise<{ gameData: MobileGameData; enteredPlatform: 'ios' | 'android' | null } | null> {
     try {
@@ -115,6 +119,34 @@ export async function fetchMobileGameData(
     }
 }
 
+export async function getMobileGames(): Promise<MobileGameData[]> {
+    try {
+        const res = await fetch(`${EGDATA_API}/free-games`)
+        if (!res.ok) return []
+        const offers: EgDataOffer[] = await res.json()
+        if (!Array.isArray(offers)) return []
+
+        const byNamespace = new Map<string, string>()
+        for (const offer of offers) {
+            if (!isMobileTag(offer.tags)) continue
+            if (!byNamespace.has(offer.namespace)) {
+                byNamespace.set(offer.namespace, offer.id)
+            }
+        }
+
+        const results = await Promise.all(
+            [...byNamespace.values()].map(offerId => getMobileGame(offerId)),
+        )
+
+        return results
+            .filter((r): r is NonNullable<typeof r> => r !== null)
+            .map(r => r.gameData)
+    } catch (error) {
+        console.error('getMobileGames:', error)
+        return []
+    }
+}
+
 export function formatPrice(cents: number, currencyCode: string): string {
     const amount = cents / 100
 
@@ -149,17 +181,17 @@ export function generateDiscordEmbed(gameData: MobileGameData): object {
     const fieldParts: string[] = []
 
     if (checkoutUrl) {
-        fieldParts.push(`[Claim Game](${checkoutUrl})`)
+        fieldParts.push(`[Claim Game ↗](${checkoutUrl})`)
     }
 
     const priceStr = formatPrice(originalPrice, currencyCode)
     fieldParts.push(`~~${priceStr}~~ **Free**`)
 
     if (isCombined && iosOffer?.pageSlug) {
-        fieldParts.push(`[iOS](https://store.epicgames.com/en-US/p/${iosOffer.pageSlug})`)
+        fieldParts.push(`[iOS ↗](https://store.epicgames.com/en-US/p/${iosOffer.pageSlug})`)
     }
     if (isCombined && androidOffer?.pageSlug) {
-        fieldParts.push(`[Android](https://store.epicgames.com/en-US/p/${androidOffer.pageSlug})`)
+        fieldParts.push(`[Android ↗](https://store.epicgames.com/en-US/p/${androidOffer.pageSlug})`)
     }
 
     const embed: EgDataDiscordEmbed = {

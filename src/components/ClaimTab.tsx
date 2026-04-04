@@ -2,6 +2,13 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog'
 import { Check, Copy, ExternalLink } from 'lucide-react'
 import { getMobileGameKey } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -16,6 +23,8 @@ export default function ClaimTab({
 	parsedMobileGames?: MobileGameDataLocal[]
 }) {
 	const [copiedUrl, setCopiedUrl] = useState('')
+	const [combinedDialogGame, setCombinedDialogGame] =
+		useState<MobileGameDataLocal | null>(null)
 
 	const mysteryGames = games.currentGames.some(
 		game => game.seller?.name === 'Epic Dev Test Account',
@@ -40,6 +49,19 @@ export default function ClaimTab({
 			offerParams.push(`1-${mg.namespace}-${mg.androidOffer.id}--`)
 		if (offerParams.length === 0) return null
 		return `https://store.epicgames.com/purchase?offers=${offerParams.join('&offers=')}#/`
+	}
+
+	const mobileCheckoutUrlForPlatform = (
+		mg: MobileGameDataLocal,
+		platform: 'ios' | 'android',
+	) => {
+		if (platform === 'ios' && mg.iosOffer) {
+			return `https://store.epicgames.com/purchase?offers=1-${mg.namespace}-${mg.iosOffer.id}--#/`
+		}
+		if (platform === 'android' && mg.androidOffer) {
+			return `https://store.epicgames.com/purchase?offers=1-${mg.namespace}-${mg.androidOffer.id}--#/`
+		}
+		return null
 	}
 
 	const generateBulkCheckoutUrl = () => {
@@ -80,9 +102,103 @@ export default function ClaimTab({
 	const bulkCheckoutUrl = generateBulkCheckoutUrl()
 
 	return (
-		<Card className="rounded-none border-none bg-transparent shadow-none">
-			<CardContent className="px-4">
-				<div className="space-y-4">
+		<Card className="rounded-none border-none bg-transparent shadow-none p-0 gap-0">
+			<Dialog
+				open={combinedDialogGame !== null}
+				onOpenChange={open => {
+					if (!open) setCombinedDialogGame(null)
+				}}
+			>
+				<DialogContent className="sm:max-w-md">
+					<DialogHeader>
+						<DialogTitle>Choose platform</DialogTitle>
+						<DialogDescription>
+							Copy or open checkout for iOS or Android.
+						</DialogDescription>
+					</DialogHeader>
+					{combinedDialogGame ? (
+						<div className="grid gap-4">
+							<div className="space-y-2">
+								<p className="text-sm font-medium">iOS</p>
+								<div className="flex flex-wrap gap-2">
+									<Button
+										variant="outline"
+										size="sm"
+										className="flex items-center gap-2"
+										onClick={() => {
+											const url = mobileCheckoutUrlForPlatform(
+												combinedDialogGame,
+												'ios',
+											)
+											if (url) copyToClipboard(url)
+										}}
+									>
+										{copiedUrl ===
+										mobileCheckoutUrlForPlatform(combinedDialogGame, 'ios') ? (
+											<Check className="size-4" />
+										) : (
+											<Copy className="size-4" />
+										)}
+										Copy
+									</Button>
+									<Button size="sm" className="flex items-center gap-2" asChild>
+										<a
+											href={
+												mobileCheckoutUrlForPlatform(combinedDialogGame, 'ios') ?? '#'
+											}
+											target="_blank"
+											rel="noopener noreferrer"
+										>
+											<ExternalLink className="size-4" />
+											Claim
+										</a>
+									</Button>
+								</div>
+							</div>
+							<div className="space-y-2">
+								<p className="text-sm font-medium">Android</p>
+								<div className="flex flex-wrap gap-2">
+									<Button
+										variant="outline"
+										size="sm"
+										className="flex items-center gap-2"
+										onClick={() => {
+											const url = mobileCheckoutUrlForPlatform(
+												combinedDialogGame,
+												'android',
+											)
+											if (url) copyToClipboard(url)
+										}}
+									>
+										{copiedUrl ===
+										mobileCheckoutUrlForPlatform(combinedDialogGame, 'android') ? (
+											<Check className="size-4" />
+										) : (
+											<Copy className="size-4" />
+										)}
+										Copy
+									</Button>
+									<Button size="sm" className="flex items-center gap-2" asChild>
+										<a
+											href={
+												mobileCheckoutUrlForPlatform(combinedDialogGame, 'android') ??
+												'#'
+											}
+											target="_blank"
+											rel="noopener noreferrer"
+										>
+											<ExternalLink className="size-4" />
+											Claim
+										</a>
+									</Button>
+								</div>
+							</div>
+						</div>
+					) : null}
+				</DialogContent>
+			</Dialog>
+			<CardContent className="px-0">
+				<div className="space-y-3">
 					{mysteryGames ? (
 						<div className="p-4 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
 							<p className="text-yellow-800 dark:text-yellow-200 font-medium">
@@ -93,8 +209,8 @@ export default function ClaimTab({
 						<>
 							{bulkCheckoutUrl &&
 								games.currentGames.length + activeMobileGames.length > 1 && (
-									<div className="p-4 bg-epic-blue/10 rounded-lg border border-epic-blue/20">
-										<h4 className="font-semibold text-epic-blue mb-2">
+									<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between justify-start px-4 py-3 mb-3 gap-2 bg-epic-blue/10 rounded-lg border border-epic-blue/20">
+										<h4 className="font-semibold text-epic-blue">
 											Claim All Free Games
 										</h4>
 										<div className="flex items-center gap-2">
@@ -179,6 +295,9 @@ export default function ClaimTab({
 								})}
 								{activeMobileGames.map(mg => {
 									const checkoutUrl = generateMobileCheckoutUrl(mg)
+									const hasBothPlatforms = Boolean(
+										mg.iosOffer && mg.androidOffer,
+									)
 									if (!checkoutUrl) return null
 									const platformLabel =
 										mg.iosOffer && mg.androidOffer
@@ -202,35 +321,65 @@ export default function ClaimTab({
 												)}
 											</span>
 											<div className="flex items-center gap-2">
-												<Button
-													variant="outline"
-													size="sm"
-													onClick={() => copyToClipboard(checkoutUrl)}
-													className="flex items-center gap-2"
-												>
-													{copiedUrl === checkoutUrl ? (
-														<Check className="size-4" />
-													) : (
-														<Copy className="size-4" />
-													)}
-													Copy
-												</Button>
-												<Button
-													size="sm"
-													className="flex items-center gap-2 bg-epic-blue hover:bg-epic-blue/90"
-													asChild
-												>
-													<a href={checkoutUrl} target="_blank" rel="noopener noreferrer">
-														<ExternalLink className="size-4" />
-														Claim
-													</a>
-												</Button>
+												{hasBothPlatforms ? (
+													<>
+														<Button
+															variant="outline"
+															size="sm"
+															type="button"
+															onClick={() => setCombinedDialogGame(mg)}
+															className="flex items-center gap-2"
+														>
+															<Copy className="size-4" />
+															Copy
+														</Button>
+														<Button
+															size="sm"
+															type="button"
+															className="flex items-center gap-2 bg-epic-blue hover:bg-epic-blue/90"
+															onClick={() => setCombinedDialogGame(mg)}
+														>
+															<ExternalLink className="size-4" />
+															Claim
+														</Button>
+													</>
+												) : (
+													<>
+														<Button
+															variant="outline"
+															size="sm"
+															onClick={() => copyToClipboard(checkoutUrl)}
+															className="flex items-center gap-2"
+														>
+															{copiedUrl === checkoutUrl ? (
+																<Check className="size-4" />
+															) : (
+																<Copy className="size-4" />
+															)}
+															Copy
+														</Button>
+														<Button
+															size="sm"
+															className="flex items-center gap-2 bg-epic-blue hover:bg-epic-blue/90"
+															asChild
+														>
+															<a
+																href={checkoutUrl}
+																target="_blank"
+																rel="noopener noreferrer"
+															>
+																<ExternalLink className="size-4" />
+																Claim
+															</a>
+														</Button>
+													</>
+												)}
 											</div>
 										</div>
 									)
 								})}
 							</div>
-							<div className="text-xs text-muted-foreground mt-4">
+							<div className="text-xs text-muted-foreground">
 								<p>
 									You are required to be logged into your Epic Games account before
 									claiming the games.

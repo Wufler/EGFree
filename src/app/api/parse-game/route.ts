@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { parseGameUrl, fetchMobileGameData, generateDiscordEmbed } from '@/lib/EGData'
+import { parseGameUrl, getMobileGame, generateDiscordEmbed } from '@/lib/EGData'
 
 export async function POST(request: Request) {
     try {
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
             )
         }
 
-        const result = await fetchMobileGameData(offerId)
+        const result = await getMobileGame(offerId)
         if (!result) {
             return NextResponse.json(
                 { error: 'Could not fetch game data' },

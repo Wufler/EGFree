@@ -105,7 +105,7 @@ export default function JsonPreviewContent({
 					updateSetting={updateSetting}
 					copyToClipboard={copyToClipboard}
 					isCopied={isCopied}
-					className="px-4 pt-2"
+					className="px-4 pt-2 pb-4"
 				/>
 			)}
 			{settings.showDiscordPreview ? (
@@ -120,7 +120,7 @@ export default function JsonPreviewContent({
 					{JSON.stringify(jsonData, null, 2)}
 				</pre>
 			)}
-			<div className="flex justify-center pb-5 lg:p-4 lg:pb-6">
+			<div className="flex justify-center py-4 lg:p-4 lg:pb-6">
 				<Link href={builderUrl} target="_blank">
 					<div className="flex items-center gap-2 text-blue-500 hover:underline">
 						<Hammer className="size-5" />

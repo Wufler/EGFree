@@ -1,4 +1,4 @@
-import { getMobileGameKey } from '@/lib/utils'
+import { getEffectiveGames, getMobileGameKey } from '@/lib/utils'
 
 export function generateJsonPayload(
 	games: Game,
@@ -6,10 +6,14 @@ export function generateJsonPayload(
 	checkoutLink: string,
 	parsedMobileGames: MobileGameDataLocal[],
 ): object {
-	const selectedGames = [...games.currentGames, ...games.nextGames].filter(
+	const effectiveGames = getEffectiveGames(games)
+	const selectedGames = [
+		...effectiveGames.currentGames,
+		...effectiveGames.nextGames,
+	].filter(
 		game => settings.selectedGames[game.id],
 	)
-	const mysteryGames = games.currentGames.some(
+	const mysteryGames = effectiveGames.currentGames.some(
 		game => game.seller?.name === 'Epic Dev Test Account',
 	)
 	const now = new Date()
@@ -19,7 +23,7 @@ export function generateJsonPayload(
 			game.promoEndDate &&
 			new Date(game.promoEndDate) > now,
 	)
-	const selectedCurrentGames = games.currentGames.filter(
+	const selectedCurrentGames = effectiveGames.currentGames.filter(
 		game => settings.selectedGames[game.id],
 	)
 
@@ -111,10 +115,10 @@ export function generateJsonPayload(
 
 		const getClaimText = (g: GameItem) =>
 			g.offerType === 'ADD_ON'
-				? 'Claim Add-on'
+				? 'Claim Add-on ↗'
 				: isBundleGame
-					? 'Claim Bundle'
-					: 'Claim Game'
+					? 'Claim Bundle ↗'
+					: 'Claim Game ↗'
 
 		const getCheckoutUrl = (g: GameItem) => {
 			if (!g.namespace || !g.id) return null
@@ -147,6 +151,14 @@ export function generateJsonPayload(
 					if (isPermanentlyFree(g)) {
 						if (!isValidPageSlug) return ''
 						return `[${getClaimText(g)}](https://store.epicgames.com/${linkPrefix}${pageSlug})`
+					}
+					if (
+						settings.includeCheckout &&
+						normalizedCheckoutLink &&
+						selectedCurrentGames.length === 1 &&
+						selectedCurrentGames[0].id === g.id
+					) {
+						return `[${getClaimText(g)}](${normalizedCheckoutLink})`
 					}
 					if (!checkoutUrl) return ''
 					return `[${getClaimText(g)}](${checkoutUrl})`
@@ -213,15 +225,15 @@ export function generateJsonPayload(
 		}).format(mg.originalPrice / 100)
 		const descParts: string[] = []
 		if (mobileCheckoutUrl && settings.includeClaimGame)
-			descParts.push(`[Claim Game](${mobileCheckoutUrl})`)
+			descParts.push(`[Claim Game ↗](${mobileCheckoutUrl})`)
 		if (settings.includePrice) descParts.push(`~~${priceFormatted}~~ **Free**`)
 		if (isCombined && mg.iosOffer?.pageSlug)
 			descParts.push(
-				`[iOS](https://store.epicgames.com/en-US/p/${mg.iosOffer.pageSlug})`,
+				`[iOS ↗](https://store.epicgames.com/en-US/p/${mg.iosOffer.pageSlug})`,
 			)
 		if (isCombined && mg.androidOffer?.pageSlug)
 			descParts.push(
-				`[Android](https://store.epicgames.com/en-US/p/${mg.androidOffer.pageSlug})`,
+				`[Android ↗](https://store.epicgames.com/en-US/p/${mg.androidOffer.pageSlug})`,
 			)
 		embeds.push({
 			color: parseInt(settings.embedColor.replace('#', ''), 16),
@@ -249,11 +261,11 @@ export function generateJsonPayload(
 		if (!mysteryGames || normalizedCheckoutLink) {
 			embeds.push({
 				color: parseInt(settings.embedColor.replace('#', ''), 16),
-				title: 'Checkout Link',
+				title: '🛒 Checkout Link',
 				description: normalizedCheckoutLink
-					? `[Claim All Games](${normalizedCheckoutLink})`
+					? `[Claim All Games ↗](${normalizedCheckoutLink})`
 					: bulkCheckoutUrl
-						? `[Claim All Games](${bulkCheckoutUrl})`
+						? `[Claim All Games ↗](${bulkCheckoutUrl})`
 						: 'No claimable games available',
 			})
 		}
