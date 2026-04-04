@@ -1,22 +1,23 @@
-import ClaimLinks from '@/components/Claim'
-import Json from '@/components/Json'
+import Json from '@/components/Json/Builder'
 import List from '@/components/List'
 import Theme from '@/components/ui/Theme'
 import { Button } from '@/components/ui/button'
 import Github from '@/components/ui/github'
 import { getEpicFreeGames } from '@/lib/getGames'
+import { getMobileGames } from '@/lib/EGData'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
 	const games = await getEpicFreeGames()
+	const mobileGames = await getMobileGames()
 
 	return (
 		<main className="flex min-h-dvh flex-col text-foreground dark:text-white">
 			<div className="w-full mx-auto flex grow flex-col">
-				<header className="z-50 border-b border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black px-8 backdrop-blur-md">
-					<div className="container mx-auto flex h-14 sm:h-20 items-center justify-between py-4 sm:py-0 gap-4 md:gap-0">
+				<header className="z-50 border-b border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black px-8">
+					<div className=" mx-auto flex h-14 sm:h-20 items-center justify-between py-4 sm:py-0 gap-4 md:gap-0">
 						<Link
 							href="https://store.epicgames.com/free-games"
 							target="_blank"
@@ -31,19 +32,16 @@ export default async function Home() {
 							</span>
 						</Link>
 						<div className="flex items-center gap-2">
-							<Json games={games} />
-							<div className="hidden lg:block">
-								<ClaimLinks games={games} />
-							</div>
+							<Json games={games} mobile={mobileGames} />
 						</div>
 					</div>
 				</header>
 
-				<List games={games} />
+				<List games={games} mobile={mobileGames} />
 
 				<footer className="px-4 mt-auto border-t border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black text-center py-4">
 					<div className="text-sm text-epic-gray dark:text-muted-foreground">
-						2025,{' '}
+						2026,{' '}
 						<Link href="https://wolfey.me" target="_blank">
 							wolfey.me
 						</Link>
