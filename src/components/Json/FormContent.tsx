@@ -380,7 +380,7 @@ export default function JsonFormContent({
 							{games.currentGames.length > 0 && (
 								<GameSelectionList
 									games={games.currentGames}
-									type="Free Now"
+									type="Desktop"
 									settings={settings}
 									updateSetting={updateSetting}
 								/>

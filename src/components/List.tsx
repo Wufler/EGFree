@@ -135,7 +135,7 @@ function DesktopHome({
 		<div className="space-y-10">
 			{games.currentGames.length > 0 && (
 				<div>
-					<SectionHeader icon={Gem} title="Free Now" />
+					<SectionHeader icon={Gem} title="Desktop" />
 					<div className={gridClassName}>
 						{games.currentGames.map(game => renderGameCard(game, true))}
 					</div>
@@ -615,7 +615,7 @@ export default function List({
 						localStorage.setItem('tabState', value)
 					}
 				}}
-				className="w-full min-h-0 flex flex-col gap-0 lg:grid lg:grid-cols-[16rem_1fr]"
+				className="w-full min-h-0 flex flex-col gap-0 lg:grid lg:grid-cols-[16rem_1fr] lg:items-start"
 			>
 				{/* Mobile Tabs */}
 				<div className="lg:hidden sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b">
@@ -631,7 +631,7 @@ export default function List({
 						{activeMobileGames.length > 0 && (
 							<TabsTrigger value="mobile" className={mobileTabTriggerClass}>
 								<Smartphone className="size-4" />
-								{activeTab === 'mobile' && <span>Mobile Games</span>}
+								{activeTab === 'mobile' && <span>Mobile</span>}
 							</TabsTrigger>
 						)}
 						<TabsTrigger value="upcoming" className={mobileTabTriggerClass}>
@@ -654,8 +654,8 @@ export default function List({
 				</div>
 
 				{/* Desktop Sidebar */}
-				<aside className="hidden lg:flex lg:flex-col border-r bg-background/50">
-					<div className="p-6 lg:sticky lg:top-0 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto">
+				<aside className="hidden lg:flex lg:flex-col lg:self-stretch lg:min-h-[calc(100dvh-10rem)] border-r bg-background/50">
+					<div className="p-6 lg:sticky lg:top-0 lg:max-h-[calc(100dvh-10rem)] lg:overflow-y-auto lg:h-full lg:min-h-0">
 						<div className="space-y-6">
 							<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
 								<TabsTrigger value="home" className={desktopSidebarTriggerClass}>
@@ -684,7 +684,7 @@ export default function List({
 									<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
 										{activeMobileGames.length > 0 && (
 											<TabsTrigger value="mobile" className={desktopSidebarTriggerClass}>
-												<Smartphone className="size-4" /> Active Offers
+												<Smartphone className="size-4" /> Free Now
 											</TabsTrigger>
 										)}
 										{expiredMobileGames.length > 0 && (
@@ -732,7 +732,7 @@ export default function List({
 						>
 							<div className="lg:hidden">{renderContent('current')}</div>
 							<div className="hidden lg:block">
-								<SectionHeader icon={Gem} title="Free Now" />
+								<SectionHeader icon={Gem} title="Desktop" />
 								{renderContent('current')}
 							</div>
 						</TabsContent>
@@ -742,7 +742,7 @@ export default function List({
 						>
 							<div className="lg:hidden">{renderContent('mobile')}</div>
 							<div className="hidden lg:block">
-								<SectionHeader icon={Smartphone} title="Mobile Games" />
+								<SectionHeader icon={Smartphone} title="Mobile" />
 								{renderContent('mobile')}
 							</div>
 						</TabsContent>
@@ -752,7 +752,7 @@ export default function List({
 						>
 							<div className="lg:hidden">{renderContent('upcoming')}</div>
 							<div className="hidden lg:block">
-								<SectionHeader icon={Calendar} title="Upcoming Games" />
+								<SectionHeader icon={Calendar} title="Upcoming" />
 								{renderContent('upcoming')}
 							</div>
 						</TabsContent>
