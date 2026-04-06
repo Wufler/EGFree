@@ -35,9 +35,9 @@ function PreviewTimestampChip({
 	date: Date
 }) {
 	return (
-		<span className="inline-flex items-baseline gap-1 text-[#dbdee1]">
+		<span className="inline-flex items-baseline gap-1 text-black dark:text-white">
 			{label && <span>{label}</span>}
-			<span className="rounded bg-[#ebedef] px-1 py-0.5 text-xs font-mono text-[#313338] dark:bg-[#404249] dark:text-[#f2f3f5]">
+			<span className="rounded px-0.5 text-[13px] font-light text-black dark:text-white bg-[#eeeef0] dark:bg-[#404249]">
 				{format(date, 'dd/MM/yyyy')}
 			</span>
 		</span>
@@ -279,7 +279,7 @@ export default function DiscordPreview({
 						if (settings.componentsV2) {
 							return (
 								<div key={game.id} className="mt-3">
-									<div className="max-w-[600px] overflow-hidden rounded-md border border-[#d4d7dc] dark:border-[#4e5058] px-4 pt-4 bg-[#2b2d31] text-white">
+									<div className="max-w-[600px] overflow-hidden rounded-md border border-[#d4d7dc] dark:border-[#4e5058] px-4 pt-4 bg-[#ffffff] dark:bg-[#242429]">
 										{settings.includeImage && imageUrl && (
 											<Image
 												width={1280}
@@ -291,18 +291,18 @@ export default function DiscordPreview({
 											/>
 										)}
 										<div>
-											<div className="flex items-start justify-between gap-3 mt-4">
+											<div className="flex items-start justify-between gap-3 mt-3">
 												<div className="min-w-0 flex-1">
 													{isValidPageSlug ? (
 														<a
 															href={browserHref!}
-															className="block text-[16px] font-semibold leading-5 text-[#00A8FC] hover:underline"
+															className="block text-[19px] font-bold leading-7 text-[#216ad0] dark:text-[#5593eb] hover:underline"
 															target="_blank"
 														>
 															{game.title}
 														</a>
 													) : (
-														<span className="block text-[16px] font-semibold leading-5 text-white">
+														<span className="block text-[19px] font-bold leading-7 text-black dark:text-white">
 															{game.title}
 														</span>
 													)}
@@ -311,9 +311,9 @@ export default function DiscordPreview({
 															(!isCurrent ? (
 																<span className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5">
 																	{game.price.totalPrice.originalPrice === 0 ? (
-																		<span className="font-light text-[#dbdee1]">Free</span>
+																		<span className="font-light text-black dark:text-white">Free</span>
 																	) : (
-																		<span className="font-light text-[#dbdee1]">
+																		<span className="font-light text-black dark:text-white">
 																			{game.price.totalPrice.fmtPrice.originalPrice}
 																		</span>
 																	)}
@@ -322,28 +322,28 @@ export default function DiscordPreview({
 																<span className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5">
 																	{isCurrentlyFree(game) ? (
 																		game.price.totalPrice.originalPrice === 0 ? (
-																			<span className="font-light text-[#dbdee1]">Free</span>
+																			<span className="font-light text-black dark:text-white">Free</span>
 																		) : (
 																			<>
-																				<span className="font-light line-through text-white">
+																				<span className="font-light line-through text-black dark:text-white">
 																					{game.price.totalPrice.fmtPrice.originalPrice}
 																				</span>
-																				<span className="font-semibold text-white">Free</span>
+																				<span className="font-semibold text-black dark:text-white">Free</span>
 																			</>
 																		)
 																	) : isPermanentlyFree(game) ? (
-																		<span className="font-semibold text-white">Free</span>
+																		<span className="font-semibold text-black dark:text-white">Free</span>
 																	) : isDiscountedGame(game) ? (
 																		<>
-																			<span className="font-light line-through text-white">
+																			<span className="font-light line-through text-black dark:text-white">
 																				{game.price.totalPrice.fmtPrice.originalPrice}
 																			</span>
-																			<span className="font-semibold text-white">
+																			<span className="font-semibold text-black dark:text-white">
 																				{game.price.totalPrice.fmtPrice.discountPrice}
 																			</span>
 																		</>
 																	) : (
-																		<span className="font-semibold text-[#dbdee1]">
+																		<span className="font-semibold text-black dark:text-white">
 																			{game.price.totalPrice.fmtPrice.originalPrice}
 																		</span>
 																	)}
@@ -365,7 +365,7 @@ export default function DiscordPreview({
 													className="size-21 shrink-0 rounded-md bg-[#3a3c43]"
 												/>
 											</div>
-											<div className="my-4 flex flex-wrap gap-2">
+											<div className="mt-2.5 mb-4 flex flex-wrap gap-2">
 												{browserHref && (
 													<PreviewLinkButton
 														href={browserHref}
@@ -391,7 +391,7 @@ export default function DiscordPreview({
 								className="flex mt-1 rounded-sm overflow-hidden"
 								style={{ borderLeft: `4px solid ${settings.embedColor}` }}
 							>
-								<div className="max-w-md bg-[#f2f3f5] dark:bg-[#2B2D31] p-3.5 pr-4">
+								<div className="max-w-md bg-[#ffffff] dark:bg-[#2B2D31] border border-[#d4d7dc] dark:border-[#4e5058] rounded-r-sm p-3.5 pr-4">
 									<div className="flex items-center mb-2">
 										<Image
 											width={1280}
@@ -408,7 +408,7 @@ export default function DiscordPreview({
 										{isValidPageSlug ? (
 											<a
 												href={`https://store.epicgames.com/${linkPrefix}${pageSlug}`}
-												className="font-semibold flex items-center mb-2 text-[16px] text-[#4e80eb] dark:text-[#00A8FC] hover:underline"
+												className="font-semibold flex items-center mb-2 text-[16px] text-[#2b71d2] dark:text-[#5593eb] hover:underline"
 												target="_blank"
 											>
 												{game.title}
@@ -543,7 +543,7 @@ export default function DiscordPreview({
 							if (settings.componentsV2) {
 								return (
 									<div key={getMobileGameKey(game)} className="mt-3">
-										<div className="max-w-[600px] overflow-hidden rounded-md border border-[#d4d7dc] dark:border-[#4e5058] px-4 pt-4 bg-[#2b2d31] text-white">
+										<div className="max-w-[600px] overflow-hidden rounded-md border border-[#d4d7dc] dark:border-[#4e5058] px-4 pt-4 bg-[#ffffff] dark:bg-[#242429]">
 											{settings.includeImage && game.imageUrl && (
 												<Image
 													width={1280}
@@ -555,18 +555,18 @@ export default function DiscordPreview({
 												/>
 											)}
 											<div>
-												<div className="flex items-start justify-between gap-3 mt-4">
+												<div className="flex items-start justify-between gap-3 mt-3">
 													<div className="min-w-0 flex-1">
-														<span className="block text-[16px] font-semibold leading-5 text-white">
+														<span className="block text-[19px] font-bold leading-7 text-black dark:text-white">
 															{game.title}
 														</span>
 														<div className="mt-1 flex flex-wrap items-baseline gap-x-1 gap-y-0.5 text-sm">
 															{settings.includePrice && (
 																<span className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5">
-																	<span className="font-light line-through text-white">
+																	<span className="font-light line-through text-black dark:text-white">
 																		{priceFormatted}
 																	</span>
-																	<span className="font-semibold text-white">Free</span>
+																	<span className="font-semibold text-black dark:text-white">Free</span>
 																</span>
 															)}
 															{settings.includeFooter && endDate && (
@@ -582,7 +582,7 @@ export default function DiscordPreview({
 														className="size-21 shrink-0 rounded-md bg-[#3a3c43]"
 													/>
 												</div>
-												<div className="my-4 flex flex-wrap gap-2">
+												<div className="mt-2.5 mb-4 flex flex-wrap gap-2">
 													{isCombined && iosLink && (
 														<PreviewLinkButton href={iosLink} label="iOS" />
 													)}
@@ -613,7 +613,7 @@ export default function DiscordPreview({
 										borderLeft: `4px solid ${settings.embedColor}`,
 									}}
 								>
-									<div className="max-w-md bg-[#f2f3f5] dark:bg-[#2B2D31] p-3.5 pr-4">
+									<div className="max-w-md bg-[#ffffff] dark:bg-[#2B2D31] border border-[#d4d7dc] dark:border-[#4e5058] rounded-r-sm p-3.5 pr-4">
 										<div className="flex items-center mb-2">
 											<Image
 												width={1280}
@@ -634,7 +634,7 @@ export default function DiscordPreview({
 											) : storeUrl ? (
 												<a
 													href={storeUrl}
-													className="font-semibold flex items-center mb-2 text-[16px] text-[#4e80eb] dark:text-[#00A8FC] hover:underline"
+													className="font-semibold flex items-center mb-2 text-[16px] text-[#2b71d2] dark:text-[#5593eb] hover:underline"
 													target="_blank"
 												>
 													{game.title}
@@ -647,7 +647,7 @@ export default function DiscordPreview({
 											{checkoutUrl && settings.includeClaimGame && (
 												<a
 													href={checkoutUrl}
-													className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
+													className="text-[#2b71d2] dark:text-[#5593eb] hover:underline self-start"
 													target="_blank"
 												>
 													Claim Game
@@ -664,7 +664,7 @@ export default function DiscordPreview({
 											{isCombined && iosLink && (
 												<a
 													href={iosLink}
-													className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
+													className="text-[#2b71d2] dark:text-[#5593eb] hover:underline self-start"
 													target="_blank"
 												>
 													iOS
@@ -673,7 +673,7 @@ export default function DiscordPreview({
 											{isCombined && androidLink && (
 												<a
 													href={androidLink}
-													className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
+													className="text-[#2b71d2] dark:text-[#5593eb] hover:underline self-start"
 													target="_blank"
 												>
 													Android
@@ -706,13 +706,13 @@ export default function DiscordPreview({
 								className="flex mt-1 rounded-sm overflow-hidden"
 								style={{ borderLeft: `4px solid ${settings.embedColor}` }}
 							>
-								<div className="max-w-md bg-[#f2f3f5] dark:bg-[#2B2D31] p-3.5 pr-4">
+								<div className="max-w-md bg-[#ffffff] dark:bg-[#2B2D31] border border-[#d4d7dc] dark:border-[#4e5058] rounded-r-sm p-3.5 pr-4">
 									<div className="flex flex-col text-sm gap-0.5">
 										<h1 className="font-semibold">🛒 Checkout Link</h1>
 										{normalizedCheckoutLink ? (
 											<a
 												href={normalizedCheckoutLink}
-												className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start font-medium"
+												className="text-[#2b71d2] dark:text-[#5593eb] hover:underline self-start font-medium"
 												target="_blank"
 											>
 												{settings.includeClaimGame ? 'Claim All Games' : 'Checkout'}
@@ -720,20 +720,20 @@ export default function DiscordPreview({
 										) : mysteryGames ? (
 											<>
 												<span>Currently disabled due to mystery games</span>
-												<span className="text-xs text-gray-500 dark:text-gray-400">
+												<span className="text-xs text-black dark:text-white">
 													This will not appear in the JSON data
 												</span>
 											</>
 										) : bulkCheckoutUrl ? (
 											<a
 												href={bulkCheckoutUrl}
-												className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start font-medium"
+												className="text-[#2b71d2] dark:text-[#5593eb] hover:underline self-start font-medium"
 												target="_blank"
 											>
 												{settings.includeClaimGame ? 'Claim All Games' : 'Checkout'}
 											</a>
 										) : (
-											<span className="text-gray-500 dark:text-gray-400">
+											<span className="text-black dark:text-white">
 												No claimable games available
 											</span>
 										)}

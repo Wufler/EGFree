@@ -121,17 +121,7 @@ export default function JsonPreviewContent({
 				</pre>
 			)}
 			<div className="flex justify-center py-4 lg:p-4 lg:pb-6">
-				{settings.componentsV2 ? (
-					<Button
-						variant="outline"
-						size="default"
-						className="w-full"
-						disabled
-					>
-						<Hammer className="size-5" />
-						Open in Builder
-					</Button>
-				) : (
+				{!settings.componentsV2 && (
 					<Button
 						variant="outline"
 						size="default"
