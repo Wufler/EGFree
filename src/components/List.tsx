@@ -628,16 +628,16 @@ export default function List({
 							<Gem className="size-4" />
 							{activeTab === 'current' && <span>Free Now</span>}
 						</TabsTrigger>
+						<TabsTrigger value="upcoming" className={mobileTabTriggerClass}>
+							<Calendar className="size-4" />
+							{activeTab === 'upcoming' && <span>Upcoming</span>}
+						</TabsTrigger>
 						{activeMobileGames.length > 0 && (
 							<TabsTrigger value="mobile" className={mobileTabTriggerClass}>
 								<Smartphone className="size-4" />
 								{activeTab === 'mobile' && <span>Mobile</span>}
 							</TabsTrigger>
 						)}
-						<TabsTrigger value="upcoming" className={mobileTabTriggerClass}>
-							<Calendar className="size-4" />
-							{activeTab === 'upcoming' && <span>Upcoming</span>}
-						</TabsTrigger>
 						{expiredMobileGames.length > 0 && (
 							<TabsTrigger value="expired" className={mobileTabTriggerClass}>
 								<XCircle className="size-4" />
@@ -647,7 +647,7 @@ export default function List({
 						{(effectiveGames.currentGames.length > 0 || activeMobileGames.length > 0) && (
 							<TabsTrigger value="claim" className={mobileTabTriggerClass}>
 								<ShoppingCart className="size-4" />
-								{activeTab === 'claim' && <span>Claim Games</span>}
+								{activeTab === 'claim' && <span>Claim</span>}
 							</TabsTrigger>
 						)}
 					</TabsList>
@@ -664,7 +664,7 @@ export default function List({
 							</TabsList>
 							<div className="space-y-1">
 								<h4 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-									Games
+									Desktop
 								</h4>
 								<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
 									<TabsTrigger value="current" className={desktopSidebarTriggerClass}>

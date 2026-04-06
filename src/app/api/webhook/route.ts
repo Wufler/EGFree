@@ -1,3 +1,4 @@
+import { buildWebhookExecuteUrl } from '@/lib/discordWebhook'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
@@ -8,7 +9,7 @@ export async function POST(request: Request) {
     }
 
     try {
-        const url = messageId?.trim() ? `${webhookUrl}/messages/${messageId}` : webhookUrl
+        const url = buildWebhookExecuteUrl(webhookUrl, messageId?.trim())
         const method = messageId?.trim() ? 'PATCH' : 'POST'
 
         const response = await fetch(url, {

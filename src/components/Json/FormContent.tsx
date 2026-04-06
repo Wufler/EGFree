@@ -438,6 +438,23 @@ export default function JsonFormContent({
 									{allOptionsSelected ? 'Deselect All' : 'Select All'}
 								</Button>
 							</div>
+							<div className={optionCheckboxClass}>
+								<div className="flex justify-between gap-2">
+									<Checkbox
+										id={`components-v2${idSuffix}`}
+										checked={settings.componentsV2}
+										onCheckedChange={checked => {
+											setMessageId('')
+											updateSetting('componentsV2', checked as boolean)
+										}}
+										className="order-1 after:absolute after:inset-0"
+									/>
+									<ExternalLink className="opacity-60" size={16} aria-hidden="true" />
+								</div>
+								<Label htmlFor={`components-v2${idSuffix}`}>
+									Components V2 layout
+								</Label>
+							</div>
 							<div className="grid grid-cols-2 gap-3">
 								<div className={optionCheckboxClass}>
 									<div className="flex justify-between gap-2">
@@ -538,44 +555,46 @@ export default function JsonFormContent({
 									</div>
 								</div>
 							)}
-						</div>
-						<div className="space-y-3">
-							<Label
-								htmlFor={`sidebar-color${idSuffix}`}
-								className="text-sm font-medium"
-							>
-								Sidebar Color
-							</Label>
-							<div className="flex items-center gap-2">
-								<Popover>
-									<PopoverTrigger asChild>
-										<Button style={{ backgroundColor: settings.embedColor }} />
-									</PopoverTrigger>
-									<PopoverContent className="w-full p-3" align="start">
-										<HexColorPicker
-											color={settings.embedColor}
-											onChange={handleColorChange}
-											className="w-full mb-2"
+							{!settings.componentsV2 && (
+								<div className="space-y-3">
+									<Label
+										htmlFor={`sidebar-color${idSuffix}`}
+										className="text-sm font-medium"
+									>
+										Sidebar Color
+									</Label>
+									<div className="flex items-center gap-2">
+										<Popover>
+											<PopoverTrigger asChild>
+												<Button style={{ backgroundColor: settings.embedColor }} />
+											</PopoverTrigger>
+											<PopoverContent className="w-full p-3" align="start">
+												<HexColorPicker
+													color={settings.embedColor}
+													onChange={handleColorChange}
+													className="w-full mb-2"
+												/>
+												<Button
+													onClick={() => handleColorChange(defaultColor)}
+													variant="outline"
+													size="sm"
+													className="w-full"
+												>
+													<Undo2 className="size-4" />
+													Reset to Default
+												</Button>
+											</PopoverContent>
+										</Popover>
+										<Input
+											id={`sidebar-color${idSuffix}`}
+											value={settings.embedColor}
+											onChange={e => handleColorChange(e.target.value)}
+											maxLength={7}
+											className="text-sm"
 										/>
-										<Button
-											onClick={() => handleColorChange(defaultColor)}
-											variant="outline"
-											size="sm"
-											className="w-full"
-										>
-											<Undo2 className="size-4" />
-											Reset to Default
-										</Button>
-									</PopoverContent>
-								</Popover>
-								<Input
-									id={`sidebar-color${idSuffix}`}
-									value={settings.embedColor}
-									onChange={e => handleColorChange(e.target.value)}
-									maxLength={7}
-									className="text-sm"
-								/>
-							</div>
+									</div>
+								</div>
+							)}
 						</div>
 					</AccordionContent>
 				</AccordionItem>

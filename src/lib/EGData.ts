@@ -181,17 +181,17 @@ export function generateDiscordEmbed(gameData: MobileGameData): object {
     const fieldParts: string[] = []
 
     if (checkoutUrl) {
-        fieldParts.push(`[Claim Game ↗](${checkoutUrl})`)
+        fieldParts.push(`[Claim Game](${checkoutUrl})`)
     }
 
     const priceStr = formatPrice(originalPrice, currencyCode)
     fieldParts.push(`~~${priceStr}~~ **Free**`)
 
     if (isCombined && iosOffer?.pageSlug) {
-        fieldParts.push(`[iOS ↗](https://store.epicgames.com/en-US/p/${iosOffer.pageSlug})`)
+        fieldParts.push(`[iOS](https://store.epicgames.com/en-US/p/${iosOffer.pageSlug})`)
     }
     if (isCombined && androidOffer?.pageSlug) {
-        fieldParts.push(`[Android ↗](https://store.epicgames.com/en-US/p/${androidOffer.pageSlug})`)
+        fieldParts.push(`[Android](https://store.epicgames.com/en-US/p/${androidOffer.pageSlug})`)
     }
 
     const embed: EgDataDiscordEmbed = {
@@ -205,7 +205,7 @@ export function generateDiscordEmbed(gameData: MobileGameData): object {
         author: {
             name: 'Epic Games Store Mobile',
             url: 'https://free.wolfey.me/',
-            icon_url: 'https://up.wolfey.me/tTq6cwfU'
+            icon_url: 'https://up.wolfey.me/gO16VwIQ'
         },
         footer: {
             text: 'Offer ends'
