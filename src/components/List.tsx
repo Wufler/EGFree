@@ -80,7 +80,7 @@ function TimeDisplay({
 
 	return (
 		<div
-			className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm ${type === 'end' ? 'bg-epic-blue/90 text-white' : 'bg-black/60 text-white'
+			className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-bold ${type === 'end' ? 'bg-epic-blue/90 text-white' : 'bg-black/90 text-white'
 				}`}
 		>
 			<Clock className="size-3.5" />
@@ -309,7 +309,7 @@ export default function List({
 
 					<div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/40 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
 
-					<div className="absolute top-3 left-3 z-10">
+					<div className="absolute top-4 left-4 z-10">
 						<TimeDisplay
 							date={gameDate}
 							type={isCurrentGame ? 'end' : 'start'}
@@ -317,7 +317,7 @@ export default function List({
 						/>
 					</div>
 
-					<div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+					<div className="absolute bottom-0 left-0 right-0 p-4 z-10">
 						<div className="flex items-end justify-between gap-4">
 							<div className="flex-1 min-w-0">
 								<h3 className="truncate text-lg font-bold text-white group-hover:text-epic-blue transition-colors">
@@ -407,7 +407,7 @@ export default function List({
 			<div className="h-full border-0 bg-transparent shadow-none group overflow-hidden">
 				<div className="relative aspect-video overflow-hidden rounded-xl bg-muted shadow-sm hover:shadow-md transition-all duration-300 ring-1 ring-black/5 dark:ring-white/10">
 					{mobileTag && (
-						<div className="absolute right-2 top-2 z-10 flex items-center rounded-md bg-black/60 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md">
+						<div className="absolute right-4 top-4 z-10 flex items-center rounded-md bg-black/60 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md">
 							{mobileTag}
 						</div>
 					)}
@@ -430,19 +430,19 @@ export default function List({
 					<div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/40 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
 
 					{isExpired ? (
-						<div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm bg-black text-white">
+						<div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-bold bg-black/90 text-white">
 							<CalendarOff className="size-3.5" />
 							<span>Ended</span>
 						</div>
 					) : (
 						endDate && (
-							<div className="absolute top-3 left-3 z-10">
+							<div className="absolute top-4 left-4 z-10">
 								<TimeDisplay date={endDate} type="end" onExpired={handleExpired} />
 							</div>
 						)
 					)}
 
-					<div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+					<div className="absolute bottom-0 left-0 right-0 p-4 z-10">
 						<div className="flex items-end justify-between gap-4">
 							<div className="flex-1 min-w-0">
 								<h3 className="truncate text-lg font-bold text-white group-hover:text-epic-blue transition-colors">
