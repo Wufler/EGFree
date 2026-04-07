@@ -169,6 +169,9 @@ export default function Json({
 						})
 						setWebhookUrl(decryptedWebhook)
 						setMessageId('')
+						if (decryptedWebhook && isValidDiscordWebhook(decryptedWebhook)) {
+							await fetchWebhookInfo(decryptedWebhook)
+						}
 					} catch (error) {
 						console.error('Failed to load settings:', error)
 					}

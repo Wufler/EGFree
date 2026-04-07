@@ -230,7 +230,7 @@ export default function JsonFormContent({
 									<Save className="size-4" />
 								</Button>
 							</AlertDialogTrigger>
-							<AlertDialogContent>
+							<AlertDialogContent className="z-80">
 								<AlertDialogHeader>
 									<AlertDialogTitle>Warning</AlertDialogTitle>
 									<AlertDialogDescription className="space-y-2" asChild>
