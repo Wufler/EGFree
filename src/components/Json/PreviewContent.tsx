@@ -120,8 +120,8 @@ export default function JsonPreviewContent({
 					{JSON.stringify(jsonData, null, 2)}
 				</pre>
 			)}
-			<div className="flex justify-center py-4 lg:p-4 lg:pb-6">
-				{!settings.componentsV2 && (
+			{!settings.componentsV2 && (
+				<div className="flex justify-center p-3 lg:p-3 lg:pt-3 lg:pb-4">
 					<Button
 						variant="outline"
 						size="default"
@@ -133,8 +133,8 @@ export default function JsonPreviewContent({
 							Open in Builder
 						</Link>
 					</Button>
-				)}
-			</div>
+				</div>
+			)}
 		</div>
 	)
 }
