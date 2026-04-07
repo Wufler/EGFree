@@ -618,7 +618,7 @@ export default function List({
 				className="w-full min-h-0 flex flex-col gap-0 lg:grid lg:grid-cols-[16rem_1fr] lg:items-start"
 			>
 				{/* Mobile Tabs */}
-				<div className="lg:hidden sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b">
+				<div className="lg:hidden sticky top-0 z-60 bg-background/80 backdrop-blur-md border-b">
 					<TabsList className="w-full h-auto rounded-none bg-transparent p-0 flex flex-nowrap justify-center overflow-x-auto [&::-webkit-scrollbar]:h-0">
 						<TabsTrigger value="home" className={mobileTabTriggerClass}>
 							<HomeIcon className="size-4" />

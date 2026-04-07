@@ -361,8 +361,8 @@ export default function DiscordPreview({
 													width={1280}
 													height={720}
 													src="https://up.wolfey.me/gO16VwIQ"
-													alt=""
-													className="size-21 shrink-0 rounded-md bg-[#3a3c43]"
+													alt="Epic Games Store"
+													className="sm:size-21 size-15 shrink-0 rounded-md bg-[#3a3c43]"
 												/>
 											</div>
 											<div className="mt-2.5 mb-4 flex flex-wrap gap-2">
@@ -579,7 +579,7 @@ export default function DiscordPreview({
 														height={720}
 														src="https://up.wolfey.me/gO16VwIQ"
 														alt="Epic Games Store Mobile"
-														className="size-21 shrink-0 rounded-md bg-[#3a3c43]"
+														className="sm:size-21 size-15 shrink-0 rounded-md bg-[#3a3c43]"
 													/>
 												</div>
 												<div className="mt-2.5 mb-4 flex flex-wrap gap-2">

@@ -600,7 +600,7 @@ export default function Json({
 			<DialogContent
 				onOpenAutoFocus={e => e.preventDefault()}
 				hideCloseButton
-				className="max-w-7xl! w-full overflow-hidden p-0"
+				className="max-w-7xl! w-full overflow-hidden p-0 z-70"
 			>
 				<AlertDialog
 					open={isPlatformPromptOpen}
