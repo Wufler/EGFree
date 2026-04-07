@@ -80,7 +80,7 @@ function TimeDisplay({
 
 	return (
 		<div
-			className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-bold ${type === 'end' ? 'bg-epic-blue/90 text-white' : 'bg-black/90 text-white'
+			className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-bold text-white ${type === 'end' ? 'bg-epic-blue' : 'bg-black'
 				}`}
 		>
 			<Clock className="size-3.5" />
@@ -407,7 +407,7 @@ export default function List({
 			<div className="h-full border-0 bg-transparent shadow-none group overflow-hidden">
 				<div className="relative aspect-video overflow-hidden rounded-xl bg-muted shadow-sm hover:shadow-md transition-all duration-300 ring-1 ring-black/5 dark:ring-white/10">
 					{mobileTag && (
-						<div className="absolute right-4 top-4 z-10 flex items-center rounded-md bg-black/60 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md">
+						<div className="absolute right-4 top-4 z-10 flex items-center rounded-md bg-black px-2 py-0.5 text-[10px] font-bold text-white">
 							{mobileTag}
 						</div>
 					)}
@@ -430,7 +430,7 @@ export default function List({
 					<div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/40 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
 
 					{isExpired ? (
-						<div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-bold bg-black/90 text-white">
+						<div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-bold bg-black text-white">
 							<CalendarOff className="size-3.5" />
 							<span>Ended</span>
 						</div>

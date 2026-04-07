@@ -278,7 +278,7 @@ export default function DiscordPreview({
 
 						if (settings.componentsV2) {
 							return (
-								<div key={game.id} className="mt-3">
+								<div key={game.id} className="mt-2">
 									<div className="max-w-[600px] overflow-hidden rounded-md border border-[#d4d7dc] dark:border-[#4e5058] px-4 pt-4 bg-[#ffffff] dark:bg-[#242429]">
 										{settings.includeImage && imageUrl && (
 											<Image
