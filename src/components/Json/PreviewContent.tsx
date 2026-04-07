@@ -5,7 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import Discord from '@/components/ui/discord'
 import Link from 'next/link'
-import DiscordPreview from './Embed'
+import DiscordPreview from '@/components/json/Embed'
 
 export function JsonPreviewButtons({
 	idSuffix = '',

@@ -1,5 +1,5 @@
-import { buildClassicEmbedPayload } from '@/lib/jsonBuilder.classic'
-import { buildComponentsV2MessagePayload } from '@/lib/jsonBuilder.v2'
+import { buildClassicEmbedPayload } from '@/lib/json/builder.classic'
+import { buildComponentsV2MessagePayload } from '@/lib/json/builder.v2'
 
 export function buildDiscordMessagePayload(
 	games: Game,

@@ -307,7 +307,7 @@ export default function List({
 						</div>
 					)}
 
-					<div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/40 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
+					<div className="absolute inset-0 bg-linear-to-t dark:from-black/95 from-black/70 via-black/20 dark:via-black/30 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
 
 					<div className="absolute top-4 left-4 z-10">
 						<TimeDisplay
@@ -427,7 +427,7 @@ export default function List({
 						</div>
 					)}
 
-					<div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/40 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
+					<div className="absolute inset-0 bg-linear-to-t dark:from-black/95 from-black/70 dark:via-black/30 via-black/20 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
 
 					{isExpired ? (
 						<div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-bold bg-black text-white">

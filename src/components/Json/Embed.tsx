@@ -1,7 +1,7 @@
 import { format } from 'date-fns'
 import { ExternalLink } from 'lucide-react'
 import Image from 'next/image'
-import { epicMobileProductPageUrl } from '@/lib/jsonBuilder.shared'
+import { epicMobileProductPageUrl } from '@/lib/json/builder.shared'
 import { getEffectiveGames, getMobileGameKey } from '@/lib/utils'
 import Discord from '../ui/discord'
 
@@ -542,7 +542,7 @@ export default function DiscordPreview({
 
 							if (settings.componentsV2) {
 								return (
-									<div key={getMobileGameKey(game)} className="mt-3">
+									<div key={getMobileGameKey(game)} className="mt-2">
 										<div className="max-w-[600px] overflow-hidden rounded-md border border-[#d4d7dc] dark:border-[#4e5058] px-4 pt-4 bg-[#ffffff] dark:bg-[#242429]">
 											{settings.includeImage && game.imageUrl && (
 												<Image

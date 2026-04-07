@@ -24,10 +24,10 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { encrypt, decrypt } from '@/lib/encryption'
-import { buildDiscordMessagePayload } from '@/lib/jsonBuilder'
+import { buildDiscordMessagePayload } from '@/lib/json/builder'
 import { getEffectiveGames, getMobileGameKey, mergeMobile } from '@/lib/utils'
-import JsonFormContent from './FormContent'
-import JsonPreviewContent, { JsonPreviewButtons } from './PreviewContent'
+import JsonFormContent from '@/components/json/FormContent'
+import JsonPreviewContent, { JsonPreviewButtons } from '@/components/json/PreviewContent'
 const defaultColor = '#85ce4b'
 const defaultContent = '<@&847939354978811924>'
 

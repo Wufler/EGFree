@@ -1,4 +1,4 @@
-import Json from '@/components/Json/Builder'
+import Json from '@/components/json/Builder'
 import List from '@/components/List'
 import Theme from '@/components/ui/Theme'
 import { Button } from '@/components/ui/button'
