@@ -12,7 +12,7 @@ import {
 	isDiscountedGame,
 	isPermanentlyFree,
 	parseAllowedMentions,
-} from '@/lib/json/builder.shared'
+} from '@/lib/builder/shared'
 
 function buildDesktopComponentsV2Card(
 	game: GameItem,

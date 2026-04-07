@@ -6,7 +6,7 @@ import {
 	isCurrentlyFree,
 	isDiscountedGame,
 	isPermanentlyFree,
-} from '@/lib/json/builder.shared'
+} from '@/lib/builder/shared'
 
 export function buildClassicEmbedPayload(
 	games: Game,

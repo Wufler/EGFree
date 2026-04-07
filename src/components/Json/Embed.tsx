@@ -1,7 +1,7 @@
 import { format } from 'date-fns'
 import { ExternalLink } from 'lucide-react'
 import Image from 'next/image'
-import { epicMobileProductPageUrl } from '@/lib/json/builder.shared'
+import { epicMobileProductPageUrl } from '@/lib/builder/shared'
 import { getEffectiveGames, getMobileGameKey } from '@/lib/utils'
 import Discord from '../ui/discord'
 

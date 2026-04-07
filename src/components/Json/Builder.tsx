@@ -24,7 +24,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { encrypt, decrypt } from '@/lib/encryption'
-import { buildDiscordMessagePayload } from '@/lib/json/builder'
+import { buildDiscordMessagePayload } from '@/lib/builder/payload'
 import { getEffectiveGames, getMobileGameKey, mergeMobile } from '@/lib/utils'
 import JsonFormContent from '@/components/json/FormContent'
 import JsonPreviewContent, { JsonPreviewButtons } from '@/components/json/PreviewContent'
