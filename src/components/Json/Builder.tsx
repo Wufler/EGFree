@@ -24,11 +24,10 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { encrypt, decrypt } from '@/lib/encryption'
-import { generateJsonPayload } from '@/lib/jsonBuilder'
+import { buildDiscordMessagePayload } from '@/lib/jsonBuilder'
 import { getEffectiveGames, getMobileGameKey, mergeMobile } from '@/lib/utils'
 import JsonFormContent from './FormContent'
 import JsonPreviewContent, { JsonPreviewButtons } from './PreviewContent'
-
 const defaultColor = '#85ce4b'
 const defaultContent = '<@&847939354978811924>'
 
@@ -91,6 +90,7 @@ export default function Json({
 		includeImage: true,
 		includeCheckout: true,
 		includeClaimGame: true,
+		componentsV2: true,
 		webhookUrl: '',
 		webhookName: undefined,
 		webhookAvatar: undefined,
@@ -158,12 +158,14 @@ export default function Json({
 						setSettings({
 							...parsed,
 							selectedGames: cleanedSelectedGames,
+							embedColor: parsed.embedColor ?? defaultColor,
 							webhookUrl: decryptedWebhook,
 							webhookName: parsed.webhookName,
 							webhookAvatar: parsed.webhookAvatar,
 							messageId: '',
 							checkoutLink: '',
 							openAccordions: parsed.openAccordions || [],
+							componentsV2: parsed.componentsV2 ?? true,
 						})
 						setWebhookUrl(decryptedWebhook)
 						setMessageId('')
@@ -216,6 +218,9 @@ export default function Json({
 		key: T,
 		value: EgFreeSettings[T],
 	) => {
+		if (key === 'componentsV2' && settings.componentsV2 !== value) {
+			setMessageId('')
+		}
 		setSettings(prev => ({ ...prev, [key]: value }))
 	}
 
@@ -307,7 +312,12 @@ export default function Json({
 
 	useEffect(() => {
 		setJsonData(
-			generateJsonPayload(effectiveGames, settings, checkoutLink, allMobileGames),
+			buildDiscordMessagePayload(
+				effectiveGames,
+				settings,
+				checkoutLink,
+				allMobileGames,
+			),
 		)
 	}, [effectiveGames, settings, checkoutLink, allMobileGames])
 
@@ -324,7 +334,7 @@ export default function Json({
 
 	const isValidDiscordWebhook = (url: string) => {
 		const webhookPattern =
-			/^https:\/\/(?:discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+\/?$/
+			/^https:\/\/(?:discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+(?:\?[^\s#]*)?\/?$/
 		return webhookPattern.test(url.trim())
 	}
 
@@ -590,7 +600,7 @@ export default function Json({
 			<DialogContent
 				onOpenAutoFocus={e => e.preventDefault()}
 				hideCloseButton
-				className="max-w-4xl! overflow-hidden p-0"
+				className="max-w-7xl! w-full overflow-hidden p-0"
 			>
 				<AlertDialog
 					open={isPlatformPromptOpen}
@@ -648,7 +658,7 @@ export default function Json({
 					</AlertDialogContent>
 				</AlertDialog>
 				<div className="flex h-[90vh] flex-col lg:flex-row">
-					<div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r flex flex-col">
+					<div className="w-full lg:w-2/5 lg:min-w-0 lg:max-w-[520px] border-b lg:border-b-0 lg:border-r flex flex-col shrink-0">
 						<div className="p-6 pb-4 lg:border-b shrink-0">
 							<div className="flex items-center justify-between">
 								<DialogTitle className="flex items-center gap-2">
@@ -714,7 +724,7 @@ export default function Json({
 						</div>
 					</div>
 
-					<div className="hidden lg:flex flex-col w-1/2">
+					<div className="hidden lg:flex flex-col flex-1 min-w-0">
 						<div className="flex gap-2 p-3 shrink-0">
 							<JsonPreviewButtons {...previewProps} />
 						</div>

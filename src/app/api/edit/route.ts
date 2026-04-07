@@ -1,3 +1,4 @@
+import { buildWebhookExecuteUrl } from '@/lib/discordWebhook';
 import { NextResponse } from 'next/server';
 
 export async function PATCH(request: Request) {
@@ -13,9 +14,7 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ message: 'Invalid webhook URL format' }, { status: 400 });
         }
 
-        const [, webhookId, webhookToken] = webhookUrlMatch;
-
-        const webhookEditUrl = `https://discord.com/api/webhooks/${webhookId}/${webhookToken}/messages/${messageId}`;
+        const webhookEditUrl = buildWebhookExecuteUrl(webhookUrl, messageId);
 
         const response = await fetch(webhookEditUrl, {
             method: 'PATCH',

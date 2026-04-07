@@ -1,10 +1,48 @@
 import { format } from 'date-fns'
+import { ExternalLink } from 'lucide-react'
 import Image from 'next/image'
+import { epicMobileProductPageUrl } from '@/lib/jsonBuilder.shared'
 import { getEffectiveGames, getMobileGameKey } from '@/lib/utils'
 import Discord from '../ui/discord'
 
 const defaultContent = '<@&847939354978811924>'
 const EMPTY_MOBILE_GAMES: MobileGameDataLocal[] = []
+
+function PreviewLinkButton({
+	href,
+	label,
+}: {
+	href: string
+	label: string
+}) {
+	return (
+		<a
+			href={href}
+			className="inline-flex items-center gap-1.5 rounded-md border border-[#d4d7dc] bg-[#ffffff] px-3 py-1.5 text-sm font-medium text-[#2e3338] hover:bg-[#f2f3f5] dark:border-[#4e5058] dark:bg-[#2b2d31] dark:text-[#f2f3f5] dark:hover:bg-[#393c41]"
+			target="_blank"
+		>
+			<span>{label}</span>
+			<ExternalLink className="size-3.5" />
+		</a>
+	)
+}
+
+function PreviewTimestampChip({
+	label,
+	date,
+}: {
+	label?: string
+	date: Date
+}) {
+	return (
+		<span className="inline-flex items-baseline gap-1 text-black dark:text-white">
+			{label && <span>{label}</span>}
+			<span className="rounded px-0.5 text-[13px] font-light text-black dark:text-white bg-[#eeeef0] dark:bg-[#404249]">
+				{format(date, 'dd/MM/yyyy')}
+			</span>
+		</span>
+	)
+}
 
 export default function DiscordPreview({
 	games,
@@ -91,6 +129,12 @@ export default function DiscordPreview({
 	const selectedCurrentGamesCount = effectiveGames.currentGames.filter(
 		game => settings.selectedGames[game.id],
 	).length
+	const componentsV2CheckoutHref =
+		settings.includeCheckout &&
+			selectedCurrentGamesCount + selectedMobileCount > 1 &&
+			(!mysteryGames || normalizedCheckoutLink)
+			? normalizedCheckoutLink || bulkCheckoutUrl
+			: null
 
 	const isCurrentlyFree = (game: GameItem) => {
 		const currentPromo =
@@ -194,18 +238,165 @@ export default function DiscordPreview({
 							return `https://store.epicgames.com/purchase?${offerParam}#`
 						}
 
+						const browserHref = isValidPageSlug
+							? `https://store.epicgames.com/${linkPrefix}${pageSlug}`
+							: null
+						const checkoutUrlForGame = getCheckoutUrl(game)
+						let claimHrefV2: string | null = null
+						let claimLabelV2 = 'Claim Game'
+						if (settings.includeClaimGame && isCurrent) {
+							if (isCurrentlyFree(game)) {
+								if (isPermanentlyFree(game)) {
+									claimHrefV2 = isValidPageSlug
+										? `https://store.epicgames.com/${linkPrefix}${pageSlug}`
+										: null
+								} else if (
+									settings.includeCheckout &&
+									normalizedCheckoutLink &&
+									selectedCurrentGamesCount === 1
+								) {
+									claimHrefV2 = normalizedCheckoutLink
+								} else {
+									claimHrefV2 = checkoutUrlForGame
+								}
+								claimLabelV2 = isAddOn
+									? 'Claim Add-on'
+									: isBundleGame
+										? 'Claim Bundle'
+										: 'Claim Game'
+							} else if (isValidPageSlug) {
+								claimHrefV2 = `https://store.epicgames.com/${linkPrefix}${pageSlug}`
+								claimLabelV2 = isDiscountedGame(game)
+									? 'Store Page'
+									: isAddOn
+										? 'Claim Add-on'
+										: isBundleGame
+											? 'Claim Bundle'
+											: 'Claim Game'
+							}
+						}
+
+						if (settings.componentsV2) {
+							return (
+								<div key={game.id} className="mt-3">
+									<div className="max-w-[600px] overflow-hidden rounded-md border border-[#d4d7dc] dark:border-[#4e5058] px-4 pt-4 bg-[#ffffff] dark:bg-[#242429]">
+										{settings.includeImage && imageUrl && (
+											<Image
+												width={1280}
+												height={720}
+												src={imageUrl}
+												alt={game.title}
+												className="w-full object-cover rounded-md"
+												unoptimized
+											/>
+										)}
+										<div>
+											<div className="flex items-start justify-between gap-3 mt-3">
+												<div className="min-w-0 flex-1">
+													{isValidPageSlug ? (
+														<a
+															href={browserHref!}
+															className="block text-[19px] font-bold leading-7 text-[#216ad0] dark:text-[#5593eb] hover:underline"
+															target="_blank"
+														>
+															{game.title}
+														</a>
+													) : (
+														<span className="block text-[19px] font-bold leading-7 text-black dark:text-white">
+															{game.title}
+														</span>
+													)}
+													<div className="mt-1 flex flex-wrap items-baseline gap-x-1 gap-y-0.5 text-sm">
+														{settings.includePrice &&
+															(!isCurrent ? (
+																<span className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5">
+																	{game.price.totalPrice.originalPrice === 0 ? (
+																		<span className="font-light text-black dark:text-white">Free</span>
+																	) : (
+																		<span className="font-light text-black dark:text-white">
+																			{game.price.totalPrice.fmtPrice.originalPrice}
+																		</span>
+																	)}
+																</span>
+															) : (
+																<span className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5">
+																	{isCurrentlyFree(game) ? (
+																		game.price.totalPrice.originalPrice === 0 ? (
+																			<span className="font-light text-black dark:text-white">Free</span>
+																		) : (
+																			<>
+																				<span className="font-light line-through text-black dark:text-white">
+																					{game.price.totalPrice.fmtPrice.originalPrice}
+																				</span>
+																				<span className="font-semibold text-black dark:text-white">Free</span>
+																			</>
+																		)
+																	) : isPermanentlyFree(game) ? (
+																		<span className="font-semibold text-black dark:text-white">Free</span>
+																	) : isDiscountedGame(game) ? (
+																		<>
+																			<span className="font-light line-through text-black dark:text-white">
+																				{game.price.totalPrice.fmtPrice.originalPrice}
+																			</span>
+																			<span className="font-semibold text-black dark:text-white">
+																				{game.price.totalPrice.fmtPrice.discountPrice}
+																			</span>
+																		</>
+																	) : (
+																		<span className="font-semibold text-black dark:text-white">
+																			{game.price.totalPrice.fmtPrice.originalPrice}
+																		</span>
+																	)}
+																</span>
+															))}
+														{settings.includeFooter && (
+															<PreviewTimestampChip
+																label={isCurrent ? 'until' : 'starts'}
+																date={endDate}
+															/>
+														)}
+													</div>
+												</div>
+												<Image
+													width={1280}
+													height={720}
+													src="https://up.wolfey.me/gO16VwIQ"
+													alt=""
+													className="size-21 shrink-0 rounded-md bg-[#3a3c43]"
+												/>
+											</div>
+											<div className="mt-2.5 mb-4 flex flex-wrap gap-2">
+												{browserHref && (
+													<PreviewLinkButton
+														href={browserHref}
+														label="Open in browser"
+													/>
+												)}
+												{claimHrefV2 && (
+													<PreviewLinkButton
+														href={claimHrefV2}
+														label={claimLabelV2}
+													/>
+												)}
+											</div>
+										</div>
+									</div>
+								</div>
+							)
+						}
+
 						return (
 							<div
 								key={game.id}
 								className="flex mt-1 rounded-sm overflow-hidden"
 								style={{ borderLeft: `4px solid ${settings.embedColor}` }}
 							>
-								<div className="max-w-md bg-[#f2f3f5] dark:bg-[#2B2D31] p-3.5 pr-4">
+								<div className="max-w-md bg-[#ffffff] dark:bg-[#2B2D31] border border-[#d4d7dc] dark:border-[#4e5058] rounded-r-sm p-3.5 pr-4">
 									<div className="flex items-center mb-2">
 										<Image
 											width={1280}
 											height={720}
-											src="/epic.png"
+											src="https://up.wolfey.me/mFG3IGgV"
 											alt="Epic Games Store"
 											className="size-7 rounded-full mr-2.5"
 										/>
@@ -217,7 +408,7 @@ export default function DiscordPreview({
 										{isValidPageSlug ? (
 											<a
 												href={`https://store.epicgames.com/${linkPrefix}${pageSlug}`}
-												className="font-semibold flex items-center mb-2 text-[16px] text-[#4e80eb] dark:text-[#00A8FC] hover:underline"
+												className="font-semibold flex items-center mb-2 text-[16px] text-[#2b71d2] dark:text-[#5593eb] hover:underline"
 												target="_blank"
 											>
 												{game.title}
@@ -294,10 +485,10 @@ export default function DiscordPreview({
 														target="_blank"
 													>
 														{isAddOn
-															? 'Claim Add-on ↗'
+															? 'Claim Add-on'
 															: isBundleGame
-																? 'Claim Bundle ↗'
-																: 'Claim Game ↗'}
+																? 'Claim Bundle'
+																: 'Claim Game'}
 													</a>
 												)
 											})()}
@@ -327,17 +518,11 @@ export default function DiscordPreview({
 						.map(game => {
 							const endDate = game.promoEndDate ? new Date(game.promoEndDate) : null
 							const isCombined = Boolean(game.iosOffer && game.androidOffer)
-							const storeUrl = game.iosOffer?.pageSlug
-								? `https://store.epicgames.com/en-US/p/${game.iosOffer.pageSlug}`
-								: game.androidOffer?.pageSlug
-									? `https://store.epicgames.com/en-US/p/${game.androidOffer.pageSlug}`
-									: null
-							const iosLink = game.iosOffer?.pageSlug
-								? `https://store.epicgames.com/en-US/p/${game.iosOffer.pageSlug}`
-								: null
-							const androidLink = game.androidOffer?.pageSlug
-								? `https://store.epicgames.com/en-US/p/${game.androidOffer.pageSlug}`
-								: null
+							const iosLink = epicMobileProductPageUrl(game.iosOffer?.pageSlug)
+							const androidLink = epicMobileProductPageUrl(
+								game.androidOffer?.pageSlug,
+							)
+							const storeUrl = iosLink ?? androidLink
 
 							const offerParams: string[] = []
 							if (game.iosOffer)
@@ -355,6 +540,71 @@ export default function DiscordPreview({
 								minimumFractionDigits: 2,
 							}).format(game.originalPrice / 100)
 
+							if (settings.componentsV2) {
+								return (
+									<div key={getMobileGameKey(game)} className="mt-3">
+										<div className="max-w-[600px] overflow-hidden rounded-md border border-[#d4d7dc] dark:border-[#4e5058] px-4 pt-4 bg-[#ffffff] dark:bg-[#242429]">
+											{settings.includeImage && game.imageUrl && (
+												<Image
+													width={1280}
+													height={720}
+													src={game.imageUrl}
+													alt={game.title}
+													className="w-full object-cover rounded-md"
+													unoptimized
+												/>
+											)}
+											<div>
+												<div className="flex items-start justify-between gap-3 mt-3">
+													<div className="min-w-0 flex-1">
+														<span className="block text-[19px] font-bold leading-7 text-black dark:text-white">
+															{game.title}
+														</span>
+														<div className="mt-1 flex flex-wrap items-baseline gap-x-1 gap-y-0.5 text-sm">
+															{settings.includePrice && (
+																<span className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5">
+																	<span className="font-light line-through text-black dark:text-white">
+																		{priceFormatted}
+																	</span>
+																	<span className="font-semibold text-black dark:text-white">Free</span>
+																</span>
+															)}
+															{settings.includeFooter && endDate && (
+																<PreviewTimestampChip label="until" date={endDate} />
+															)}
+														</div>
+													</div>
+													<Image
+														width={1280}
+														height={720}
+														src="https://up.wolfey.me/gO16VwIQ"
+														alt="Epic Games Store Mobile"
+														className="size-21 shrink-0 rounded-md bg-[#3a3c43]"
+													/>
+												</div>
+												<div className="mt-2.5 mb-4 flex flex-wrap gap-2">
+													{isCombined && iosLink && (
+														<PreviewLinkButton href={iosLink} label="iOS" />
+													)}
+													{isCombined && androidLink && (
+														<PreviewLinkButton
+															href={androidLink}
+															label="Android"
+														/>
+													)}
+													{checkoutUrl && settings.includeClaimGame && (
+														<PreviewLinkButton
+															href={checkoutUrl}
+															label="Claim Game"
+														/>
+													)}
+												</div>
+											</div>
+										</div>
+									</div>
+								)
+							}
+
 							return (
 								<div
 									key={getMobileGameKey(game)}
@@ -363,12 +613,12 @@ export default function DiscordPreview({
 										borderLeft: `4px solid ${settings.embedColor}`,
 									}}
 								>
-									<div className="max-w-md bg-[#f2f3f5] dark:bg-[#2B2D31] p-3.5 pr-4">
+									<div className="max-w-md bg-[#ffffff] dark:bg-[#2B2D31] border border-[#d4d7dc] dark:border-[#4e5058] rounded-r-sm p-3.5 pr-4">
 										<div className="flex items-center mb-2">
 											<Image
 												width={1280}
 												height={720}
-												src="/epic.png"
+												src="https://up.wolfey.me/mFG3IGgV"
 												alt="Epic Games Store Mobile"
 												className="size-7 rounded-full mr-2.5"
 											/>
@@ -384,7 +634,7 @@ export default function DiscordPreview({
 											) : storeUrl ? (
 												<a
 													href={storeUrl}
-													className="font-semibold flex items-center mb-2 text-[16px] text-[#4e80eb] dark:text-[#00A8FC] hover:underline"
+													className="font-semibold flex items-center mb-2 text-[16px] text-[#2b71d2] dark:text-[#5593eb] hover:underline"
 													target="_blank"
 												>
 													{game.title}
@@ -397,10 +647,10 @@ export default function DiscordPreview({
 											{checkoutUrl && settings.includeClaimGame && (
 												<a
 													href={checkoutUrl}
-													className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
+													className="text-[#2b71d2] dark:text-[#5593eb] hover:underline self-start"
 													target="_blank"
 												>
-													Claim Game ↗
+													Claim Game
 												</a>
 											)}
 											{settings.includePrice && (
@@ -414,7 +664,7 @@ export default function DiscordPreview({
 											{isCombined && iosLink && (
 												<a
 													href={iosLink}
-													className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
+													className="text-[#2b71d2] dark:text-[#5593eb] hover:underline self-start"
 													target="_blank"
 												>
 													iOS
@@ -423,7 +673,7 @@ export default function DiscordPreview({
 											{isCombined && androidLink && (
 												<a
 													href={androidLink}
-													className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
+													className="text-[#2b71d2] dark:text-[#5593eb] hover:underline self-start"
 													target="_blank"
 												>
 													Android
@@ -449,40 +699,41 @@ export default function DiscordPreview({
 							)
 						})}
 
-					{selectedCurrentGamesCount + selectedMobileCount > 1 &&
+					{!settings.componentsV2 &&
+						selectedCurrentGamesCount + selectedMobileCount > 1 &&
 						settings.includeCheckout && (
 							<div
 								className="flex mt-1 rounded-sm overflow-hidden"
 								style={{ borderLeft: `4px solid ${settings.embedColor}` }}
 							>
-								<div className="max-w-md bg-[#f2f3f5] dark:bg-[#2B2D31] p-3.5 pr-4">
+								<div className="max-w-md bg-[#ffffff] dark:bg-[#2B2D31] border border-[#d4d7dc] dark:border-[#4e5058] rounded-r-sm p-3.5 pr-4">
 									<div className="flex flex-col text-sm gap-0.5">
 										<h1 className="font-semibold">🛒 Checkout Link</h1>
 										{normalizedCheckoutLink ? (
 											<a
 												href={normalizedCheckoutLink}
-												className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start font-medium"
+												className="text-[#2b71d2] dark:text-[#5593eb] hover:underline self-start font-medium"
 												target="_blank"
 											>
-												{settings.includeClaimGame ? 'Claim All Games ↗' : 'Checkout ↗'}
+												{settings.includeClaimGame ? 'Claim All Games' : 'Checkout'}
 											</a>
 										) : mysteryGames ? (
 											<>
 												<span>Currently disabled due to mystery games</span>
-												<span className="text-xs text-gray-500 dark:text-gray-400">
+												<span className="text-xs text-black dark:text-white">
 													This will not appear in the JSON data
 												</span>
 											</>
 										) : bulkCheckoutUrl ? (
 											<a
 												href={bulkCheckoutUrl}
-												className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start font-medium"
+												className="text-[#2b71d2] dark:text-[#5593eb] hover:underline self-start font-medium"
 												target="_blank"
 											>
-												{settings.includeClaimGame ? 'Claim All Games ↗' : 'Checkout ↗'}
+												{settings.includeClaimGame ? 'Claim All Games' : 'Checkout'}
 											</a>
 										) : (
-											<span className="text-gray-500 dark:text-gray-400">
+											<span className="text-black dark:text-white">
 												No claimable games available
 											</span>
 										)}
@@ -490,6 +741,14 @@ export default function DiscordPreview({
 								</div>
 							</div>
 						)}
+					{settings.componentsV2 && componentsV2CheckoutHref && (
+						<div className="mt-2">
+							<PreviewLinkButton
+								href={componentsV2CheckoutHref}
+								label="🎁 Claim All Games"
+							/>
+						</div>
+					)}
 				</div>
 			</div>
 		</div>

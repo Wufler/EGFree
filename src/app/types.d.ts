@@ -96,6 +96,7 @@ type EgFreeSettings = {
     showDiscordPreview: boolean
     openAccordions: string[]
     includeClaimGame: boolean
+    componentsV2: boolean
 }
 
 type MobileGameDataLocal = {
@@ -111,7 +112,7 @@ type MobileGameDataLocal = {
 }
 
 type DiscordEmbed = {
-    color: number
+    color?: number
     title: string
     description: string
     url?: string

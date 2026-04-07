@@ -121,12 +121,19 @@ export default function JsonPreviewContent({
 				</pre>
 			)}
 			<div className="flex justify-center py-4 lg:p-4 lg:pb-6">
-				<Link href={builderUrl} target="_blank">
-					<div className="flex items-center gap-2 text-blue-500 hover:underline">
-						<Hammer className="size-5" />
-						<span>Open in Builder</span>
-					</div>
-				</Link>
+				{!settings.componentsV2 && (
+					<Button
+						variant="outline"
+						size="default"
+						className="w-full"
+						asChild
+					>
+						<Link href={builderUrl} target="_blank">
+							<Hammer className="size-5" />
+							Open in Builder
+						</Link>
+					</Button>
+				)}
 			</div>
 		</div>
 	)
