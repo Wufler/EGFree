@@ -1,17 +1,6 @@
 // Fetch from egdata.app API, mostly for the mobile games (thank you!)
 const EGDATA_API = 'https://api.egdata.app'
 
-export function parseGameUrl(url: string): string | null {
-    try {
-        const urlObj = new URL(url)
-        if (urlObj.hostname !== 'egdata.app') return null
-        const match = urlObj.pathname.match(/\/offers\/([a-f0-9]{32})/)
-        return match ? match[1] : null
-    } catch {
-        return null
-    }
-}
-
 function getPlatform(tags: EgDataTag[]): 'ios' | 'android' | null {
     for (const tag of tags) {
         if (tag.id === '39070' || tag.name === 'iOS') return 'ios'

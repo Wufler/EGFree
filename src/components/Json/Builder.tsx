@@ -352,11 +352,11 @@ export default function Json({
 			<DialogContent
 				onOpenAutoFocus={e => e.preventDefault()}
 				hideCloseButton
-				className="max-w-7xl! w-full overflow-hidden p-0 z-70"
+				className="max-w-7xl! w-full max-h-[90vh] h-[90vh] overflow-hidden p-0 z-70 flex flex-col"
 			>
-				<div className="flex flex-col lg:flex-row">
-					<div className="w-full lg:w-2/5 lg:min-w-0 lg:max-w-[520px] border-b lg:border-b-0 lg:border-r flex flex-col shrink-0">
-						<div className="px-6 py-5 lg:border-b shrink-0 bg-background flex flex-col gap-1.5 items-start justify-center shadow-sm relative z-10">
+				<div className="flex flex-col lg:flex-row flex-1 min-h-0">
+					<div className="w-full lg:w-2/5 lg:min-w-0 lg:max-w-[520px] border-b lg:border-b-0 lg:border-r flex flex-col flex-1 lg:flex-none lg:shrink-0 min-h-0">
+						<div className="px-6 py-5 lg:border-b shrink-0 bg-background flex flex-col gap-1.5 items-start justify-center relative z-10">
 							<div className="flex w-full items-center justify-between">
 								<DialogTitle className="flex items-center gap-3 text-xl font-bold tracking-tight">
 									<div className="flex items-center justify-center p-1.5 rounded-lg bg-primary/10 text-primary">
@@ -374,7 +374,7 @@ export default function Json({
 							</DialogDescription>
 						</div>
 
-						<div className="block lg:hidden">
+						<div className="block lg:hidden flex-1 min-h-0">
 							<Tabs defaultValue="settings" className="flex h-full flex-col min-h-0 gap-0">
 								<TabsList className="w-full h-auto rounded-none border-b border-border bg-transparent p-0 shrink-0">
 									<TabsTrigger
@@ -394,7 +394,7 @@ export default function Json({
 									value="settings"
 									className="overflow-hidden mt-0 pb-0 border-0 flex-1 min-h-0"
 								>
-									<ScrollArea className="h-[calc(90vh-170px)]">
+									<ScrollArea className="h-full">
 										<JsonFormContent idSuffix="-mobile" {...formProps} />
 									</ScrollArea>
 								</TabsContent>
@@ -402,7 +402,7 @@ export default function Json({
 									value="preview"
 									className="overflow-hidden mt-0 pb-0 border-0 flex-1 min-h-0"
 								>
-									<ScrollArea className="h-[calc(90vh-170px)]">
+									<ScrollArea className="h-full">
 										<JsonPreviewContent
 											idSuffix="-mobile"
 											inlineButtons
@@ -413,19 +413,19 @@ export default function Json({
 							</Tabs>
 						</div>
 
-						<div className="hidden lg:block overflow-hidden">
+						<div className="hidden lg:block overflow-hidden flex-1 min-h-0">
 							<ScrollArea className="h-full">
 								<JsonFormContent {...formProps} />
 							</ScrollArea>
 						</div>
 					</div>
 
-					<div className="hidden lg:flex flex-col flex-1 min-w-0 bg-muted/10 rounded-r-lg border-l border-border/50">
+					<div className="hidden lg:flex flex-col flex-1 min-w-0 min-h-0 bg-muted/10 rounded-r-lg border-l border-border/50">
 						<div className="flex justify-end gap-3 p-2 shrink-0 border-b border-border/50 bg-background/50 backdrop-blur-sm z-10 w-full items-center">
 							<JsonPreviewButtons {...previewProps} />
 						</div>
-						<div className="overflow-hidden grow">
-							<ScrollArea className="h-[calc(90vh-90px)] border border-border/40 bg-background shadow-xs overflow-hidden">
+						<div className="overflow-hidden grow min-h-0">
+							<ScrollArea className="h-full border border-border/40 bg-background shadow-xs overflow-hidden">
 								<JsonPreviewContent inlineButtons={false} {...previewProps} />
 							</ScrollArea>
 						</div>

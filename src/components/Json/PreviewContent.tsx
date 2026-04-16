@@ -42,7 +42,7 @@ export function JsonPreviewButtons({
 			</Button>
 			<Label
 				htmlFor={`discord${idSuffix}`}
-				className="relative w-full sm:flex-1 sm:min-w-0 flex h-9 border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 transition-all items-center justify-center gap-2 rounded-md"
+				className="relative w-full sm:flex-1 sm:min-w-0 flex h-9 border border-input bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors items-center justify-center gap-2 rounded-md"
 			>
 				<Discord className="size-4" />
 				Discord Preview

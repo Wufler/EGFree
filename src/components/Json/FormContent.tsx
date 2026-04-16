@@ -209,7 +209,7 @@ export default function JsonFormContent({
 					value="discord"
 					className="space-y-4 focus-visible:outline-none focus-visible:ring-0 mt-0"
 				>
-					<Card className="bg-[#0a0a0a] border-none overflow-hidden rounded-none p-0">
+					<Card className="bg-background dark:bg-[#0a0a0a] border-none overflow-hidden rounded-none p-0 pb-6">
 						<CardHeader className="bg-muted/30 py-4 border-b border-border/50">
 							<CardTitle className="text-lg flex items-center gap-2">
 								Configuration
@@ -378,7 +378,7 @@ export default function JsonFormContent({
 								onClick={handleWebhook}
 								className={`w-full py-6 text-lg font-bold shadow-lg transition-all duration-300 ${showWarning
 									? 'bg-yellow-500 hover:bg-yellow-600 text-black outline-8 outline-yellow-500/20'
-									: 'bg-primary hover:bg-primary/90 text-primary-foreground hover:shadow-primary/20'
+									: 'bg-primary hover:bg-primary/90 text-primary-foreground'
 									}`}
 								disabled={isLoading || !isValidDiscordWebhook(webhookUrl)}
 							>
@@ -405,7 +405,7 @@ export default function JsonFormContent({
 					value="games"
 					className="space-y-4 focus-visible:outline-none focus-visible:ring-0 mt-0"
 				>
-					<Card className="bg-[#0a0a0a] border-none overflow-hidden rounded-none p-0">
+					<Card className="bg-background dark:bg-[#0a0a0a] border-none overflow-hidden rounded-none p-0 pb-6">
 						<CardHeader className="bg-muted/30 py-4 border-b border-border/50">
 							<CardTitle className="text-lg flex items-center gap-2">
 								Game Visibility
@@ -464,7 +464,7 @@ export default function JsonFormContent({
 					value="appearance"
 					className="space-y-4 focus-visible:outline-none focus-visible:ring-0 mt-0"
 				>
-					<Card className="bg-[#0a0a0a] border-none overflow-hidden rounded-none p-0">
+					<Card className="bg-background dark:bg-[#0a0a0a] border-none overflow-hidden rounded-none p-0 pb-6">
 						<CardHeader className="bg-muted/30 py-4 border-b border-border/50">
 							<CardTitle className="text-lg flex items-center gap-2">
 								Appearance
@@ -473,8 +473,8 @@ export default function JsonFormContent({
 								Customize how the message looks in Discord.
 							</CardDescription>
 						</CardHeader>
-						<CardContent className="space-y-6">
-							<div className="flex items-center justify-between pb-2 border-b">
+						<CardContent className="space-y-3">
+							<div className="flex items-center justify-between">
 								<Label className="text-sm font-semibold">
 									Features
 								</Label>
