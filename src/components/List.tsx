@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } fro
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { calculateTimeLeft } from '@/lib/calculateTime'
-import { getEffectiveGames, getMobileGameKey, mergeMobile } from '@/lib/utils'
+import { getEffectiveGames, getMobileGameKey } from '@/lib/utils'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import {
@@ -12,6 +12,7 @@ import {
 	Clock,
 	Gem,
 	Gift,
+	Monitor,
 	Smartphone,
 	ShoppingCart,
 	XCircle,
@@ -135,7 +136,7 @@ function DesktopHome({
 		<div className="space-y-10">
 			{games.currentGames.length > 0 && (
 				<div>
-					<SectionHeader icon={Gem} title="Desktop" />
+					<SectionHeader icon={Monitor} title="Desktop" />
 					<div className={gridClassName}>
 						{games.currentGames.map(game => renderGameCard(game, true))}
 					</div>
@@ -178,15 +179,9 @@ export default function List({
 }) {
 	const router = useRouter()
 	const hasToastShown = useRef(false)
-	const [parsedMobileGames, setParsedMobileGames] = useState<
-		MobileGameDataLocal[]
-	>([])
 	const [activeTab, setActiveTab] = useState('home')
 
-	const mobileGames = useMemo(
-		() => mergeMobile(mobile, parsedMobileGames),
-		[mobile, parsedMobileGames],
-	)
+	const mobileGames = mobile
 	const effectiveGames = useMemo(() => getEffectiveGames(games), [games])
 
 	useEffect(() => {
@@ -200,35 +195,10 @@ export default function List({
 
 		checkDesktop()
 
-		const loadParsedGames = () => {
-			try {
-				const stored = localStorage.getItem('parsedMobileGames')
-				const parsed = stored ? JSON.parse(stored) : []
-				setParsedMobileGames(Array.isArray(parsed) ? parsed : [])
-			} catch (error) {
-				console.error('Failed to load parsed games:', error)
-				setParsedMobileGames([])
-			}
-		}
-
-		loadParsedGames()
-		const handleStorage = (event: StorageEvent) => {
-			if (event.key === 'parsedMobileGames') {
-				loadParsedGames()
-			}
-		}
-		const handleParsedGamesUpdate = () => loadParsedGames()
 		const handleResize = () => checkDesktop()
 
-		window.addEventListener('storage', handleStorage)
-		window.addEventListener('parsedMobileGamesUpdated', handleParsedGamesUpdate)
 		window.addEventListener('resize', handleResize)
 		return () => {
-			window.removeEventListener('storage', handleStorage)
-			window.removeEventListener(
-				'parsedMobileGamesUpdated',
-				handleParsedGamesUpdate,
-			)
 			window.removeEventListener('resize', handleResize)
 		}
 	}, [])
@@ -625,7 +595,7 @@ export default function List({
 							{activeTab === 'home' && <span>Home</span>}
 						</TabsTrigger>
 						<TabsTrigger value="current" className={mobileTabTriggerClass}>
-							<Gem className="size-4" />
+							<	Gem className="size-4" />
 							{activeTab === 'current' && <span>Free Now</span>}
 						</TabsTrigger>
 						<TabsTrigger value="upcoming" className={mobileTabTriggerClass}>
@@ -668,7 +638,7 @@ export default function List({
 								</h4>
 								<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
 									<TabsTrigger value="current" className={desktopSidebarTriggerClass}>
-										<Gem className="size-4" /> Free Now
+										<Monitor className="size-4" /> Free Now
 									</TabsTrigger>
 									<TabsTrigger value="upcoming" className={desktopSidebarTriggerClass}>
 										<Calendar className="size-4" /> Upcoming
@@ -732,7 +702,7 @@ export default function List({
 						>
 							<div className="lg:hidden">{renderContent('current')}</div>
 							<div className="hidden lg:block">
-								<SectionHeader icon={Gem} title="Desktop" />
+								<SectionHeader icon={Monitor} title="Desktop" />
 								{renderContent('current')}
 							</div>
 						</TabsContent>

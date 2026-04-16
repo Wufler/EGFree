@@ -8,13 +8,7 @@ import Discord from '../ui/discord'
 const defaultContent = '<@&847939354978811924>'
 const EMPTY_MOBILE_GAMES: MobileGameDataLocal[] = []
 
-function PreviewLinkButton({
-	href,
-	label,
-}: {
-	href: string
-	label: string
-}) {
+function PreviewLinkButton({ href, label }: { href: string; label: string }) {
 	return (
 		<a
 			href={href}
@@ -27,13 +21,7 @@ function PreviewLinkButton({
 	)
 }
 
-function PreviewTimestampChip({
-	label,
-	date,
-}: {
-	label?: string
-	date: Date
-}) {
+function PreviewTimestampChip({ label, date }: { label?: string; date: Date }) {
 	return (
 		<span className="inline-flex items-baseline gap-1 text-black dark:text-white">
 			{label && <span>{label}</span>}
@@ -59,9 +47,7 @@ export default function DiscordPreview({
 	const selectedGames = [
 		...effectiveGames.currentGames,
 		...effectiveGames.nextGames,
-	].filter(
-		game => settings.selectedGames[game.id],
-	)
+	].filter(game => settings.selectedGames[game.id])
 
 	const mysteryGames = effectiveGames.currentGames.some(
 		game => game.seller?.name === 'Epic Dev Test Account',
@@ -279,7 +265,7 @@ export default function DiscordPreview({
 						if (settings.componentsV2) {
 							return (
 								<div key={game.id} className="mt-2">
-									<div className="max-w-[600px] overflow-hidden rounded-md border border-[#d4d7dc] dark:border-[#4e5058] px-4 pt-4 bg-[#ffffff] dark:bg-[#242429]">
+									<div className="max-w-150 overflow-hidden rounded-md border border-[#d4d7dc] dark:border-[#4e5058] px-4 pt-4 bg-[#ffffff] dark:bg-[#242429]">
 										{settings.includeImage && imageUrl && (
 											<Image
 												width={1280}
@@ -311,7 +297,9 @@ export default function DiscordPreview({
 															(!isCurrent ? (
 																<span className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5">
 																	{game.price.totalPrice.originalPrice === 0 ? (
-																		<span className="font-light text-black dark:text-white">Free</span>
+																		<span className="font-light text-black dark:text-white">
+																			Free
+																		</span>
 																	) : (
 																		<span className="font-light text-black dark:text-white">
 																			{game.price.totalPrice.fmtPrice.originalPrice}
@@ -322,17 +310,23 @@ export default function DiscordPreview({
 																<span className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5">
 																	{isCurrentlyFree(game) ? (
 																		game.price.totalPrice.originalPrice === 0 ? (
-																			<span className="font-light text-black dark:text-white">Free</span>
+																			<span className="font-light text-black dark:text-white">
+																				Free
+																			</span>
 																		) : (
 																			<>
 																				<span className="font-light line-through text-black dark:text-white">
 																					{game.price.totalPrice.fmtPrice.originalPrice}
 																				</span>
-																				<span className="font-semibold text-black dark:text-white">Free</span>
+																				<span className="font-semibold text-black dark:text-white">
+																					Free
+																				</span>
 																			</>
 																		)
 																	) : isPermanentlyFree(game) ? (
-																		<span className="font-semibold text-black dark:text-white">Free</span>
+																		<span className="font-semibold text-black dark:text-white">
+																			Free
+																		</span>
 																	) : isDiscountedGame(game) ? (
 																		<>
 																			<span className="font-light line-through text-black dark:text-white">
@@ -367,16 +361,10 @@ export default function DiscordPreview({
 											</div>
 											<div className="mt-2.5 mb-4 flex flex-wrap gap-2">
 												{browserHref && (
-													<PreviewLinkButton
-														href={browserHref}
-														label="Open in browser"
-													/>
+													<PreviewLinkButton href={browserHref} label="Open in browser" />
 												)}
 												{claimHrefV2 && (
-													<PreviewLinkButton
-														href={claimHrefV2}
-														label={claimLabelV2}
-													/>
+													<PreviewLinkButton href={claimHrefV2} label={claimLabelV2} />
 												)}
 											</div>
 										</div>
@@ -519,9 +507,7 @@ export default function DiscordPreview({
 							const endDate = game.promoEndDate ? new Date(game.promoEndDate) : null
 							const isCombined = Boolean(game.iosOffer && game.androidOffer)
 							const iosLink = epicMobileProductPageUrl(game.iosOffer?.pageSlug)
-							const androidLink = epicMobileProductPageUrl(
-								game.androidOffer?.pageSlug,
-							)
+							const androidLink = epicMobileProductPageUrl(game.androidOffer?.pageSlug)
 							const storeUrl = iosLink ?? androidLink
 
 							const offerParams: string[] = []
@@ -543,7 +529,7 @@ export default function DiscordPreview({
 							if (settings.componentsV2) {
 								return (
 									<div key={getMobileGameKey(game)} className="mt-2">
-										<div className="max-w-[600px] overflow-hidden rounded-md border border-[#d4d7dc] dark:border-[#4e5058] px-4 pt-4 bg-[#ffffff] dark:bg-[#242429]">
+										<div className="max-w-150 overflow-hidden rounded-md border border-[#d4d7dc] dark:border-[#4e5058] px-4 pt-4 bg-[#ffffff] dark:bg-[#242429]">
 											{settings.includeImage && game.imageUrl && (
 												<Image
 													width={1280}
@@ -566,7 +552,9 @@ export default function DiscordPreview({
 																	<span className="font-light line-through text-black dark:text-white">
 																		{priceFormatted}
 																	</span>
-																	<span className="font-semibold text-black dark:text-white">Free</span>
+																	<span className="font-semibold text-black dark:text-white">
+																		Free
+																	</span>
 																</span>
 															)}
 															{settings.includeFooter && endDate && (
@@ -587,16 +575,10 @@ export default function DiscordPreview({
 														<PreviewLinkButton href={iosLink} label="iOS" />
 													)}
 													{isCombined && androidLink && (
-														<PreviewLinkButton
-															href={androidLink}
-															label="Android"
-														/>
+														<PreviewLinkButton href={androidLink} label="Android" />
 													)}
 													{checkoutUrl && settings.includeClaimGame && (
-														<PreviewLinkButton
-															href={checkoutUrl}
-															label="Claim Game"
-														/>
+														<PreviewLinkButton href={checkoutUrl} label="Claim Game" />
 													)}
 												</div>
 											</div>

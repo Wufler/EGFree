@@ -1,8 +1,9 @@
 import { differenceInSeconds } from "date-fns"
 
 export const calculateTimeLeft = (endDate: Date): string => {
+    if (!endDate || Number.isNaN(endDate.getTime())) return 'Expired'
     const secondsLeft = differenceInSeconds(endDate, new Date())
-    if (secondsLeft <= 0) return 'Expired'
+    if (!Number.isFinite(secondsLeft) || secondsLeft <= 0) return 'Expired'
     const days = Math.floor(secondsLeft / 86400)
     const hours = Math.floor((secondsLeft % 86400) / 3600)
     const minutes = Math.floor((secondsLeft % 3600) / 60)

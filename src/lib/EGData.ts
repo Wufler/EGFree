@@ -20,10 +20,6 @@ function getPlatform(tags: EgDataTag[]): 'ios' | 'android' | null {
     return null
 }
 
-function isMobileTag(tags: EgDataTag[] | undefined): boolean {
-    return getPlatform(tags || []) !== null
-}
-
 export async function getMobileGame(
     offerId: string,
 ): Promise<{ gameData: MobileGameData; enteredPlatform: 'ios' | 'android' | null } | null> {
@@ -66,7 +62,10 @@ export async function getMobileGame(
             console.log('Final promoEndDate:', promoEndDate, promoEndDate ? new Date(promoEndDate).toISOString() : 'empty')
         }
 
-        const fallbackPageSlug = offer.offerMappings?.[0]?.pageSlug || ''
+        const getSlug = (o: EgDataOffer): string =>
+            o.offerMappings?.[0]?.pageSlug || o.urlSlug || ''
+
+        const fallbackPageSlug = getSlug(offer)
         let iosOffer: MobileGameData['iosOffer'] = enteredPlatform === 'ios'
             ? { id: offer.id, pageSlug: fallbackPageSlug }
             : null
@@ -74,25 +73,55 @@ export async function getMobileGame(
             ? { id: offer.id, pageSlug: fallbackPageSlug }
             : null
 
+        const assignFromOffer = (o: EgDataOffer) => {
+            const platform = getPlatform(o.tags || [])
+            const pageSlug = getSlug(o)
+            if (platform === 'ios' && !iosOffer) {
+                iosOffer = { id: o.id, pageSlug }
+            } else if (platform === 'android' && !androidOffer) {
+                androidOffer = { id: o.id, pageSlug }
+            }
+        }
+
         if (sandboxRes.ok) {
             const sandboxData: EgDataSandboxResponse = await sandboxRes.json()
-
             for (const item of sandboxData.elements || []) {
-                const platform = getPlatform(item.tags || [])
-                const pageSlug = item.offerMappings?.[0]?.pageSlug || ''
-
-                if (platform === 'ios' && !iosOffer) {
-                    iosOffer = { id: item.id, pageSlug }
-                } else if (platform === 'android' && !androidOffer) {
-                    androidOffer = { id: item.id, pageSlug }
-                }
-
+                assignFromOffer(item)
                 if (iosOffer && androidOffer) break
             }
-        } else {
+        } else if (sandboxRes.status !== 404) {
             console.warn(
-                `Sandbox lookup failed for namespace ${offer.namespace} (${sandboxRes.status}); using fallback offer mapping.`
+                `Sandbox lookup failed for namespace ${offer.namespace} (${sandboxRes.status}); falling back to promotion offers.`
             )
+        }
+
+        if (!iosOffer || !androidOffer) {
+            const siblingIds = new Set<string>()
+            for (const rule of priceData.appliedRules || []) {
+                for (const entry of rule.promotionSetting?.discountOffers || []) {
+                    if (entry.offerId && entry.offerId !== offer.id) {
+                        siblingIds.add(entry.offerId)
+                    }
+                }
+            }
+
+            if (siblingIds.size > 0) {
+                const siblings = await Promise.all(
+                    [...siblingIds].map(async id => {
+                        try {
+                            const res = await fetch(`${EGDATA_API}/offers/${id}`)
+                            if (!res.ok) return null
+                            return (await res.json()) as EgDataOffer
+                        } catch {
+                            return null
+                        }
+                    })
+                )
+                for (const sibling of siblings) {
+                    if (sibling) assignFromOffer(sibling)
+                    if (iosOffer && androidOffer) break
+                }
+            }
         }
 
         const imageUrl = (offer.keyImages || []).find(img =>
@@ -121,14 +150,13 @@ export async function getMobileGame(
 
 export async function getMobileGames(): Promise<MobileGameData[]> {
     try {
-        const res = await fetch(`${EGDATA_API}/free-games`)
+        const res = await fetch(`${EGDATA_API}/free-games/mobile`)
         if (!res.ok) return []
         const offers: EgDataOffer[] = await res.json()
         if (!Array.isArray(offers)) return []
 
         const byNamespace = new Map<string, string>()
         for (const offer of offers) {
-            if (!isMobileTag(offer.tags)) continue
             if (!byNamespace.has(offer.namespace)) {
                 byNamespace.set(offer.namespace, offer.id)
             }

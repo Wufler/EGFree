@@ -94,7 +94,6 @@ type EgFreeSettings = {
     webhookName?: string
     webhookAvatar?: string
     showDiscordPreview: boolean
-    openAccordions: string[]
     includeClaimGame: boolean
     componentsV2: boolean
 }

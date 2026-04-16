@@ -119,6 +119,37 @@ export default function ClaimTab({
 					{combinedDialogGame ? (
 						<div className="grid gap-4">
 							<div className="space-y-2">
+								<p className="text-sm font-medium">iOS + Android</p>
+								<div className="flex flex-wrap gap-2">
+									<Button
+										variant="outline"
+										size="sm"
+										className="flex items-center gap-2"
+										onClick={() => {
+											const url = generateMobileCheckoutUrl(combinedDialogGame)
+											if (url) copyToClipboard(url)
+										}}
+									>
+										{copiedUrl === generateMobileCheckoutUrl(combinedDialogGame) ? (
+											<Check className="size-4" />
+										) : (
+											<Copy className="size-4" />
+										)}
+										Copy
+									</Button>
+									<Button size="sm" className="flex items-center gap-2" asChild>
+										<a
+											href={generateMobileCheckoutUrl(combinedDialogGame) ?? '#'}
+											target="_blank"
+											rel="noopener noreferrer"
+										>
+											<ExternalLink className="size-4" />
+											Claim
+										</a>
+									</Button>
+								</div>
+							</div>
+							<div className="space-y-2">
 								<p className="text-sm font-medium">iOS</p>
 								<div className="flex flex-wrap gap-2">
 									<Button

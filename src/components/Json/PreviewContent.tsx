@@ -105,7 +105,7 @@ export default function JsonPreviewContent({
 					updateSetting={updateSetting}
 					copyToClipboard={copyToClipboard}
 					isCopied={isCopied}
-					className="px-4 pt-2 pb-4"
+					className="p-2"
 				/>
 			)}
 			{settings.showDiscordPreview ? (
@@ -121,7 +121,7 @@ export default function JsonPreviewContent({
 				</pre>
 			)}
 			{!settings.componentsV2 && (
-				<div className="flex justify-center p-3 lg:p-3 lg:pt-3 lg:pb-4">
+				<div className="flex justify-center p-2">
 					<Button
 						variant="outline"
 						size="default"

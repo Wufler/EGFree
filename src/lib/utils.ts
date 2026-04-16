@@ -12,22 +12,6 @@ export function getMobileGameKey(game: MobileGameDataLocal): string {
 	return `mobile-${game.namespace}-${game.title}-${platform}`
 }
 
-export function mergeMobile(
-	apiGames: MobileGameDataLocal[],
-	storedGames: MobileGameDataLocal[],
-): MobileGameDataLocal[] {
-	const byNs = new Map<string, MobileGameDataLocal>()
-	for (const g of apiGames) {
-		byNs.set(g.namespace, g)
-	}
-	for (const g of storedGames) {
-		if (!byNs.has(g.namespace)) {
-			byNs.set(g.namespace, g)
-		}
-	}
-	return [...byNs.values()]
-}
-
 function parseDate(value: string | undefined): Date | null {
 	if (!value) return null
 	const date = new Date(value)
@@ -56,20 +40,36 @@ export function getEffectiveGames(
 		return endDate ? endDate > referenceDate : true
 	})
 
+	const noActiveCurrent = activeCurrentGames.length === 0
+
 	const promotedUpcomingGames = games.nextGames.filter(game => {
 		const startDate = getUpcomingOfferStartDate(game)
-		return startDate ? startDate <= referenceDate : false
+		if (startDate && startDate <= referenceDate) return true
+		return noActiveCurrent
 	})
 
-	const upcomingGames = games.nextGames.filter(game => {
-		const startDate = getUpcomingOfferStartDate(game)
-		return startDate ? startDate > referenceDate : true
-	})
+	const upcomingGames = noActiveCurrent
+		? []
+		: games.nextGames.filter(game => {
+			const startDate = getUpcomingOfferStartDate(game)
+			return startDate ? startDate > referenceDate : true
+		})
 
 	const existingIds = new Set(activeCurrentGames.map(game => game.id))
-	const uniquePromotedGames = promotedUpcomingGames.filter(
-		game => !existingIds.has(game.id),
-	)
+	const uniquePromotedGames = promotedUpcomingGames
+		.filter(game => !existingIds.has(game.id))
+		.map(game => {
+			const upcoming = game.promotions?.upcomingPromotionalOffers?.[0]?.promotionalOffers?.[0]
+			if (!upcoming) return game
+			return {
+				...game,
+				promotions: {
+					...game.promotions,
+					promotionalOffers: [{ promotionalOffers: [upcoming] }],
+					upcomingPromotionalOffers: [],
+				},
+			}
+		})
 
 	return {
 		currentGames: [...activeCurrentGames, ...uniquePromotedGames],
