@@ -144,20 +144,27 @@ export async function getMobileGames(): Promise<MobileGameData[]> {
         const offers: EgDataOffer[] = await res.json()
         if (!Array.isArray(offers)) return []
 
-        const byNamespace = new Map<string, string>()
-        for (const offer of offers) {
-            if (!byNamespace.has(offer.namespace)) {
-                byNamespace.set(offer.namespace, offer.id)
+        const results = await Promise.all(
+            offers.map(offer => getMobileGame(offer.id)),
+        )
+
+        const getEndTime = (promoEndDate: string) => {
+            const endTime = new Date(promoEndDate).getTime()
+            return Number.isFinite(endTime) ? endTime : 0
+        }
+
+        const byNamespace = new Map<string, MobileGameData>()
+        for (const result of results) {
+            if (!result) continue
+            const current = byNamespace.get(result.gameData.namespace)
+            const currentEndTime = current ? getEndTime(current.promoEndDate) : 0
+            const nextEndTime = getEndTime(result.gameData.promoEndDate)
+            if (!current || nextEndTime > currentEndTime) {
+                byNamespace.set(result.gameData.namespace, result.gameData)
             }
         }
 
-        const results = await Promise.all(
-            [...byNamespace.values()].map(offerId => getMobileGame(offerId)),
-        )
-
-        return results
-            .filter((r): r is NonNullable<typeof r> => r !== null)
-            .map(r => r.gameData)
+        return [...byNamespace.values()]
     } catch (error) {
         console.error('getMobileGames:', error)
         return []

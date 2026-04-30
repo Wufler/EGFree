@@ -10,7 +10,6 @@ import {
 	Calendar,
 	CalendarOff,
 	Clock,
-	Gem,
 	Gift,
 	Monitor,
 	Smartphone,
@@ -93,10 +92,12 @@ function TimeDisplay({
 function SectionHeader({
 	icon: Icon,
 	title,
+	titleSuffix,
 	primary = false,
 }: {
-	icon: typeof Gem
+	icon: typeof Monitor
 	title: string
+	titleSuffix?: ReactNode
 	primary?: boolean
 }) {
 	return (
@@ -108,7 +109,10 @@ function SectionHeader({
 				<Icon className="size-5" />
 			</div>
 			<div>
-				<h2 className="text-2xl font-bold tracking-tight">{title}</h2>
+				<div className="flex items-center gap-2">
+					<h2 className="text-2xl font-bold tracking-tight">{title}</h2>
+					{titleSuffix}
+				</div>
 			</div>
 		</div>
 	)
@@ -144,7 +148,20 @@ function DesktopHome({
 			)}
 			{activeMobileGames.length > 0 && (
 				<div>
-					<SectionHeader icon={Smartphone} title="Mobile" />
+					<SectionHeader
+						icon={Smartphone}
+						title="Mobile"
+						titleSuffix={
+							<Link
+								href="https://egdata.app"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="text-xs font-medium text-muted-foreground transition-colors hover:text-epic-blue"
+							>
+								via egdata.app
+							</Link>
+						}
+					/>
 					<div className={gridClassName}>
 						{activeMobileGames.map(game => renderMobileGameCard(game, false))}
 					</div>
@@ -595,7 +612,7 @@ export default function List({
 							{activeTab === 'home' && <span>Home</span>}
 						</TabsTrigger>
 						<TabsTrigger value="current" className={mobileTabTriggerClass}>
-							<	Gem className="size-4" />
+							<Monitor className="size-4" />
 							{activeTab === 'current' && <span>Free Now</span>}
 						</TabsTrigger>
 						<TabsTrigger value="upcoming" className={mobileTabTriggerClass}>
@@ -712,7 +729,20 @@ export default function List({
 						>
 							<div className="lg:hidden">{renderContent('mobile')}</div>
 							<div className="hidden lg:block">
-								<SectionHeader icon={Smartphone} title="Mobile" />
+								<SectionHeader
+									icon={Smartphone}
+									title="Mobile"
+									titleSuffix={
+										<Link
+											href="https://egdata.app"
+											target="_blank"
+											rel="noopener noreferrer"
+											className="text-xs font-medium text-muted-foreground transition-colors hover:text-epic-blue"
+										>
+											via egdata.app
+										</Link>
+									}
+								/>
 								{renderContent('mobile')}
 							</div>
 						</TabsContent>
