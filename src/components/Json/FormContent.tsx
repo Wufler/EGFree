@@ -20,6 +20,8 @@ import {
 	Monitor,
 	Smartphone,
 	CalendarDays,
+	Edit,
+	ArrowRightLeft,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn, getMobileGameKey } from '@/lib/utils'
@@ -131,37 +133,54 @@ export default function JsonFormContent({
 	games,
 	settings,
 	parsedMobileGames,
+	canSplitDesktopMobile,
 	webhookUrl,
 	setWebhookUrl,
+	webhookUrlMobile,
+	setWebhookUrlMobile,
 	messageId,
 	setMessageId,
+	mobileMessageId,
+	setMobileMessageId,
 	checkoutLink,
 	setCheckoutLink,
 	isVisible,
 	setIsVisible,
+	isMobileWebhookVisible,
+	setIsMobileWebhookVisible,
 	isLoading,
 	showWarning,
 	updateSetting,
 	handleColorChange,
 	handleWebhook,
 	handlePaste,
+	handlePasteMobile,
+	canSendWebhook,
 	isValidDiscordWebhook,
 	debouncedFetchWebhookInfo,
 	fetchWebhookInfo,
 	defaultContent,
+	defaultMobileContent,
 }: {
 	idSuffix?: string
 	games: Game
 	settings: EgFreeSettings
 	parsedMobileGames: MobileGameDataLocal[]
+	canSplitDesktopMobile: boolean
 	webhookUrl: string
 	setWebhookUrl: (v: string) => void
+	webhookUrlMobile: string
+	setWebhookUrlMobile: (v: string) => void
 	messageId: string
 	setMessageId: (v: string) => void
+	mobileMessageId: string
+	setMobileMessageId: (v: string) => void
 	checkoutLink: string
 	setCheckoutLink: (v: string) => void
 	isVisible: boolean
 	setIsVisible: (v: boolean) => void
+	isMobileWebhookVisible: boolean
+	setIsMobileWebhookVisible: (v: boolean) => void
 	isLoading: boolean
 	showWarning: boolean
 	updateSetting: <T extends keyof EgFreeSettings>(
@@ -171,10 +190,13 @@ export default function JsonFormContent({
 	handleColorChange: (color: string) => void
 	handleWebhook: () => void
 	handlePaste: () => void
+	handlePasteMobile: () => void
+	canSendWebhook: boolean
 	isValidDiscordWebhook: (url: string) => boolean
 	debouncedFetchWebhookInfo: (url: string) => void
-	fetchWebhookInfo: (url: string) => void
+	fetchWebhookInfo: (url: string, target?: 'desktop' | 'mobile') => void
 	defaultContent: string
+	defaultMobileContent: string
 }) {
 	const activeMobile = parsedMobileGames.filter(
 		g => g.promoEndDate && new Date(g.promoEndDate) > new Date(),
@@ -186,6 +208,19 @@ export default function JsonFormContent({
 	const selectedCurrentCount = games.currentGames.filter(
 		game => settings.selectedGames[game.id],
 	).length
+	const showDesktopMessageFields = true
+	const showMobileMessageFields = settings.splitDesktopMobile
+	const showDesktopWebhookField =
+		!settings.splitDesktopMobile ||
+		(settings.splitDesktopMobile && canSplitDesktopMobile)
+	const showMobileWebhookField =
+		settings.splitDesktopMobile &&
+		canSplitDesktopMobile &&
+		!settings.useDesktopWebhookForMobile
+	const clearMessageIds = () => {
+		setMessageId('')
+		setMobileMessageId('')
+	}
 	const allOptionsSelected =
 		settings.includePrice &&
 		settings.includeImage &&
@@ -219,183 +254,463 @@ export default function JsonFormContent({
 							</CardDescription>
 						</CardHeader>
 						<CardContent className="space-y-6">
-							<div className="space-y-2">
-								<Label
-									htmlFor={`webhook-url${idSuffix}`}
-									className="text-sm font-semibold"
-								>
-									Webhook URL
-								</Label>
-								<div className="flex items-center ring-1 ring-input rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-all">
-									<Input
-										id={`webhook-url${idSuffix}`}
-										type={isVisible ? 'text' : 'password'}
-										onFocus={() => setIsVisible(true)}
-										onBlur={() => setIsVisible(false)}
-										placeholder="https://discord.com/api/webhooks/..."
-										value={webhookUrl}
-										onChange={e => {
-											setWebhookUrl(e.target.value)
-											debouncedFetchWebhookInfo(e.target.value)
-										}}
-										className={`border-0 rounded-none focus-visible:ring-0 text-sm ${webhookUrl && !isValidDiscordWebhook(webhookUrl)
-											? 'text-red-500'
-											: ''
-											}`}
-									/>
-									<AlertDialog>
-										<AlertDialogTrigger asChild>
+							<div className="space-y-3">
+								{showDesktopWebhookField && (
+									<>
+										<Label
+											htmlFor={`webhook-url${idSuffix}`}
+											className="text-sm font-semibold flex items-center gap-1.5"
+										>
+											{settings.splitDesktopMobile &&
+												!settings.useDesktopWebhookForMobile && (
+													<>
+														<Monitor className="size-3.5 text-primary" /> Desktop{' '}
+													</>
+												)}
+											Webhook URL
+										</Label>
+										<div className="flex items-center ring-1 ring-input rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-all">
+											<Input
+												id={`webhook-url${idSuffix}`}
+												type={isVisible ? 'text' : 'password'}
+												onFocus={() => setIsVisible(true)}
+												onBlur={() => setIsVisible(false)}
+												placeholder="https://discord.com/api/webhooks/..."
+												value={webhookUrl}
+												onChange={e => {
+													setWebhookUrl(e.target.value)
+													debouncedFetchWebhookInfo(e.target.value)
+												}}
+												className={`border-0 rounded-none focus-visible:ring-0 text-sm ${webhookUrl && !isValidDiscordWebhook(webhookUrl)
+													? 'text-red-500'
+													: ''
+													}`}
+											/>
+											<AlertDialog>
+												<AlertDialogTrigger asChild>
+													<Button
+														variant="ghost"
+														key="save-webhook"
+														className="px-3 h-full rounded-none border-l hover:bg-accent hover:text-accent-foreground disabled:opacity-100 disabled:text-muted-foreground"
+														disabled={!webhookUrl.trim()}
+													>
+														<Save className="size-4" />
+													</Button>
+												</AlertDialogTrigger>
+												<AlertDialogContent className="z-80 border-primary/20 shadow-2xl">
+													<AlertDialogHeader>
+														<AlertDialogTitle className="flex items-center gap-2 text-primary">
+															<Save className="size-5" /> Warning
+														</AlertDialogTitle>
+														<AlertDialogDescription className="space-y-2 text-base" asChild>
+															<div>
+																<p>
+																	This will encrypt and save your webhook in your browser&apos;s local
+																	storage and will automatically populate the URL input.
+																</p>
+																<p className="font-semibold text-foreground text-sm">
+																	Consider manually pasting the webhook as a safer alternative.
+																</p>
+															</div>
+														</AlertDialogDescription>
+													</AlertDialogHeader>
+													<AlertDialogFooter>
+														<AlertDialogCancel className="sm:w-1/2">Cancel</AlertDialogCancel>
+														<AlertDialogAction
+															className="sm:w-1/2 font-semibold"
+															onClick={() => {
+																updateSetting('webhookUrl', webhookUrl)
+																fetchWebhookInfo(webhookUrl)
+																toast.success('Webhook saved locally')
+															}}
+														>
+															Save Anyway
+														</AlertDialogAction>
+													</AlertDialogFooter>
+												</AlertDialogContent>
+											</AlertDialog>
 											<Button
 												variant="ghost"
-												key="save-webhook"
-												className="px-3 h-full rounded-none border-l hover:bg-accent hover:text-accent-foreground disabled:opacity-100 disabled:text-muted-foreground"
-												disabled={!webhookUrl.trim()}
+												onClick={handlePaste}
+												className="px-3 h-full rounded-none border-l hover:bg-accent hover:text-accent-foreground"
+												title="Paste desktop webhook from clipboard"
 											>
-												<Save className="size-4" />
+												<Clipboard className="size-4" />
 											</Button>
-										</AlertDialogTrigger>
-										<AlertDialogContent className="z-80 border-primary/20 shadow-2xl">
-											<AlertDialogHeader>
-												<AlertDialogTitle className="flex items-center gap-2 text-primary">
-													<Save className="size-5" /> Warning
-												</AlertDialogTitle>
-												<AlertDialogDescription className="space-y-2 text-base" asChild>
-													<div>
-														<p>
-															This will encrypt and save your webhook in your browser's local
-															storage and will automatically populate the URL input.
-														</p>
-														<p className="font-semibold text-foreground text-sm">
-															Consider manually pasting the webhook as a safer alternative.
-														</p>
-													</div>
-												</AlertDialogDescription>
-											</AlertDialogHeader>
-											<AlertDialogFooter>
-												<AlertDialogCancel className="sm:w-1/2">Cancel</AlertDialogCancel>
-												<AlertDialogAction
-													className="sm:w-1/2 font-semibold"
-													onClick={() => {
-														updateSetting('webhookUrl', webhookUrl)
-														fetchWebhookInfo(webhookUrl)
-														toast.success('Webhook saved locally')
+										</div>
+									</>
+								)}
+								{showMobileWebhookField && (
+									<>
+										<Label
+											htmlFor={`webhook-url-mobile${idSuffix}`}
+											className="text-sm font-semibold flex items-center gap-1.5"
+										>
+											<Smartphone className="size-3.5 text-primary" />
+											Mobile Webhook URL
+										</Label>
+										<div className="flex items-center ring-1 ring-input rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-all">
+											<Input
+												id={`webhook-url-mobile${idSuffix}`}
+												type={isMobileWebhookVisible ? 'text' : 'password'}
+												onFocus={() => setIsMobileWebhookVisible(true)}
+												onBlur={() => setIsMobileWebhookVisible(false)}
+												placeholder="https://discord.com/api/webhooks/..."
+												value={webhookUrlMobile}
+												onChange={e => {
+													setWebhookUrlMobile(e.target.value)
+													if (isValidDiscordWebhook(e.target.value)) {
+														fetchWebhookInfo(e.target.value, 'mobile')
+													}
+												}}
+												className={`border-0 rounded-none focus-visible:ring-0 text-sm ${webhookUrlMobile && !isValidDiscordWebhook(webhookUrlMobile)
+													? 'text-red-500'
+													: ''
+													}`}
+											/>
+											<AlertDialog>
+												<AlertDialogTrigger asChild>
+													<Button
+														variant="ghost"
+														key="save-mobile-webhook"
+														className="px-3 h-full rounded-none border-l hover:bg-accent hover:text-accent-foreground disabled:opacity-100 disabled:text-muted-foreground"
+														disabled={!webhookUrlMobile.trim()}
+													>
+														<Save className="size-4" />
+													</Button>
+												</AlertDialogTrigger>
+												<AlertDialogContent className="z-80 border-primary/20 shadow-2xl">
+													<AlertDialogHeader>
+														<AlertDialogTitle className="flex items-center gap-2 text-primary">
+															<Save className="size-5" /> Warning
+														</AlertDialogTitle>
+														<AlertDialogDescription className="space-y-2 text-base" asChild>
+															<div>
+																<p>
+																	This will encrypt and save your mobile webhook in your browser&apos;s local
+																	storage.
+																</p>
+																<p className="font-semibold text-foreground text-sm">
+																	Consider manually pasting the webhook as a safer alternative.
+																</p>
+															</div>
+														</AlertDialogDescription>
+													</AlertDialogHeader>
+													<AlertDialogFooter>
+														<AlertDialogCancel className="sm:w-1/2">Cancel</AlertDialogCancel>
+														<AlertDialogAction
+															className="sm:w-1/2 font-semibold"
+															onClick={() => {
+																updateSetting('webhookUrlMobile', webhookUrlMobile)
+																fetchWebhookInfo(webhookUrlMobile, 'mobile')
+																toast.success('Mobile webhook saved locally')
+															}}
+														>
+															Save Anyway
+														</AlertDialogAction>
+													</AlertDialogFooter>
+												</AlertDialogContent>
+											</AlertDialog>
+											<Button
+												variant="ghost"
+												onClick={handlePasteMobile}
+												className="px-3 h-full rounded-none border-l hover:bg-accent hover:text-accent-foreground"
+												title="Paste mobile webhook from clipboard"
+											>
+												<Clipboard className="size-4" />
+											</Button>
+										</div>
+									</>
+								)}
+								<div className="space-y-3">
+									{canSplitDesktopMobile && (
+										<Label
+											htmlFor={`split-toggle${idSuffix}`}
+											className={cn(optionCheckboxClass, 'flex')}
+										>
+											<span className="inline-flex min-w-0 items-center gap-2 font-medium leading-tight">
+												<Edit className="opacity-70 shrink-0" size={14} />
+												Split Desktop and Mobile
+											</span>
+											<Checkbox
+												id={`split-toggle${idSuffix}`}
+												checked={settings.splitDesktopMobile}
+												onCheckedChange={checked => {
+													clearMessageIds()
+													updateSetting('splitDesktopMobile', checked as boolean)
+												}}
+												className="shadow-sm"
+											/>
+										</Label>
+									)}
+
+									{canSplitDesktopMobile && settings.splitDesktopMobile && (
+										<div className="grid gap-3 sm:grid-cols-2">
+											<Label
+												htmlFor={`split-use-desktop-webhook${idSuffix}`}
+												className={cn(optionCheckboxClass, 'flex sm:col-span-2')}
+											>
+												<span className="inline-flex min-w-0 items-center gap-2 font-medium leading-tight">
+													<ArrowRightLeft className="opacity-70 shrink-0" size={14} />
+													Use same webhook for both
+												</span>
+												<Checkbox
+													id={`split-use-desktop-webhook${idSuffix}`}
+													checked={settings.useDesktopWebhookForMobile}
+													onCheckedChange={checked => {
+														clearMessageIds()
+														updateSetting(
+															'useDesktopWebhookForMobile',
+															checked as boolean,
+														)
 													}}
-												>
-													Save Anyway
-												</AlertDialogAction>
-											</AlertDialogFooter>
-										</AlertDialogContent>
-									</AlertDialog>
-									<Button
-										variant="ghost"
-										onClick={handlePaste}
-										className="px-3 h-full rounded-none border-l hover:bg-accent hover:text-accent-foreground"
-										title="Paste from clipboard"
-									>
-										<Clipboard className="size-4" />
-									</Button>
+													className="shadow-sm"
+												/>
+											</Label>
+											<Label
+												htmlFor={`split-send-desktop${idSuffix}`}
+												className={cn(optionCheckboxClass, 'flex')}
+											>
+												<span className="inline-flex min-w-0 items-center gap-2 font-medium leading-tight">
+													<Monitor className="opacity-70 shrink-0" size={14} />
+													Send Desktop
+												</span>
+												<Checkbox
+													id={`split-send-desktop${idSuffix}`}
+													checked={settings.sendDesktop}
+													onCheckedChange={checked => {
+														clearMessageIds()
+														updateSetting('sendDesktop', checked as boolean)
+													}}
+													className="shadow-sm"
+												/>
+											</Label>
+											<Label
+												htmlFor={`split-send-mobile${idSuffix}`}
+												className={cn(optionCheckboxClass, 'flex')}
+											>
+												<span className="inline-flex min-w-0 items-center gap-2 font-medium leading-tight">
+													<Smartphone className="opacity-70 shrink-0" size={14} />
+													Send Mobile
+												</span>
+												<Checkbox
+													id={`split-send-mobile${idSuffix}`}
+													checked={settings.sendMobile}
+													onCheckedChange={checked => {
+														clearMessageIds()
+														updateSetting('sendMobile', checked as boolean)
+													}}
+													className="shadow-sm"
+												/>
+											</Label>
+										</div>
+									)}
 								</div>
 							</div>
 
 							<div className="grid gap-4 sm:grid-cols-2">
-								<div className="space-y-2 sm:col-span-2">
-									<Label
-										htmlFor={`message-content${idSuffix}`}
-										className="text-sm font-semibold flex justify-between"
-									>
-										<span>Message Content</span>
-										<Button
-											variant="ghost"
-											size="sm"
-											className="h-5 px-2 text-xs text-muted-foreground hover:text-primary"
-											onClick={async () => {
-												try {
-													const text = await navigator.clipboard.readText()
-													if (/^\d+$/.test(text)) {
-														updateSetting(
-															'embedContent',
-															`${settings.embedContent}<@&${text}>`,
-														)
-													} else {
-														toast.error('Clipboard content must be a role ID')
-													}
-												} catch (err) {
-													toast.error('Failed to read clipboard')
-												}
-											}}
-										>
-											Paste Role ID (@&)
-										</Button>
-									</Label>
-									<Textarea
-										id={`message-content${idSuffix}`}
-										placeholder={defaultContent}
-										value={settings.embedContent}
-										onChange={e => updateSetting('embedContent', e.target.value)}
-										className="min-h-16 max-h-32 text-sm wrap-anywhere resize-y border-input focus-visible:ring-primary"
-									/>
-								</div>
+								{showDesktopMessageFields && (
+									<>
+										<div className="space-y-2 sm:col-span-2">
+											<Label
+												htmlFor={`message-content${idSuffix}`}
+												className="text-sm font-semibold flex justify-between"
+											>
+												<span className="flex items-center gap-1.5">
+													{settings.splitDesktopMobile && (
+														<Monitor className="size-3.5 text-primary" />
+													)}
+													{settings.splitDesktopMobile ? 'Desktop Message Content' : 'Message Content'}
+												</span>
+												<Button
+													variant="ghost"
+													size="sm"
+													className="h-5 px-2 text-xs text-muted-foreground hover:text-primary"
+													onClick={async () => {
+														try {
+															const text = await navigator.clipboard.readText()
+															if (/^\d+$/.test(text)) {
+																updateSetting(
+																	'embedContent',
+																	`${settings.embedContent}<@&${text}>`,
+																)
+															} else {
+																toast.error('Clipboard content must be a role ID')
+															}
+														} catch {
+															toast.error('Failed to read clipboard')
+														}
+													}}
+												>
+													Paste Role ID (@&)
+												</Button>
+											</Label>
+											<Textarea
+												id={`message-content${idSuffix}`}
+												placeholder={defaultContent}
+												value={settings.embedContent}
+												onChange={e => updateSetting('embedContent', e.target.value)}
+												className="min-h-16 max-h-32 text-sm wrap-anywhere resize-y border-input focus-visible:ring-primary"
+											/>
+										</div>
 
-								<div className="space-y-2 sm:col-span-2">
-									<Label
-										htmlFor={`message-id${idSuffix}`}
-										className="text-sm font-semibold"
-									>
-										Message ID (Edit mode)
-									</Label>
-									<div className="flex items-center ring-1 ring-input rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-all">
-										<Input
-											id={`message-id${idSuffix}`}
-											placeholder="Leave empty to send as a new message"
-											value={messageId}
-											onChange={e => setMessageId(e.target.value)}
-											className="border-0 rounded-none focus-visible:ring-0 text-sm"
-										/>
-										<Button
-											variant="ghost"
-											onClick={async () => {
-												try {
-													const text = await navigator.clipboard.readText()
-													if (/^\d+$/.test(text.trim())) {
-														setMessageId(text.trim())
-													} else {
-														toast.error('Message ID must contain only numbers')
-													}
-												} catch (err) {
-													toast.error('Failed to read clipboard')
+										<div className="space-y-2 sm:col-span-2">
+											<Label
+												htmlFor={`message-id${idSuffix}`}
+												className="text-sm font-semibold flex items-center gap-1.5"
+											>
+												{settings.splitDesktopMobile && (
+													<Monitor className="size-3.5 text-primary" />
+												)}
+												{settings.splitDesktopMobile
+													? 'Desktop Message ID (Edit mode)'
+													: 'Message ID (Edit mode)'}
+											</Label>
+											<div className="flex items-center ring-1 ring-input rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-all">
+												<Input
+													id={`message-id${idSuffix}`}
+													placeholder="Leave empty to send as a new message"
+													value={messageId}
+													onChange={e => setMessageId(e.target.value)}
+													className="border-0 rounded-none focus-visible:ring-0 text-sm"
+												/>
+												<Button
+													variant="ghost"
+													onClick={async () => {
+														try {
+															const text = await navigator.clipboard.readText()
+															if (/^\d+$/.test(text.trim())) {
+																setMessageId(text.trim())
+															} else {
+																toast.error('Message ID must contain only numbers')
+															}
+														} catch {
+															toast.error('Failed to read clipboard')
+														}
+													}}
+													className="px-3 h-full rounded-none border-l hover:bg-accent hover:text-accent-foreground"
+												>
+													<Clipboard className="size-4" />
+												</Button>
+											</div>
+										</div>
+									</>
+								)}
+
+								{showMobileMessageFields && (
+									<>
+										<div className="space-y-2 sm:col-span-2">
+											<Label
+												htmlFor={`message-content-mobile${idSuffix}`}
+												className="text-sm font-semibold flex justify-between"
+											>
+												<span className="flex items-center gap-1.5">
+													<Smartphone className="size-3.5 text-primary" />
+													Mobile Message Content
+												</span>
+												<Button
+													variant="ghost"
+													size="sm"
+													className="h-5 px-2 text-xs text-muted-foreground hover:text-primary"
+													onClick={async () => {
+														try {
+															const text = await navigator.clipboard.readText()
+															if (/^\d+$/.test(text)) {
+																updateSetting(
+																	'embedContentMobile',
+																	`${settings.embedContentMobile}<@&${text}>`,
+																)
+															} else {
+																toast.error('Clipboard content must be a role ID')
+															}
+														} catch {
+															toast.error('Failed to read clipboard')
+														}
+													}}
+												>
+													Paste Role ID (@&)
+												</Button>
+											</Label>
+											<Textarea
+												id={`message-content-mobile${idSuffix}`}
+												placeholder={defaultMobileContent}
+												value={settings.embedContentMobile}
+												onChange={e =>
+													updateSetting('embedContentMobile', e.target.value)
 												}
-											}}
-											className="px-3 h-full rounded-none border-l hover:bg-accent hover:text-accent-foreground"
-										>
-											<Clipboard className="size-4" />
-										</Button>
-									</div>
-								</div>
+												className="min-h-16 max-h-32 text-sm wrap-anywhere resize-y border-input focus-visible:ring-primary"
+											/>
+										</div>
+
+										<div className="space-y-2 sm:col-span-2">
+											<Label
+												htmlFor={`message-id-mobile${idSuffix}`}
+												className="text-sm font-semibold flex items-center gap-1.5"
+											>
+												<Smartphone className="size-3.5 text-primary" />
+												Mobile Message ID (Edit mode)
+											</Label>
+											<div className="flex items-center ring-1 ring-input rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-all">
+												<Input
+													id={`message-id-mobile${idSuffix}`}
+													placeholder="Leave empty to send as a new message"
+													value={mobileMessageId}
+													onChange={e => setMobileMessageId(e.target.value)}
+													className="border-0 rounded-none focus-visible:ring-0 text-sm"
+												/>
+												<Button
+													variant="ghost"
+													onClick={async () => {
+														try {
+															const text = await navigator.clipboard.readText()
+															if (/^\d+$/.test(text.trim())) {
+																setMobileMessageId(text.trim())
+															} else {
+																toast.error('Message ID must contain only numbers')
+															}
+														} catch {
+															toast.error('Failed to read clipboard')
+														}
+													}}
+													className="px-3 h-full rounded-none border-l hover:bg-accent hover:text-accent-foreground"
+												>
+													<Clipboard className="size-4" />
+												</Button>
+											</div>
+										</div>
+									</>
+								)}
 							</div>
 						</CardContent>
 						<CardFooter>
 							<Button
 								onClick={handleWebhook}
-								className={`w-full py-6 text-lg font-bold shadow-lg transition-all duration-300 ${showWarning
+								className={`w-full py-6 text-lg transition-all duration-300 ${showWarning
 									? 'bg-yellow-500 hover:bg-yellow-600 text-black outline-8 outline-yellow-500/20'
 									: 'bg-primary hover:bg-primary/90 text-primary-foreground'
 									}`}
-								disabled={isLoading || !isValidDiscordWebhook(webhookUrl)}
+								disabled={isLoading || !canSendWebhook}
 							>
 								{isLoading ? (
 									<Loader2 className="size-5 animate-spin" />
 								) : showWarning ? (
 									<AlertTriangle className="size-5" />
-								) : messageId ? (
+								) : (settings.splitDesktopMobile
+									? messageId || mobileMessageId
+									: messageId) ? (
 									<Pen className="size-5" />
 								) : (
 									<Send className="size-5" />
 								)}
 								{showWarning
 									? 'Click again to confirm'
-									: messageId
-										? 'Update Existing Message'
-										: 'Send'}
+									: settings.splitDesktopMobile
+										? messageId || mobileMessageId
+											? 'Update Split Messages'
+											: 'Send Split Messages'
+										: messageId
+											? 'Update Existing Message'
+											: 'Send'}
 							</Button>
 						</CardFooter>
 					</Card>
@@ -464,7 +779,7 @@ export default function JsonFormContent({
 					value="appearance"
 					className="space-y-4 focus-visible:outline-none focus-visible:ring-0 mt-0"
 				>
-					<Card className="bg-background dark:bg-[#0a0a0a] border-none overflow-hidden rounded-none p-0 pb-6">
+					<Card className="bg-background dark:bg-[#0a0a0a] border-none overflow-hidden rounded-none p-0 pb-6 gap-4">
 						<CardHeader className="bg-muted/30 py-4 border-b border-border/50">
 							<CardTitle className="text-lg flex items-center gap-2">
 								Appearance
@@ -475,7 +790,7 @@ export default function JsonFormContent({
 						</CardHeader>
 						<CardContent className="space-y-3">
 							<div className="flex items-center justify-between">
-								<Label className="text-sm font-semibold">
+								<Label className="text-base font-semibold">
 									Features
 								</Label>
 								<Button

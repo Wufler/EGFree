@@ -85,14 +85,24 @@ type Game = {
 type EgFreeSettings = {
     selectedGames: { [key: string]: boolean }
     embedContent: string
+    embedContentMobile: string
+    splitDesktopMobile: boolean
+    sendDesktop: boolean
+    sendMobile: boolean
+    useDesktopWebhookForMobile: boolean
     embedColor: string
     includeFooter: boolean
     includePrice: boolean
     includeImage: boolean
     includeCheckout: boolean
     webhookUrl: string
+    webhookUrlMobile: string
     webhookName?: string
     webhookAvatar?: string
+    webhookNameMobile?: string
+    webhookAvatarMobile?: string
+    webhookChannelName?: string
+    webhookChannelNameMobile?: string
     showDiscordPreview: boolean
     includeClaimGame: boolean
     componentsV2: boolean

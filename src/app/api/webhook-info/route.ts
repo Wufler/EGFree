@@ -28,12 +28,17 @@ export async function POST(request: Request) {
         }
 
         const webhookInfo = await response.json()
+        const channelName =
+            webhookInfo.channel?.name ||
+            webhookInfo.source_channel?.name ||
+            (webhookInfo.channel_id ? `#${webhookInfo.channel_id}` : null)
 
         return NextResponse.json({
             name: webhookInfo.name || 'Captain Hook',
             avatar: webhookInfo.avatar
                 ? `https://cdn.discordapp.com/avatars/${webhookInfo.id}/${webhookInfo.avatar}.png`
-                : null
+				: null,
+            channelName,
         })
     } catch (error) {
         console.error('Webhook info fetch error:', error)

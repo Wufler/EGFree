@@ -6,6 +6,7 @@ import { getEffectiveGames, getMobileGameKey } from '@/lib/utils'
 import Discord from '../ui/discord'
 
 const defaultContent = '<@&847939354978811924>'
+const defaultMobileContent = '<@&1494404105471266936>'
 const EMPTY_MOBILE_GAMES: MobileGameDataLocal[] = []
 
 function PreviewLinkButton({ href, label }: { href: string; label: string }) {
@@ -43,25 +44,100 @@ export default function DiscordPreview({
 	checkoutLink?: string
 	parsedMobileGames?: MobileGameDataLocal[]
 }) {
+	if (settings.splitDesktopMobile && settings.sendDesktop && settings.sendMobile) {
+		return (
+			<div>
+				<div>
+					<div className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-muted/40">
+						Desktop embed in
+						{settings.webhookChannelName && (
+							<span className="ml-1 font-medium normal-case tracking-normal">
+								{settings.webhookChannelName}
+							</span>
+						)}
+					</div>
+					<DiscordPreview
+						games={games}
+						settings={{
+							...settings,
+							sendDesktop: true,
+							sendMobile: false,
+						}}
+						checkoutLink={checkoutLink}
+						parsedMobileGames={parsedMobileGames}
+					/>
+				</div>
+				<div>
+					<div className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-muted/40">
+						Mobile embed in
+						{(settings.useDesktopWebhookForMobile
+							? settings.webhookChannelName
+							: settings.webhookChannelNameMobile) && (
+							<span className="ml-1 font-medium normal-case tracking-normal">
+								{settings.useDesktopWebhookForMobile
+									? settings.webhookChannelName
+									: settings.webhookChannelNameMobile}
+							</span>
+						)}
+					</div>
+					<DiscordPreview
+						games={games}
+						settings={{
+							...settings,
+							sendDesktop: false,
+							sendMobile: true,
+							embedContent: settings.embedContentMobile,
+							webhookName: settings.useDesktopWebhookForMobile
+								? settings.webhookName
+								: settings.webhookNameMobile,
+							webhookAvatar: settings.useDesktopWebhookForMobile
+								? settings.webhookAvatar
+								: settings.webhookAvatarMobile,
+							webhookChannelName: settings.useDesktopWebhookForMobile
+								? settings.webhookChannelName
+								: settings.webhookChannelNameMobile,
+						}}
+						checkoutLink={checkoutLink}
+						parsedMobileGames={parsedMobileGames}
+					/>
+				</div>
+			</div>
+		)
+	}
+
 	const effectiveGames = getEffectiveGames(games)
+	const includeDesktopGames = !settings.splitDesktopMobile || settings.sendDesktop
+	const includeMobileGames = !settings.splitDesktopMobile || settings.sendMobile
 	const selectedGames = [
 		...effectiveGames.currentGames,
 		...effectiveGames.nextGames,
-	].filter(game => settings.selectedGames[game.id])
+	].filter(game => includeDesktopGames && settings.selectedGames[game.id])
 
 	const mysteryGames = effectiveGames.currentGames.some(
 		game => game.seller?.name === 'Epic Dev Test Account',
 	)
 
 	const selectedMobileCount = parsedMobileGames.filter(
-		game => settings.selectedGames[getMobileGameKey(game)],
+		game => includeMobileGames && settings.selectedGames[getMobileGameKey(game)],
 	).length
+	const messageContent =
+		settings.splitDesktopMobile && !settings.sendDesktop && settings.sendMobile
+			? settings.embedContentMobile || defaultMobileContent
+			: settings.embedContent || defaultContent
+	const previewWebhookName =
+		settings.splitDesktopMobile && !settings.sendDesktop && settings.sendMobile
+			? settings.webhookNameMobile || settings.webhookName
+			: settings.webhookName
+	const previewWebhookAvatar =
+		settings.splitDesktopMobile && !settings.sendDesktop && settings.sendMobile
+			? settings.webhookAvatarMobile || settings.webhookAvatar
+			: settings.webhookAvatar
 
 	const generateBulkCheckoutUrl = () => {
 		if (mysteryGames) return null
 
 		const pcOffers = effectiveGames.currentGames
-			.filter(game => settings.selectedGames[game.id])
+			.filter(game => includeDesktopGames && settings.selectedGames[game.id])
 			.map(game => {
 				if (!game.namespace || !game.id) return null
 				return `1-${game.namespace}-${game.id}-`
@@ -69,7 +145,10 @@ export default function DiscordPreview({
 			.filter(Boolean)
 
 		const mobileOffers = parsedMobileGames
-			.filter(game => settings.selectedGames[getMobileGameKey(game)])
+			.filter(
+				game =>
+					includeMobileGames && settings.selectedGames[getMobileGameKey(game)],
+			)
 			.flatMap(mg => {
 				const offers: string[] = []
 				if (mg.iosOffer) offers.push(`1-${mg.namespace}-${mg.iosOffer.id}--`)
@@ -113,7 +192,7 @@ export default function DiscordPreview({
 
 	const normalizedCheckoutLink = normalizeCheckoutUrl(checkoutLink)
 	const selectedCurrentGamesCount = effectiveGames.currentGames.filter(
-		game => settings.selectedGames[game.id],
+		game => includeDesktopGames && settings.selectedGames[game.id],
 	).length
 	const componentsV2CheckoutHref =
 		settings.includeCheckout &&
@@ -148,9 +227,9 @@ export default function DiscordPreview({
 		<div className="bg-[#ffffff] dark:bg-[#313338] dark:text-white p-4 wrap-anywhere w-full">
 			<div className="flex gap-4">
 				<div className="shrink-0">
-					{settings.webhookAvatar ? (
+					{previewWebhookAvatar ? (
 						<Image
-							src={settings.webhookAvatar}
+							src={previewWebhookAvatar}
 							alt="Webhook Avatar"
 							className="rounded-full size-10 mt-1"
 							width={40}
@@ -166,7 +245,7 @@ export default function DiscordPreview({
 				<div className="grow">
 					<div className="flex items-center gap-1 mb-1">
 						<div className="font-medium">
-							{settings.webhookName || 'Captain Hook'}
+							{previewWebhookName || 'Captain Hook'}
 						</div>
 						<div className="dark:bg-[#6263ed] bg-[#5865f2] ml-0.5 text-white rounded-sm px-1.25 font-semibold text-xs mt-0.5">
 							APP
@@ -176,7 +255,7 @@ export default function DiscordPreview({
 						</div>
 					</div>
 					<div className="mb-2 text-sm">
-						{(settings.embedContent || defaultContent)
+						{messageContent
 							.split(/(<@&\d+>)/)
 							.map((part, i) => {
 								const roleMatch = part.match(/^<@&(\d+)>$/)
@@ -502,7 +581,11 @@ export default function DiscordPreview({
 					})}
 
 					{parsedMobileGames
-						.filter(game => settings.selectedGames[getMobileGameKey(game)])
+						.filter(
+							game =>
+								includeMobileGames &&
+								settings.selectedGames[getMobileGameKey(game)],
+						)
 						.map(game => {
 							const endDate = game.promoEndDate ? new Date(game.promoEndDate) : null
 							const isCombined = Boolean(game.iosOffer && game.androidOffer)
