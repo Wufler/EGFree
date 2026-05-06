@@ -596,7 +596,7 @@ export default function List({
 						</TabsTrigger>
 						<TabsTrigger value="current" className={mobileTabTriggerClass}>
 							<	Gem className="size-4" />
-							{activeTab === 'current' && <span>Free Now</span>}
+							{activeTab === 'current' && <span>Desktop</span>}
 						</TabsTrigger>
 						<TabsTrigger value="upcoming" className={mobileTabTriggerClass}>
 							<Calendar className="size-4" />
@@ -624,37 +624,23 @@ export default function List({
 				</div>
 
 				{/* Desktop Sidebar */}
-				<aside className="hidden lg:flex lg:flex-col lg:self-stretch lg:min-h-[calc(100dvh-10rem)] border-r bg-background/50">
-					<div className="p-6 lg:sticky lg:top-0 lg:max-h-[calc(100dvh-10rem)] lg:overflow-y-auto lg:h-full lg:min-h-0">
-						<div className="space-y-6">
+				<aside className="hidden lg:block lg:self-stretch border-r bg-background/50">
+					<div className="p-6 lg:sticky lg:top-0 lg:max-h-dvh lg:overflow-y-auto">
+						<div className="space-y-1">
 							<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
 								<TabsTrigger value="home" className={desktopSidebarTriggerClass}>
-									<HomeIcon className="size-4" /> Home
+									<HomeIcon className="size-4 text-epic-blue" /> <span className="text-epic-blue">Home</span>
 								</TabsTrigger>
 							</TabsList>
-							<div className="space-y-1">
-								<h4 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-									Desktop
-								</h4>
-								<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
-									<TabsTrigger value="current" className={desktopSidebarTriggerClass}>
-										<Monitor className="size-4" /> Free Now
-									</TabsTrigger>
-									<TabsTrigger value="upcoming" className={desktopSidebarTriggerClass}>
-										<Calendar className="size-4" /> Upcoming
-									</TabsTrigger>
-								</TabsList>
-							</div>
-
-							{(activeMobileGames.length > 0 || expiredMobileGames.length > 0) && (
-								<div className="space-y-1">
-									<h4 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-										Mobile
-									</h4>
-									<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
+							<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
+								<TabsTrigger value="current" className={desktopSidebarTriggerClass}>
+									<Monitor className="size-4" /> Desktop
+								</TabsTrigger>
+								{(activeMobileGames.length > 0 || expiredMobileGames.length > 0) && (
+									<>
 										{activeMobileGames.length > 0 && (
 											<TabsTrigger value="mobile" className={desktopSidebarTriggerClass}>
-												<Smartphone className="size-4" /> Free Now
+												<Smartphone className="size-4" /> Mobile
 											</TabsTrigger>
 										)}
 										{expiredMobileGames.length > 0 && (
@@ -662,20 +648,15 @@ export default function List({
 												<XCircle className="size-4" /> Expired
 											</TabsTrigger>
 										)}
-									</TabsList>
-								</div>
-							)}
-
-							<div className="space-y-1">
-								<h4 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-									Actions
-								</h4>
-								<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
-									<TabsTrigger value="claim" className={desktopSidebarTriggerClass}>
-										<ShoppingCart className="size-4" /> Claim Games
-									</TabsTrigger>
-								</TabsList>
-							</div>
+									</>
+								)}
+								<TabsTrigger value="upcoming" className={desktopSidebarTriggerClass}>
+									<Calendar className="size-4" /> Upcoming
+								</TabsTrigger>
+								<TabsTrigger value="claim" className={desktopSidebarTriggerClass}>
+									<ShoppingCart className="size-4" /> Claim Games
+								</TabsTrigger>
+							</TabsList>
 						</div>
 					</div>
 				</aside>

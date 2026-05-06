@@ -142,22 +142,25 @@ export function buildPayloadContext(
 	parsedMobileGames: MobileGameDataLocal[],
 ): PayloadBuildContext {
 	const effectiveGames = getEffectiveGames(games)
+	const includeDesktopGames = !settings.splitDesktopMobile || settings.sendDesktop
+	const includeMobileGames = !settings.splitDesktopMobile || settings.sendMobile
 	const selectedGames = [
 		...effectiveGames.currentGames,
 		...effectiveGames.nextGames,
-	].filter(game => settings.selectedGames[game.id])
+	].filter(game => includeDesktopGames && settings.selectedGames[game.id])
 	const mysteryGames = effectiveGames.currentGames.some(
 		game => game.seller?.name === 'Epic Dev Test Account',
 	)
 	const now = new Date()
 	const selectedMobileGames = parsedMobileGames.filter(
 		game =>
+			includeMobileGames &&
 			settings.selectedGames[getMobileGameKey(game)] &&
 			game.promoEndDate &&
 			new Date(game.promoEndDate) > now,
 	)
 	const selectedCurrentGames = effectiveGames.currentGames.filter(
-		game => settings.selectedGames[game.id],
+		game => includeDesktopGames && settings.selectedGames[game.id],
 	)
 	const bulkCheckoutUrl = buildBulkCheckoutUrl(
 		selectedCurrentGames,

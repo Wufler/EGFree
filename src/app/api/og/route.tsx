@@ -97,12 +97,12 @@ export const GET = async () => {
 						}}
 					>
 						{isCurrentGame
-							? 'Free Now'
+							? 'Desktop'
 							: `${format(
-									game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0]
-										.startDate,
-									'MMM d'
-							  )}`}
+								game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0]
+									.startDate,
+								'MMM d'
+							)}`}
 					</span>
 					<span
 						style={{
