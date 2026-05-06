@@ -615,16 +615,16 @@ export default function List({
 							<Monitor className="size-4" />
 							{activeTab === 'current' && <span>Desktop</span>}
 						</TabsTrigger>
-						<TabsTrigger value="upcoming" className={mobileTabTriggerClass}>
-							<Calendar className="size-4" />
-							{activeTab === 'upcoming' && <span>Upcoming</span>}
-						</TabsTrigger>
 						{activeMobileGames.length > 0 && (
 							<TabsTrigger value="mobile" className={mobileTabTriggerClass}>
 								<Smartphone className="size-4" />
 								{activeTab === 'mobile' && <span>Mobile</span>}
 							</TabsTrigger>
 						)}
+						<TabsTrigger value="upcoming" className={mobileTabTriggerClass}>
+							<Calendar className="size-4" />
+							{activeTab === 'upcoming' && <span>Upcoming</span>}
+						</TabsTrigger>
 						{expiredMobileGames.length > 0 && (
 							<TabsTrigger value="expired" className={mobileTabTriggerClass}>
 								<XCircle className="size-4" />

@@ -452,7 +452,7 @@ export default function JsonFormContent({
 											>
 												<span className="inline-flex min-w-0 items-center gap-2 font-medium leading-tight">
 													<ArrowRightLeft className="opacity-70 shrink-0" size={14} />
-													Same webhook for both
+													Use same webhook for both
 												</span>
 												<Checkbox
 													id={`split-use-desktop-webhook${idSuffix}`}
