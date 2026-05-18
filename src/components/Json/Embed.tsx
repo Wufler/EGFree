@@ -44,7 +44,11 @@ export default function DiscordPreview({
 	checkoutLink?: string
 	parsedMobileGames?: MobileGameDataLocal[]
 }) {
-	if (settings.splitDesktopMobile && settings.sendDesktop && settings.sendMobile) {
+	if (
+		settings.splitDesktopMobile &&
+		settings.sendDesktop &&
+		settings.sendMobile
+	) {
 		return (
 			<div>
 				<div>
@@ -106,7 +110,8 @@ export default function DiscordPreview({
 	}
 
 	const effectiveGames = getEffectiveGames(games)
-	const includeDesktopGames = !settings.splitDesktopMobile || settings.sendDesktop
+	const includeDesktopGames =
+		!settings.splitDesktopMobile || settings.sendDesktop
 	const includeMobileGames = !settings.splitDesktopMobile || settings.sendMobile
 	const selectedGames = [
 		...effectiveGames.currentGames,
@@ -196,8 +201,8 @@ export default function DiscordPreview({
 	).length
 	const componentsV2CheckoutHref =
 		settings.includeCheckout &&
-			selectedCurrentGamesCount + selectedMobileCount > 1 &&
-			(!mysteryGames || normalizedCheckoutLink)
+		selectedCurrentGamesCount + selectedMobileCount > 1 &&
+		(!mysteryGames || normalizedCheckoutLink)
 			? normalizedCheckoutLink || bulkCheckoutUrl
 			: null
 
@@ -244,9 +249,7 @@ export default function DiscordPreview({
 				</div>
 				<div className="grow">
 					<div className="flex items-center gap-1 mb-1">
-						<div className="font-medium">
-							{previewWebhookName || 'Captain Hook'}
-						</div>
+						<div className="font-medium">{previewWebhookName || 'Captain Hook'}</div>
 						<div className="dark:bg-[#6263ed] bg-[#5865f2] ml-0.5 text-white rounded-sm px-1.25 font-semibold text-xs mt-0.5">
 							APP
 						</div>
@@ -255,29 +258,27 @@ export default function DiscordPreview({
 						</div>
 					</div>
 					<div className="mb-2 text-sm">
-						{messageContent
-							.split(/(<@&\d+>)/)
-							.map((part, i) => {
-								const roleMatch = part.match(/^<@&(\d+)>$/)
-								if (roleMatch) {
-									return (
-										<span
-											key={i}
-											className="text-[#535ec8] dark:text-[#c9cdfb] bg-[#e6e8fd] dark:bg-[#3c4270] rounded-sm py-0.5 px-1"
-										>
-											@role
-										</span>
-									)
-								}
-								return part
-							})}
+						{messageContent.split(/(<@&\d+>)/).map((part, i) => {
+							const roleMatch = part.match(/^<@&(\d+)>$/)
+							if (roleMatch) {
+								return (
+									<span
+										key={i}
+										className="text-[#535ec8] dark:text-[#c9cdfb] bg-[#e6e8fd] dark:bg-[#3c4270] rounded-sm py-0.5 px-1"
+									>
+										@role
+									</span>
+								)
+							}
+							return part
+						})}
 					</div>
 					{selectedGames.map((game: GameItem) => {
 						const isCurrent = game.promotions.promotionalOffers.length > 0
 						const dateInfo = isCurrent
 							? game.promotions.promotionalOffers[0].promotionalOffers[0].endDate
 							: game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0]
-								.startDate
+									.startDate
 						const endDate = new Date(dateInfo)
 						const rawPageSlug =
 							game.productSlug || game.offerMappings?.[0]?.pageSlug || game.urlSlug
@@ -534,8 +535,8 @@ export default function DiscordPreview({
 												const checkoutUrl = getCheckoutUrl(game)
 												const manualCheckoutUrl =
 													settings.includeCheckout &&
-														normalizedCheckoutLink &&
-														selectedCurrentGamesCount === 1
+													normalizedCheckoutLink &&
+													selectedCurrentGamesCount === 1
 														? normalizedCheckoutLink
 														: null
 												const claimUrl =
@@ -583,8 +584,7 @@ export default function DiscordPreview({
 					{parsedMobileGames
 						.filter(
 							game =>
-								includeMobileGames &&
-								settings.selectedGames[getMobileGameKey(game)],
+								includeMobileGames && settings.selectedGames[getMobileGameKey(game)],
 						)
 						.map(game => {
 							const endDate = game.promoEndDate ? new Date(game.promoEndDate) : null

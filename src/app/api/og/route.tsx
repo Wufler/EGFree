@@ -13,7 +13,7 @@ export const GET = async () => {
 				img.type === 'OfferImageWide' ||
 				img.type === 'VaultClosed' ||
 				img.type === 'DieselStoreFrontWide' ||
-				img.type === 'DieselGameBoxWide'
+				img.type === 'DieselGameBoxWide',
 		)?.url
 
 		return (
@@ -99,10 +99,10 @@ export const GET = async () => {
 						{isCurrentGame
 							? 'Desktop'
 							: `${format(
-								game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0]
-									.startDate,
-								'MMM d'
-							)}`}
+									game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0]
+										.startDate,
+									'MMM d',
+								)}`}
 					</span>
 					<span
 						style={{
@@ -121,57 +121,55 @@ export const GET = async () => {
 	}
 
 	return new ImageResponse(
-		(
+		<div
+			style={{
+				fontSize: 32,
+				background:
+					'linear-gradient(135deg, #0E1E45 0%, #1A2A5E 25%, #2C3875 50%, #3E468C 75%, #5054A3 100%)',
+				width: '100%',
+				height: '100%',
+				display: 'flex',
+				flexDirection: 'column',
+				alignItems: 'center',
+				justifyContent: 'center',
+				color: 'white',
+				paddingTop: '65px',
+			}}
+		>
+			<div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+				{games.currentGames.map(game => renderGameCard(game, true))}
+			</div>
+			<div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+				{games.nextGames.map(game => renderGameCard(game, false))}
+			</div>
 			<div
 				style={{
-					fontSize: 32,
-					background:
-						'linear-gradient(135deg, #0E1E45 0%, #1A2A5E 25%, #2C3875 50%, #3E468C 75%, #5054A3 100%)',
-					width: '100%',
-					height: '100%',
 					display: 'flex',
-					flexDirection: 'column',
-					alignItems: 'center',
-					justifyContent: 'center',
-					color: 'white',
-					paddingTop: '65px',
+					position: 'absolute',
+					bottom: 10,
+					right: 10,
+					fontSize: 12,
+					opacity: 0.5,
 				}}
 			>
-				<div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-					{games.currentGames.map(game => renderGameCard(game, true))}
-				</div>
-				<div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-					{games.nextGames.map(game => renderGameCard(game, false))}
-				</div>
-				<div
-					style={{
-						display: 'flex',
-						position: 'absolute',
-						bottom: 10,
-						right: 10,
-						fontSize: 12,
-						opacity: 0.5,
-					}}
-				>
-					{new Date().toLocaleString()}
-				</div>
-				<div
-					style={{
-						display: 'flex',
-						position: 'absolute',
-						bottom: 10,
-						left: 10,
-						fontSize: 12,
-						opacity: 0.5,
-					}}
-				>
-					Epic Games Free Games
-				</div>
+				{new Date().toLocaleString()}
 			</div>
-		),
+			<div
+				style={{
+					display: 'flex',
+					position: 'absolute',
+					bottom: 10,
+					left: 10,
+					fontSize: 12,
+					opacity: 0.5,
+				}}
+			>
+				Epic Games Free Games
+			</div>
+		</div>,
 		{
 			width: 1280,
 			height: 720,
-		}
+		},
 	)
 }

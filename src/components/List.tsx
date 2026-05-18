@@ -1,5 +1,12 @@
 'use client'
-import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from 'react'
+import {
+	useState,
+	useEffect,
+	useRef,
+	useCallback,
+	useMemo,
+	type ReactNode,
+} from 'react'
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { calculateTimeLeft } from '@/lib/calculateTime'
@@ -80,8 +87,9 @@ function TimeDisplay({
 
 	return (
 		<div
-			className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-bold text-white ${type === 'end' ? 'bg-epic-blue' : 'bg-black'
-				}`}
+			className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-bold text-white ${
+				type === 'end' ? 'bg-epic-blue' : 'bg-black'
+			}`}
 		>
 			<Clock className="size-3.5" />
 			<span>{timeLeft === 'Expired' ? 'Loading...' : timeLeft}</span>
@@ -103,8 +111,9 @@ function SectionHeader({
 	return (
 		<div className="mb-5 flex items-center gap-3">
 			<div
-				className={`rounded-xl p-2.5 shadow-sm ${primary ? 'bg-epic-blue text-white' : 'bg-secondary text-foreground'
-					}`}
+				className={`rounded-xl p-2.5 shadow-sm ${
+					primary ? 'bg-epic-blue text-white' : 'bg-secondary text-foreground'
+				}`}
 			>
 				<Icon className="size-5" />
 			</div>
@@ -260,7 +269,7 @@ export default function List({
 			if (isCurrentGame) {
 				return new Date(
 					game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0]?.endDate ??
-					'',
+						'',
 				)
 			}
 			return new Date(
@@ -324,18 +333,19 @@ export default function List({
 									<div className="mt-1 flex items-center gap-1.5">
 										{!isCurrentGame &&
 											game.price.totalPrice.discountPrice !==
-											game.price.totalPrice.originalPrice && (
+												game.price.totalPrice.originalPrice && (
 												<span className="text-sm font-bold text-white">
 													{game.price.totalPrice.fmtPrice.discountPrice}
 												</span>
 											)}
 										<span
-											className={`text-xs font-medium text-gray-400 ${isCurrentGame ||
+											className={`text-xs font-medium text-gray-400 ${
+												isCurrentGame ||
 												game.price.totalPrice.discountPrice !==
-												game.price.totalPrice.originalPrice
-												? 'line-through'
-												: ''
-												}`}
+													game.price.totalPrice.originalPrice
+													? 'line-through'
+													: ''
+											}`}
 										>
 											{game.price.totalPrice.fmtPrice.originalPrice}
 										</span>
@@ -405,8 +415,9 @@ export default function List({
 							height={720}
 							priority
 							alt={game.title}
-							className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${isExpired ? 'grayscale' : ''
-								}`}
+							className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+								isExpired ? 'grayscale' : ''
+							}`}
 						/>
 					) : (
 						<div className="flex h-full w-full items-center justify-center bg-epic-dark-blue">
@@ -448,8 +459,9 @@ export default function List({
 								{game.originalPrice !== 0 && (
 									<div className="mt-1 flex items-center gap-1.5">
 										<span
-											className={`text-xs font-medium text-gray-400 ${!isExpired ? 'line-through' : ''
-												}`}
+											className={`text-xs font-medium text-gray-400 ${
+												!isExpired ? 'line-through' : ''
+											}`}
 										>
 											{new Intl.NumberFormat('en-US', {
 												style: 'currency',
@@ -518,16 +530,18 @@ export default function List({
 	)
 
 	const totalFreeNow = effectiveGames.currentGames.length
-	const isSingleGame = totalFreeNow === 1 && effectiveGames.nextGames.length === 1
+	const isSingleGame =
+		totalFreeNow === 1 && effectiveGames.nextGames.length === 1
 	const isTwoCurrentGames = totalFreeNow <= 2
 	const isTwoUpcomingGames = effectiveGames.nextGames.length <= 2
 
-	const gridClassName = `grid gap-4 ${isSingleGame
-		? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2'
-		: isTwoCurrentGames && isTwoUpcomingGames
+	const gridClassName = `grid gap-4 ${
+		isSingleGame
 			? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2'
-			: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-		}`
+			: isTwoCurrentGames && isTwoUpcomingGames
+				? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2'
+				: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+	}`
 
 	const mobileTabTriggerClass =
 		'shrink-0 relative rounded-none py-3 px-3 sm:px-4 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-epic-blue text-sm font-medium data-[state=active]:text-epic-blue text-muted-foreground inline-flex items-center justify-center gap-2'
@@ -585,7 +599,9 @@ export default function List({
 					<NoOffers />
 				)
 			case 'claim':
-				return <ClaimTab games={effectiveGames} parsedMobileGames={activeMobileGames} />
+				return (
+					<ClaimTab games={effectiveGames} parsedMobileGames={activeMobileGames} />
+				)
 			default:
 				return null
 		}
@@ -631,7 +647,8 @@ export default function List({
 								{activeTab === 'expired' && <span>Expired</span>}
 							</TabsTrigger>
 						)}
-						{(effectiveGames.currentGames.length > 0 || activeMobileGames.length > 0) && (
+						{(effectiveGames.currentGames.length > 0 ||
+							activeMobileGames.length > 0) && (
 							<TabsTrigger value="claim" className={mobileTabTriggerClass}>
 								<ShoppingCart className="size-4" />
 								{activeTab === 'claim' && <span>Claim</span>}
@@ -646,7 +663,8 @@ export default function List({
 						<div className="space-y-1">
 							<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
 								<TabsTrigger value="home" className={desktopSidebarTriggerClass}>
-									<HomeIcon className="size-4 text-epic-blue" /> <span className="text-epic-blue">Home</span>
+									<HomeIcon className="size-4 text-epic-blue" />{' '}
+									<span className="text-epic-blue">Home</span>
 								</TabsTrigger>
 							</TabsList>
 							<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
@@ -752,11 +770,17 @@ export default function List({
 							className="mt-0 outline-none animate-in fade-in duration-300"
 						>
 							<div className="lg:hidden">
-								<ClaimTab games={effectiveGames} parsedMobileGames={activeMobileGames} />
+								<ClaimTab
+									games={effectiveGames}
+									parsedMobileGames={activeMobileGames}
+								/>
 							</div>
 							<div className="hidden lg:block max-w-2xl">
 								<SectionHeader icon={ShoppingCart} title="Claim Games" />
-								<ClaimTab games={effectiveGames} parsedMobileGames={activeMobileGames} />
+								<ClaimTab
+									games={effectiveGames}
+									parsedMobileGames={activeMobileGames}
+								/>
 							</div>
 						</TabsContent>
 					</div>

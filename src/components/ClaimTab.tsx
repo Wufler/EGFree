@@ -157,15 +157,12 @@ export default function ClaimTab({
 										size="sm"
 										className="flex items-center gap-2"
 										onClick={() => {
-											const url = mobileCheckoutUrlForPlatform(
-												combinedDialogGame,
-												'ios',
-											)
+											const url = mobileCheckoutUrlForPlatform(combinedDialogGame, 'ios')
 											if (url) copyToClipboard(url)
 										}}
 									>
 										{copiedUrl ===
-											mobileCheckoutUrlForPlatform(combinedDialogGame, 'ios') ? (
+										mobileCheckoutUrlForPlatform(combinedDialogGame, 'ios') ? (
 											<Check className="size-4" />
 										) : (
 											<Copy className="size-4" />
@@ -174,9 +171,7 @@ export default function ClaimTab({
 									</Button>
 									<Button size="sm" className="flex items-center gap-2" asChild>
 										<a
-											href={
-												mobileCheckoutUrlForPlatform(combinedDialogGame, 'ios') ?? '#'
-											}
+											href={mobileCheckoutUrlForPlatform(combinedDialogGame, 'ios') ?? '#'}
 											target="_blank"
 											rel="noopener noreferrer"
 										>
@@ -202,7 +197,7 @@ export default function ClaimTab({
 										}}
 									>
 										{copiedUrl ===
-											mobileCheckoutUrlForPlatform(combinedDialogGame, 'android') ? (
+										mobileCheckoutUrlForPlatform(combinedDialogGame, 'android') ? (
 											<Check className="size-4" />
 										) : (
 											<Copy className="size-4" />
@@ -212,8 +207,7 @@ export default function ClaimTab({
 									<Button size="sm" className="flex items-center gap-2" asChild>
 										<a
 											href={
-												mobileCheckoutUrlForPlatform(combinedDialogGame, 'android') ??
-												'#'
+												mobileCheckoutUrlForPlatform(combinedDialogGame, 'android') ?? '#'
 											}
 											target="_blank"
 											rel="noopener noreferrer"
@@ -241,9 +235,7 @@ export default function ClaimTab({
 							{bulkCheckoutUrl &&
 								games.currentGames.length + activeMobileGames.length > 1 && (
 									<div className="bg-epic-blue/10 flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between p-3 border rounded-lg">
-										<h4 className="font-semibold text-epic-blue">
-											Claim All Free Games
-										</h4>
+										<h4 className="font-semibold text-epic-blue">Claim All Free Games</h4>
 										<div className="flex items-center gap-2">
 											<Button
 												variant="outline"
@@ -326,9 +318,7 @@ export default function ClaimTab({
 								})}
 								{activeMobileGames.map(mg => {
 									const checkoutUrl = generateMobileCheckoutUrl(mg)
-									const hasBothPlatforms = Boolean(
-										mg.iosOffer && mg.androidOffer,
-									)
+									const hasBothPlatforms = Boolean(mg.iosOffer && mg.androidOffer)
 									if (!checkoutUrl) return null
 									const platformLabel =
 										mg.iosOffer && mg.androidOffer
@@ -394,11 +384,7 @@ export default function ClaimTab({
 															className="flex items-center gap-2 bg-epic-blue hover:bg-epic-blue/90"
 															asChild
 														>
-															<a
-																href={checkoutUrl}
-																target="_blank"
-																rel="noopener noreferrer"
-															>
+															<a href={checkoutUrl} target="_blank" rel="noopener noreferrer">
 																<ExternalLink className="size-4" />
 																Claim
 															</a>

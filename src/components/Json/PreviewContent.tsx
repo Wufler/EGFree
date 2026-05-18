@@ -122,12 +122,7 @@ export default function JsonPreviewContent({
 			)}
 			{!settings.componentsV2 && (
 				<div className="flex justify-center p-2">
-					<Button
-						variant="outline"
-						size="default"
-						className="w-full"
-						asChild
-					>
+					<Button variant="outline" size="default" className="w-full" asChild>
 						<Link href={builderUrl} target="_blank">
 							<Hammer className="size-5" />
 							Open in Builder

@@ -37,7 +37,7 @@ export async function POST(request: Request) {
             name: webhookInfo.name || 'Captain Hook',
             avatar: webhookInfo.avatar
                 ? `https://cdn.discordapp.com/avatars/${webhookInfo.id}/${webhookInfo.avatar}.png`
-				: null,
+                : null,
             channelName,
         })
     } catch (error) {

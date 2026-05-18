@@ -85,7 +85,13 @@ function GameSelectionList({
 		<div className="space-y-3 p-3 rounded-lg bg-card/50 border shadow-xs">
 			<div className="flex items-center justify-between pb-2 border-b border-border/50">
 				<div className="flex items-center gap-2 text-sm font-semibold text-primary">
-					{type === 'Desktop' ? <Monitor className="size-4" /> : type === 'Mobile' ? <Smartphone className="size-4" /> : <CalendarDays className="size-4" />}
+					{type === 'Desktop' ? (
+						<Monitor className="size-4" />
+					) : type === 'Mobile' ? (
+						<Smartphone className="size-4" />
+					) : (
+						<CalendarDays className="size-4" />
+					)}
 					{type}
 				</div>
 				<Button
@@ -115,9 +121,7 @@ function GameSelectionList({
 							}}
 							className="mt-0"
 						/>
-						<span className="font-medium text-sm cursor-pointer">
-							{game.title}
-						</span>
+						<span className="font-medium text-sm cursor-pointer">{game.title}</span>
 					</Label>
 				))}
 			</div>
@@ -230,14 +234,20 @@ export default function JsonFormContent({
 
 	return (
 		<div className="w-full">
-			<Tabs
-				defaultValue="discord"
-				className="w-full gap-0 bg-muted/30"
-			>
+			<Tabs defaultValue="discord" className="w-full gap-0 bg-muted/30">
 				<TabsList className="grid w-full grid-cols-3 rounded-none bg-transparent">
-					<TabsTrigger value="discord"> <MessageSquare className="size-3.5 text-primary" /> Webhook</TabsTrigger>
-					<TabsTrigger value="games"> <Gamepad2 className="size-3.5 text-primary" /> Games</TabsTrigger>
-					<TabsTrigger value="appearance"> <Palette className="size-3.5 text-primary" /> Theme</TabsTrigger>
+					<TabsTrigger value="discord">
+						{' '}
+						<MessageSquare className="size-3.5 text-primary" /> Webhook
+					</TabsTrigger>
+					<TabsTrigger value="games">
+						{' '}
+						<Gamepad2 className="size-3.5 text-primary" /> Games
+					</TabsTrigger>
+					<TabsTrigger value="appearance">
+						{' '}
+						<Palette className="size-3.5 text-primary" /> Theme
+					</TabsTrigger>
 				</TabsList>
 
 				<TabsContent
@@ -281,10 +291,11 @@ export default function JsonFormContent({
 													setWebhookUrl(e.target.value)
 													debouncedFetchWebhookInfo(e.target.value)
 												}}
-												className={`border-0 rounded-none focus-visible:ring-0 text-sm ${webhookUrl && !isValidDiscordWebhook(webhookUrl)
-													? 'text-red-500'
-													: ''
-													}`}
+												className={`border-0 rounded-none focus-visible:ring-0 text-sm ${
+													webhookUrl && !isValidDiscordWebhook(webhookUrl)
+														? 'text-red-500'
+														: ''
+												}`}
 											/>
 											<AlertDialog>
 												<AlertDialogTrigger asChild>
@@ -305,8 +316,8 @@ export default function JsonFormContent({
 														<AlertDialogDescription className="space-y-2 text-base" asChild>
 															<div>
 																<p>
-																	This will encrypt and save your webhook in your browser&apos;s local
-																	storage and will automatically populate the URL input.
+																	This will encrypt and save your webhook in your browser&apos;s
+																	local storage and will automatically populate the URL input.
 																</p>
 																<p className="font-semibold text-foreground text-sm">
 																	Consider manually pasting the webhook as a safer alternative.
@@ -363,10 +374,11 @@ export default function JsonFormContent({
 														fetchWebhookInfo(e.target.value, 'mobile')
 													}
 												}}
-												className={`border-0 rounded-none focus-visible:ring-0 text-sm ${webhookUrlMobile && !isValidDiscordWebhook(webhookUrlMobile)
-													? 'text-red-500'
-													: ''
-													}`}
+												className={`border-0 rounded-none focus-visible:ring-0 text-sm ${
+													webhookUrlMobile && !isValidDiscordWebhook(webhookUrlMobile)
+														? 'text-red-500'
+														: ''
+												}`}
 											/>
 											<AlertDialog>
 												<AlertDialogTrigger asChild>
@@ -387,8 +399,8 @@ export default function JsonFormContent({
 														<AlertDialogDescription className="space-y-2 text-base" asChild>
 															<div>
 																<p>
-																	This will encrypt and save your mobile webhook in your browser&apos;s local
-																	storage.
+																	This will encrypt and save your mobile webhook in your
+																	browser&apos;s local storage.
 																</p>
 																<p className="font-semibold text-foreground text-sm">
 																	Consider manually pasting the webhook as a safer alternative.
@@ -459,10 +471,7 @@ export default function JsonFormContent({
 													checked={settings.useDesktopWebhookForMobile}
 													onCheckedChange={checked => {
 														clearMessageIds()
-														updateSetting(
-															'useDesktopWebhookForMobile',
-															checked as boolean,
-														)
+														updateSetting('useDesktopWebhookForMobile', checked as boolean)
 													}}
 													className="shadow-sm"
 												/>
@@ -520,7 +529,9 @@ export default function JsonFormContent({
 													{settings.splitDesktopMobile && (
 														<Monitor className="size-3.5 text-primary" />
 													)}
-													{settings.splitDesktopMobile ? 'Desktop Message Content' : 'Message Content'}
+													{settings.splitDesktopMobile
+														? 'Desktop Message Content'
+														: 'Message Content'}
 												</span>
 												<Button
 													variant="ghost"
@@ -635,9 +646,7 @@ export default function JsonFormContent({
 												id={`message-content-mobile${idSuffix}`}
 												placeholder={defaultMobileContent}
 												value={settings.embedContentMobile}
-												onChange={e =>
-													updateSetting('embedContentMobile', e.target.value)
-												}
+												onChange={e => updateSetting('embedContentMobile', e.target.value)}
 												className="min-h-16 max-h-32 text-sm wrap-anywhere resize-y border-input focus-visible:ring-primary"
 											/>
 										</div>
@@ -685,19 +694,20 @@ export default function JsonFormContent({
 						<CardFooter>
 							<Button
 								onClick={handleWebhook}
-								className={`w-full py-6 text-lg transition-all duration-300 ${showWarning
-									? 'bg-yellow-500 hover:bg-yellow-600 text-black outline-8 outline-yellow-500/20'
-									: 'bg-primary hover:bg-primary/90 text-primary-foreground'
-									}`}
+								className={`w-full py-6 text-lg transition-all duration-300 ${
+									showWarning
+										? 'bg-yellow-500 hover:bg-yellow-600 text-black outline-8 outline-yellow-500/20'
+										: 'bg-primary hover:bg-primary/90 text-primary-foreground'
+								}`}
 								disabled={isLoading || !canSendWebhook}
 							>
 								{isLoading ? (
 									<Loader2 className="size-5 animate-spin" />
 								) : showWarning ? (
 									<AlertTriangle className="size-5" />
-								) : (settings.splitDesktopMobile
-									? messageId || mobileMessageId
-									: messageId) ? (
+								) : (
+										settings.splitDesktopMobile ? messageId || mobileMessageId : messageId
+								  ) ? (
 									<Pen className="size-5" />
 								) : (
 									<Send className="size-5" />
@@ -790,9 +800,7 @@ export default function JsonFormContent({
 						</CardHeader>
 						<CardContent className="space-y-3">
 							<div className="flex items-center justify-between">
-								<Label className="text-base font-semibold">
-									Features
-								</Label>
+								<Label className="text-base font-semibold">Features</Label>
 								<Button
 									variant="secondary"
 									size="sm"
@@ -816,10 +824,7 @@ export default function JsonFormContent({
 									className={cn(optionCheckboxClass, 'col-span-1 flex')}
 								>
 									<span className="inline-flex min-w-0 items-center gap-2 font-medium leading-tight">
-										<Paintbrush2
-											className="opacity-70 shrink-0"
-											size={14}
-										/>
+										<Paintbrush2 className="opacity-70 shrink-0" size={14} />
 										Components V2
 									</span>
 									<Checkbox
@@ -838,10 +843,7 @@ export default function JsonFormContent({
 									className={cn(optionCheckboxClass, 'col-span-1 flex')}
 								>
 									<span className="inline-flex min-w-0 items-center gap-2 font-medium leading-tight">
-										<DollarSign
-											className="opacity-70 shrink-0"
-											size={14}
-										/>
+										<DollarSign className="opacity-70 shrink-0" size={14} />
 										Price
 									</span>
 									<Checkbox
@@ -859,10 +861,7 @@ export default function JsonFormContent({
 									className={cn(optionCheckboxClass, 'col-span-1 flex')}
 								>
 									<span className="inline-flex min-w-0 items-center gap-2 font-medium leading-tight">
-										<ImageIcon
-											className="opacity-70 shrink-0"
-											size={14}
-										/>
+										<ImageIcon className="opacity-70 shrink-0" size={14} />
 										Thumbnails
 									</span>
 									<Checkbox
@@ -880,10 +879,7 @@ export default function JsonFormContent({
 									className={cn(optionCheckboxClass, 'col-span-1 flex')}
 								>
 									<span className="inline-flex min-w-0 items-center gap-2 font-medium leading-tight">
-										<Clock
-											className="opacity-70 shrink-0"
-											size={14}
-										/>
+										<Clock className="opacity-70 shrink-0" size={14} />
 										Timestamp
 									</span>
 									<Checkbox
@@ -901,10 +897,7 @@ export default function JsonFormContent({
 									className={cn(optionCheckboxClass, 'col-span-1 flex')}
 								>
 									<span className="inline-flex min-w-0 items-center gap-2 font-medium leading-tight">
-										<ExternalLink
-											className="opacity-70 shrink-0"
-											size={14}
-										/>
+										<ExternalLink className="opacity-70 shrink-0" size={14} />
 										Claim Links
 									</span>
 									<Checkbox
@@ -923,14 +916,11 @@ export default function JsonFormContent({
 										optionCheckboxClass,
 										'col-span-1 flex',
 										selectedCurrentCount < 1 &&
-										'opacity-50 grayscale pointer-events-none',
+											'opacity-50 grayscale pointer-events-none',
 									)}
 								>
 									<span className="inline-flex min-w-0 items-center gap-2 font-medium leading-tight">
-										<ShoppingCart
-											className="opacity-70 shrink-0"
-											size={14}
-										/>
+										<ShoppingCart className="opacity-70 shrink-0" size={14} />
 										Checkout Button
 									</span>
 									<Checkbox
