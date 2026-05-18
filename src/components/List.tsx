@@ -592,7 +592,7 @@ export default function List({
 	}
 
 	return (
-		<div className="w-full min-w-0">
+		<div className="w-full min-w-0 flex-1 flex flex-col">
 			<Tabs
 				defaultValue="home"
 				value={activeTab}
@@ -602,7 +602,7 @@ export default function List({
 						localStorage.setItem('tabState', value)
 					}
 				}}
-				className="w-full min-h-0 flex flex-col gap-0 lg:grid lg:grid-cols-[16rem_1fr] lg:items-start"
+				className="w-full min-h-0 flex flex-col gap-0 flex-1 lg:grid lg:grid-cols-[16rem_1fr]"
 			>
 				{/* Mobile Tabs */}
 				<div className="lg:hidden sticky top-0 z-60 bg-background/80 backdrop-blur-md border-b">
@@ -642,7 +642,7 @@ export default function List({
 
 				{/* Desktop Sidebar */}
 				<aside className="hidden lg:block lg:self-stretch border-r bg-background/50">
-					<div className="p-6 lg:sticky lg:top-0 lg:max-h-dvh lg:overflow-y-auto">
+					<div className="p-6 lg:sticky lg:top-0 lg:max-h-[calc(100dvh-5rem)] lg:overflow-y-auto">
 						<div className="space-y-1">
 							<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
 								<TabsTrigger value="home" className={desktopSidebarTriggerClass}>

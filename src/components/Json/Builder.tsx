@@ -17,7 +17,9 @@ import { encrypt, decrypt } from '@/lib/encryption'
 import { buildDiscordMessagePayload } from '@/lib/builder/payload'
 import { getEffectiveGames, getMobileGameKey } from '@/lib/utils'
 import JsonFormContent from '@/components/Json/FormContent'
-import JsonPreviewContent, { JsonPreviewButtons } from '@/components/Json/PreviewContent'
+import JsonPreviewContent, {
+	JsonPreviewButtons,
+} from '@/components/Json/PreviewContent'
 const defaultColor = '#85ce4b'
 const defaultContent = '<@&847939354978811924>'
 const defaultMobileContent = '<@&1494404105471266936>'
@@ -69,15 +71,19 @@ export default function Json({
 		showDiscordPreview: true,
 	})
 	const activeMobileGames = useMemo(
-		() => mobile.filter(game => game.promoEndDate && new Date(game.promoEndDate) > new Date()),
+		() =>
+			mobile.filter(
+				game => game.promoEndDate && new Date(game.promoEndDate) > new Date(),
+			),
 		[mobile],
 	)
 	const canSplitDesktopMobile = useMemo(() => {
-		const hasSelectedDesktopGames = [...effectiveGames.currentGames, ...effectiveGames.nextGames].some(
-			game => settings.selectedGames[game.id],
-		)
-		const hasSelectedMobileGames = activeMobileGames.some(game =>
-			settings.selectedGames[getMobileGameKey(game)],
+		const hasSelectedDesktopGames = [
+			...effectiveGames.currentGames,
+			...effectiveGames.nextGames,
+		].some(game => settings.selectedGames[game.id])
+		const hasSelectedMobileGames = activeMobileGames.some(
+			game => settings.selectedGames[getMobileGameKey(game)],
 		)
 
 		return hasSelectedDesktopGames && hasSelectedMobileGames
@@ -112,9 +118,7 @@ export default function Json({
 								if (validGameIds.has(gameId)) {
 									cleanedSelectedGames[gameId] = isSelected as boolean
 								} else if (gameId.startsWith('mobile-')) {
-									const mobileExists = mobile.some(
-										g => getMobileGameKey(g) === gameId,
-									)
+									const mobileExists = mobile.some(g => getMobileGameKey(g) === gameId)
 									if (mobileExists) {
 										cleanedSelectedGames[gameId] = isSelected as boolean
 									}
@@ -239,12 +243,7 @@ export default function Json({
 
 	useEffect(() => {
 		setJsonData(
-			buildDiscordMessagePayload(
-				effectiveGames,
-				settings,
-				checkoutLink,
-				mobile,
-			),
+			buildDiscordMessagePayload(effectiveGames, settings, checkoutLink, mobile),
 		)
 	}, [effectiveGames, settings, checkoutLink, mobile])
 
@@ -323,8 +322,7 @@ export default function Json({
 					{ currentGames: [], nextGames: [] },
 					{
 						...settings,
-						embedContent:
-							settings.embedContentMobile || defaultMobileContent,
+						embedContent: settings.embedContentMobile || defaultMobileContent,
 					},
 					checkoutLink,
 					mobile,
@@ -426,7 +424,10 @@ export default function Json({
 		setIsLoading(false)
 	}
 
-	const fetchWebhookInfo = async (url: string, target: 'desktop' | 'mobile' = 'desktop') => {
+	const fetchWebhookInfo = async (
+		url: string,
+		target: 'desktop' | 'mobile' = 'desktop',
+	) => {
 		try {
 			const response = await fetch('/api/webhook-info', {
 				method: 'POST',
@@ -555,7 +556,7 @@ export default function Json({
 				className="max-w-7xl! w-full max-h-[90vh] h-[90vh] overflow-hidden p-0 z-70 flex flex-col"
 			>
 				<div className="flex flex-col lg:flex-row flex-1 min-h-0">
-					<div className="w-full lg:w-2/5 lg:min-w-0 lg:max-w-[520px] border-b lg:border-b-0 lg:border-r flex flex-col flex-1 lg:flex-none lg:shrink-0 min-h-0">
+					<div className="w-full lg:w-2/5 lg:min-w-0 lg:max-w-130 border-b lg:border-b-0 lg:border-r flex flex-col flex-1 lg:flex-none lg:shrink-0 min-h-0">
 						<div className="px-6 py-5 lg:border-b shrink-0 bg-background flex flex-col gap-1.5 items-start justify-center relative z-10">
 							<div className="flex w-full items-center justify-between">
 								<DialogTitle className="flex items-center gap-3 text-xl font-bold tracking-tight">
@@ -575,7 +576,10 @@ export default function Json({
 						</div>
 
 						<div className="block lg:hidden flex-1 min-h-0">
-							<Tabs defaultValue="settings" className="flex h-full flex-col min-h-0 gap-0">
+							<Tabs
+								defaultValue="settings"
+								className="flex h-full flex-col min-h-0 gap-0"
+							>
 								<TabsList className="w-full h-auto rounded-none border-b border-border bg-transparent p-0 shrink-0">
 									<TabsTrigger
 										value="settings"
