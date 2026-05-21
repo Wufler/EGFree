@@ -18,7 +18,7 @@ export default async function Home() {
 	return (
 		<main className="flex min-h-dvh flex-col text-foreground dark:text-white">
 			<div className="w-full mx-auto flex grow flex-col">
-				<header className="z-50 border-b border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black px-8">
+				<header className="border-b border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black px-8">
 					<div className=" mx-auto flex h-14 sm:h-20 items-center justify-between py-4 sm:py-0 gap-4 md:gap-0">
 						<Link
 							href="https://store.epicgames.com/free-games"

@@ -476,7 +476,7 @@ export default function List({
 			<button
 				type="button"
 				key={game.id}
-				className="w-full text-left h-full z-50 animate-in fade-in zoom-in-95 duration-300 block focus-visible:outline-hidden"
+				className="w-full text-left h-full animate-in fade-in zoom-in-95 duration-300 block focus-visible:outline-hidden"
 				onClick={() => setSelectedGame(game)}
 			>
 				{cardContent}
@@ -573,7 +573,7 @@ export default function List({
 			<button
 				type="button"
 				key={getMobileGameKey(game)}
-				className="w-full text-left h-full z-50 animate-in fade-in zoom-in-95 duration-300 block focus-visible:outline-hidden"
+				className="w-full text-left h-full animate-in fade-in zoom-in-95 duration-300 block focus-visible:outline-hidden"
 				onClick={() => setSelectedGame(game)}
 			>
 				{cardContent}
@@ -671,7 +671,7 @@ export default function List({
 				className="w-full min-h-0 flex flex-col gap-0 flex-1 lg:grid lg:grid-cols-[16rem_1fr]"
 			>
 				{/* Mobile Tabs */}
-				<div className="lg:hidden sticky top-0 z-60 bg-background/80 backdrop-blur-md border-b">
+				<div className="lg:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b">
 					<TabsList className="w-full h-auto rounded-none bg-transparent p-0 flex flex-nowrap justify-center overflow-x-auto [&::-webkit-scrollbar]:h-0">
 						<TabsTrigger value="home" className={mobileTabTriggerClass}>
 							<HomeIcon className="size-4" />
