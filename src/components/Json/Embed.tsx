@@ -20,7 +20,7 @@ import Discord from '../ui/discord'
 
 const defaultContent = '<@&847939354978811924>'
 const defaultMobileContent = '<@&1494404105471266936>'
-const EMPTY_MOBILE_GAMES: MobileGameDataLocal[] = []
+const EMPTY_MOBILE_GAMES: MobileGame[] = []
 
 function PreviewLinkButton({ href, label }: { href: string; label: string }) {
 	return (
@@ -55,7 +55,7 @@ export default function DiscordPreview({
 	games: Game
 	settings: EgFreeSettings
 	checkoutLink?: string
-	parsedMobileGames?: MobileGameDataLocal[]
+	parsedMobileGames?: MobileGame[]
 }) {
 	if (
 		settings.splitDesktopMobile &&

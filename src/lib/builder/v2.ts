@@ -68,9 +68,9 @@ function buildDesktopComponentsV2Card(
 
 	const resolveClaimLabel = () =>
 		isCurrent &&
-		!isCurrentlyFree(game) &&
-		isDiscountedGame(game) &&
-		isValidPageSlug
+			!isCurrentlyFree(game) &&
+			isDiscountedGame(game) &&
+			isValidPageSlug
 			? 'Store Page'
 			: getClaimText()
 
@@ -152,7 +152,7 @@ function buildDesktopComponentsV2Card(
 }
 
 function buildMobileComponentsV2Card(
-	game: MobileGameDataLocal,
+	game: MobileGame,
 	settings: EgFreeSettings,
 ): Record<string, unknown> {
 	const iosUrl = epicMobileProductPageUrl(game.iosOffer?.pageSlug)
@@ -269,7 +269,7 @@ export function buildComponentsV2MessagePayload(
 	games: Game,
 	settings: EgFreeSettings,
 	checkoutLink: string,
-	parsedMobileGames: MobileGameDataLocal[],
+	parsedMobileGames: MobileGame[],
 ): object {
 	const {
 		selectedGames,

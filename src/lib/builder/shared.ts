@@ -18,7 +18,7 @@ export type PayloadBuildContext = {
 	effectiveGames: Game
 	selectedGames: GameItem[]
 	selectedCurrentGames: GameItem[]
-	selectedMobileGames: MobileGameDataLocal[]
+	selectedMobileGames: MobileGame[]
 	mysteryGames: boolean
 	bulkCheckoutUrl: string | null
 	normalizedCheckoutLink: string
@@ -139,7 +139,7 @@ export function buildPayloadContext(
 	games: Game,
 	settings: EgFreeSettings,
 	checkoutLink: string,
-	parsedMobileGames: MobileGameDataLocal[],
+	parsedMobileGames: MobileGame[],
 ): PayloadBuildContext {
 	const effectiveGames = getEffectiveGames(games)
 	const includeDesktopGames = !settings.splitDesktopMobile || settings.sendDesktop
@@ -187,7 +187,7 @@ export function getCheckoutUrl(game: GameItem): string | null {
 	return `https://store.epicgames.com/purchase?offers=1-${game.namespace}-${game.id}-#`
 }
 
-export function getMobileCheckoutUrl(game: MobileGameDataLocal): string | null {
+export function getMobileCheckoutUrl(game: MobileGame): string | null {
 	const offerParams: string[] = []
 	if (game.iosOffer) offerParams.push(`1-${game.namespace}-${game.iosOffer.id}--`)
 	if (game.androidOffer)
@@ -197,7 +197,7 @@ export function getMobileCheckoutUrl(game: MobileGameDataLocal): string | null {
 }
 
 export function getMobileCheckoutUrlForPlatform(
-	game: MobileGameDataLocal,
+	game: MobileGame,
 	platform: 'ios' | 'android',
 ): string | null {
 	if (platform === 'ios' && game.iosOffer) {
@@ -219,7 +219,7 @@ export function formatMobileGamePrice(game: { originalPrice: number; currencyCod
 
 export function buildBulkCheckoutUrl(
 	selectedCurrentGames: GameItem[],
-	selectedMobileGames: MobileGameDataLocal[],
+	selectedMobileGames: MobileGame[],
 ): string | null {
 	const pcOffers = selectedCurrentGames
 		.filter(game => !isMysteryGame(game))

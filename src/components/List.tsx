@@ -171,14 +171,11 @@ function DesktopHome({
 	copyToClipboard,
 }: {
 	games: Game
-	activeMobileGames: MobileGameDataLocal[]
-	expiredMobileGames: MobileGameDataLocal[]
+	activeMobileGames: MobileGame[]
+	expiredMobileGames: MobileGame[]
 	gridClassName: string
 	renderGameCard: (game: GameItem, isCurrentGame: boolean) => ReactNode
-	renderMobileGameCard: (
-		game: MobileGameDataLocal,
-		isExpired?: boolean,
-	) => ReactNode
+	renderMobileGameCard: (game: MobileGame, isExpired?: boolean) => ReactNode
 	copiedUrl: string
 	copyToClipboard: (url: string) => void
 }) {
@@ -298,9 +295,7 @@ function DesktopHome({
 	)
 }
 
-const isMobileGame = (
-	game: GameItem | MobileGameDataLocal,
-): game is MobileGameDataLocal => {
+const isMobileGame = (game: GameItem | MobileGame): game is MobileGame => {
 	return 'iosOffer' in game || 'androidOffer' in game
 }
 
@@ -326,9 +321,9 @@ export default function List({
 		g => g.promoEndDate && new Date(g.promoEndDate) <= now,
 	)
 
-	const [selectedGame, setSelectedGame] = useState<
-		GameItem | MobileGameDataLocal | null
-	>(null)
+	const [selectedGame, setSelectedGame] = useState<GameItem | MobileGame | null>(
+		null,
+	)
 	const [copiedUrl, setCopiedUrl] = useState<string>('')
 
 	const copyToClipboard = async (url: string) => {
@@ -489,10 +484,7 @@ export default function List({
 		)
 	}
 
-	const renderMobileGameCard = (
-		game: MobileGameDataLocal,
-		isExpired = false,
-	) => {
+	const renderMobileGameCard = (game: MobileGame, isExpired = false) => {
 		const endDate = game.promoEndDate ? new Date(game.promoEndDate) : null
 
 		const mobileTag =
@@ -853,7 +845,7 @@ export default function List({
 							let isValidPageSlug = false
 
 							if (isMobile) {
-								const mg = selectedGame as MobileGameDataLocal
+								const mg = selectedGame as MobileGame
 								imageUrl = mg.imageUrl
 								isExpired = Boolean(mg.promoEndDate) && new Date(mg.promoEndDate) <= now
 								if (mg.originalPrice > 0) {
@@ -1103,7 +1095,7 @@ export default function List({
 											) : isMobile ? (
 												// Mobile offers
 												(() => {
-													const mg = selectedGame as MobileGameDataLocal
+													const mg = selectedGame as MobileGame
 													const iosCheckoutUrl = getMobileCheckoutUrlForPlatform(mg, 'ios')
 													const androidCheckoutUrl = getMobileCheckoutUrlForPlatform(
 														mg,

@@ -108,7 +108,7 @@ type EgFreeSettings = {
     componentsV2: boolean
 }
 
-type MobileGameDataLocal = {
+type MobileGame = {
     title: string
     namespace: string
     imageUrl: string

@@ -16,7 +16,7 @@ export function buildClassicEmbedPayload(
 	games: Game,
 	settings: EgFreeSettings,
 	checkoutLink: string,
-	parsedMobileGames: MobileGameDataLocal[],
+	parsedMobileGames: MobileGame[],
 ): object {
 	const {
 		selectedGames,

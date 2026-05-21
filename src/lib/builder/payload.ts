@@ -5,7 +5,7 @@ export function buildDiscordMessagePayload(
 	games: Game,
 	settings: EgFreeSettings,
 	checkoutLink: string,
-	parsedMobileGames: MobileGameDataLocal[],
+	parsedMobileGames: MobileGame[],
 ): object {
 	if (settings.componentsV2) {
 		return buildComponentsV2MessagePayload(

@@ -169,7 +169,7 @@ export default function JsonFormContent({
 	idSuffix?: string
 	games: Game
 	settings: EgFreeSettings
-	parsedMobileGames: MobileGameDataLocal[]
+	parsedMobileGames: MobileGame[]
 	canSplitDesktopMobile: boolean
 	webhookUrl: string
 	setWebhookUrl: (v: string) => void

@@ -82,7 +82,7 @@ export default function JsonPreviewContent({
 	isCopied: boolean
 	games: Game
 	checkoutLink: string
-	parsedMobileGames: MobileGameDataLocal[]
+	parsedMobileGames: MobileGame[]
 	inlineButtons?: boolean
 }) {
 	const activeMobile = parsedMobileGames.filter(
