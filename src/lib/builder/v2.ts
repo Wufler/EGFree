@@ -125,8 +125,17 @@ function buildDesktopComponentsV2Card(
 		actionButtons.push({
 			type: COMPONENT_TYPES.BUTTON,
 			style: COMPONENT_TYPES.BUTTON_LINK,
-			label: 'Open in browser',
+			label: 'Open in Browser',
 			url: browserUrl,
+		})
+	}
+
+	if (isValidPageSlug && pageSlug) {
+		actionButtons.push({
+			type: COMPONENT_TYPES.BUTTON,
+			style: COMPONENT_TYPES.BUTTON_LINK,
+			label: 'Open in Launcher',
+			url: `com.epicgames.launcher://store/p/${pageSlug}`,
 		})
 	}
 

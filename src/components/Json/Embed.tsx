@@ -22,12 +22,20 @@ const defaultContent = '<@&847939354978811924>'
 const defaultMobileContent = '<@&1494404105471266936>'
 const EMPTY_MOBILE_GAMES: MobileGameDataLocal[] = []
 
-function PreviewLinkButton({ href, label }: { href: string; label: string }) {
+function PreviewLinkButton({
+	href,
+	label,
+	target = '_blank',
+}: {
+	href: string
+	label: string
+	target?: string
+}) {
 	return (
 		<a
 			href={href}
 			className="inline-flex items-center gap-1.5 rounded-md border border-[#d4d7dc] bg-[#ffffff] px-3 py-1.5 text-sm font-medium text-[#2e3338] hover:bg-[#f2f3f5] dark:border-[#4e5058] dark:bg-[#2b2d31] dark:text-[#f2f3f5] dark:hover:bg-[#393c41]"
-			target="_blank"
+			target={target}
 		>
 			<span>{label}</span>
 			<ExternalLink className="size-3.5" />
@@ -163,7 +171,9 @@ export default function DiscordPreview({
 	)
 
 	const normalizedCheckoutLink = normalizeEpicCheckoutLink(checkoutLink)
-	const claimablePCGamesCount = selectedCurrentGames.filter(g => !isMysteryGame(g) && g.namespace && g.id).length
+	const claimablePCGamesCount = selectedCurrentGames.filter(
+		g => !isMysteryGame(g) && g.namespace && g.id,
+	).length
 	const claimableMobileOffersCount = selectedMobileGames.reduce(
 		(acc, mg) => acc + (mg.iosOffer || mg.androidOffer ? 1 : 0),
 		0,
@@ -172,7 +182,7 @@ export default function DiscordPreview({
 	const componentsV2CheckoutHref =
 		settings.includeCheckout &&
 		totalClaimable > 0 &&
-		(selectedCurrentGames.length + selectedMobileGames.length > 1) &&
+		selectedCurrentGames.length + selectedMobileGames.length > 1 &&
 		(bulkCheckoutUrl || normalizedCheckoutLink)
 			? normalizedCheckoutLink || bulkCheckoutUrl
 			: null
@@ -229,7 +239,13 @@ export default function DiscordPreview({
 							: game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0]
 									.startDate
 						const endDate = new Date(dateInfo)
-						const { pageSlug, isValidPageSlug, isBundleGame, linkPrefix, browserUrl: browserHref } = getGameLinkMeta(game)
+						const {
+							pageSlug,
+							isValidPageSlug,
+							isBundleGame,
+							linkPrefix,
+							browserUrl: browserHref,
+						} = getGameLinkMeta(game)
 						const imageUrl = getPreferredGameImageUrl(game)
 						const isAddOn = game.offerType === 'ADD_ON'
 						const isMystery = isMysteryGame(game)
@@ -367,7 +383,14 @@ export default function DiscordPreview({
 											</div>
 											<div className="mt-2.5 mb-4 flex flex-wrap gap-2">
 												{browserHref && (
-													<PreviewLinkButton href={browserHref} label="Open in browser" />
+													<PreviewLinkButton href={browserHref} label="Open in Browser" />
+												)}
+												{isValidPageSlug && pageSlug && (
+													<PreviewLinkButton
+														href={`com.epicgames.launcher://store/p/${pageSlug}`}
+														label="Open in Launcher"
+														target="_self"
+													/>
 												)}
 												{claimHrefV2 && (
 													<PreviewLinkButton href={claimHrefV2} label={claimLabelV2} />
@@ -679,7 +702,7 @@ export default function DiscordPreview({
 
 					{!settings.componentsV2 &&
 						totalClaimable > 0 &&
-						(selectedCurrentGames.length + selectedMobileGames.length > 1) &&
+						selectedCurrentGames.length + selectedMobileGames.length > 1 &&
 						settings.includeCheckout && (
 							<div
 								className="flex mt-1 rounded-sm overflow-hidden"

@@ -335,7 +335,6 @@ export default function List({
 		try {
 			await navigator.clipboard.writeText(url)
 			setCopiedUrl(url)
-			toast.success('Link copied to clipboard!')
 			setTimeout(() => setCopiedUrl(''), 2000)
 		} catch (err) {
 			console.error(err)
@@ -849,6 +848,9 @@ export default function List({
 							let isCurrent = false
 							let isUpcoming = false
 							let isExpired = false
+							let storeUrl = ''
+							let pageSlug: string | null = null
+							let isValidPageSlug = false
 
 							if (isMobile) {
 								const mg = selectedGame as MobileGameDataLocal
@@ -866,6 +868,11 @@ export default function List({
 								const game = selectedGame as GameItem
 								isMystery = isMysteryGame(game)
 								imageUrl = getPreferredGameImageUrl(game) || ''
+
+								const linkMeta = getGameLinkMeta(game)
+								storeUrl = linkMeta.browserUrl || ''
+								pageSlug = linkMeta.pageSlug ?? null
+								isValidPageSlug = linkMeta.isValidPageSlug
 
 								isCurrent = effectiveGames.currentGames.some(g => g.id === game.id)
 								isUpcoming = effectiveGames.nextGames.some(g => g.id === game.id)
@@ -1015,12 +1022,12 @@ export default function List({
 											{isMystery && !isUpcoming ? (
 												<div className="space-y-4">
 													{/* Mystery Banner */}
-													<div className="p-4 rounded-xl border border-yellow-500/20 bg-yellow-500/5 text-yellow-600 dark:text-yellow-400 text-xs leading-relaxed space-y-1">
-														<p className="font-extrabold flex items-center gap-1.5 text-sm">
-															<AlertTriangle className="size-4 shrink-0" /> Unable to generate
-															checkout link
-														</p>
-														<p>
+													<div className="p-4 rounded-xl border border-amber-500/20 border-l-4 border-l-amber-500 bg-amber-500/5 text-xs leading-relaxed space-y-1.5 shadow-sm">
+														<div className="font-bold flex items-center gap-2 text-sm dark:text-amber-400 text-amber-800 dark:text-amber-250">
+															<AlertTriangle className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+															<span>Unable to generate checkout link</span>
+														</div>
+														<p className="text-amber-700 dark:text-amber-300/90 pl-6 leading-normal">
 															This was a mystery game and cannot automatically make a checkout
 															link. Checkout links will become active when the mystery game
 															period is over.
@@ -1042,23 +1049,56 @@ export default function List({
 														<Copy className="size-4" /> Copy Link
 													</Button>
 
-													{/* Store page button */}
-													<Button
-														asChild
-														variant="secondary"
-														className="w-full flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-													>
-														<a
-															href={
-																getGameLinkMeta(selectedGame as GameItem).browserUrl ||
-																'https://store.epicgames.com/en-US/free-games'
-															}
-															target="_blank"
-															rel="noopener noreferrer"
+													{/* Store Page / Launcher buttons */}
+													{(isValidPageSlug && pageSlug) || storeUrl ? (
+														<div className="flex gap-3 w-full">
+															{isValidPageSlug && pageSlug && (
+																<Button
+																	asChild
+																	variant="secondary"
+																	className="flex-1 flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] bg-epic-blue/5 hover:bg-epic-blue/10 text-epic-blue dark:text-epic-blue dark:hover:bg-epic-blue/20 border border-epic-blue/20"
+																>
+																	<a
+																		href={`com.epicgames.launcher://store/p/${pageSlug}`}
+																		rel="noopener noreferrer"
+																	>
+																		<ExternalLink className="size-4 fill-current" /> Open in
+																		Launcher
+																	</a>
+																</Button>
+															)}
+
+															<Button
+																asChild
+																variant="secondary"
+																className="flex-1 flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+															>
+																<a
+																	href={
+																		storeUrl || 'https://store.epicgames.com/en-US/free-games'
+																	}
+																	target="_blank"
+																	rel="noopener noreferrer"
+																>
+																	<ExternalLink className="size-4" /> Store Page
+																</a>
+															</Button>
+														</div>
+													) : (
+														<Button
+															asChild
+															variant="secondary"
+															className="w-full flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
 														>
-															<ExternalLink className="size-4" /> Store Page
-														</a>
-													</Button>
+															<a
+																href="https://store.epicgames.com/en-US/free-games"
+																target="_blank"
+																rel="noopener noreferrer"
+															>
+																<ExternalLink className="size-4" /> Store Page
+															</a>
+														</Button>
+													)}
 												</div>
 											) : isMobile ? (
 												// Mobile offers
@@ -1225,7 +1265,11 @@ export default function List({
 												(() => {
 													const game = selectedGame as GameItem
 													const checkoutUrl = getCheckoutUrl(game)
-													const { browserUrl: storeUrl } = getGameLinkMeta(game)
+													const {
+														browserUrl: storeUrl,
+														pageSlug,
+														isValidPageSlug,
+													} = getGameLinkMeta(game)
 
 													return (
 														<div className="space-y-3">
@@ -1269,16 +1313,36 @@ export default function List({
 																</>
 															)}
 
-															{storeUrl && (
-																<Button
-																	asChild
-																	variant="secondary"
-																	className="w-full flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-																>
-																	<a href={storeUrl} target="_blank" rel="noopener noreferrer">
-																		<ExternalLink className="size-4" /> Open Epic Games Store
-																	</a>
-																</Button>
+															{((isValidPageSlug && pageSlug) || storeUrl) && (
+																<div className="flex gap-3 w-full">
+																	{isValidPageSlug && pageSlug && (
+																		<Button
+																			asChild
+																			variant="secondary"
+																			className="flex-1 flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] bg-epic-blue/5 hover:bg-epic-blue/10 text-epic-blue dark:text-epic-blue dark:hover:bg-epic-blue/20 border border-epic-blue/20"
+																		>
+																			<a
+																				href={`com.epicgames.launcher://store/p/${pageSlug}`}
+																				rel="noopener noreferrer"
+																			>
+																				<ExternalLink className="size-4 fill-current" /> Open in
+																				Launcher
+																			</a>
+																		</Button>
+																	)}
+
+																	{storeUrl && (
+																		<Button
+																			asChild
+																			variant="secondary"
+																			className="flex-1 flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+																		>
+																			<a href={storeUrl} target="_blank" rel="noopener noreferrer">
+																				<ExternalLink className="size-4" /> Store Page
+																			</a>
+																		</Button>
+																	)}
+																</div>
 															)}
 														</div>
 													)
