@@ -10,21 +10,47 @@ import {
 export const dynamic = 'force-dynamic'
 
 export const GET = async () => {
-	const games = await getEpicFreeGames()
-	const mobileGames = await getMobileGames()
+	const [games, mobileGames] = await Promise.all([
+		getEpicFreeGames(),
+		getMobileGames(),
+	])
 
 	const now = new Date()
 	const activeMobileGames = mobileGames.filter(
 		g => !g.promoEndDate || new Date(g.promoEndDate) > now,
 	)
 
-	const displayDesktop = games.currentGames.slice(0, 2)
-	const displayMobile = activeMobileGames.slice(0, 2)
-	const displayUpcoming = games.nextGames.slice(0, 2)
+	// Up to 3 games per column (if it goes above that then gg (probably not))
+	const displayDesktop = games.currentGames.slice(0, 3)
+	const displayMobile = activeMobileGames.slice(0, 3)
+	const displayUpcoming = games.nextGames.slice(0, 3)
 
 	const hasMobile = displayMobile.length > 0
 
-	const cardHeight = hasMobile ? 210 : 230
+	const maxGames = Math.max(
+		displayDesktop.length,
+		hasMobile ? displayMobile.length : 0,
+		displayUpcoming.length,
+	)
+
+	let cardHeight = 210
+	if (maxGames >= 3) {
+		cardHeight = 140
+	} else if (maxGames === 1) {
+		cardHeight = 300
+	}
+
+	const isCompact = cardHeight < 160
+	const padding = isCompact ? '12px' : '16px'
+	const titleSize = isCompact ? '15px' : '18px'
+	const subtitleSize = isCompact ? '11px' : '12px'
+	const badgePadding = isCompact ? '3px 8px' : '4px 10px'
+	const badgeFontSize = isCompact ? '10px' : '11px'
+	const topBadgeOffset = isCompact ? '8px' : '12px'
+	const headerMarginBottom = isCompact ? '24px' : '32px'
+	const footerMarginTop = isCompact ? '20px' : '24px'
+	const cardGap = isCompact ? '12px' : '16px'
+	const columnHeaderMarginBottom = isCompact ? '12px' : '16px'
 
 	const renderDesktopGameCard = (game: GameItem, isCurrent: boolean) => {
 		const imageUrl = getPreferredGameImageUrl(game)
@@ -122,15 +148,15 @@ export const GET = async () => {
 				<div
 					style={{
 						position: 'absolute',
-						top: '12px',
-						left: '12px',
+						top: topBadgeOffset,
+						left: topBadgeOffset,
 						display: 'flex',
 						alignItems: 'center',
 						backgroundColor: isCurrent ? '#0074e4' : '#101014',
 						color: '#ffffff',
-						padding: '4px 10px',
+						padding: badgePadding,
 						borderRadius: '6px',
-						fontSize: '11px',
+						fontSize: badgeFontSize,
 						fontWeight: 'bold',
 					}}
 				>
@@ -142,8 +168,8 @@ export const GET = async () => {
 					<div
 						style={{
 							position: 'absolute',
-							top: '12px',
-							right: '12px',
+							top: topBadgeOffset,
+							right: topBadgeOffset,
 							display: 'flex',
 							backgroundColor: 'rgba(0, 0, 0, 0.75)',
 							color: '#ffffff',
@@ -164,7 +190,7 @@ export const GET = async () => {
 						bottom: 0,
 						left: 0,
 						right: 0,
-						padding: '16px',
+						padding: padding,
 						display: 'flex',
 						flexDirection: 'row',
 						alignItems: 'flex-end',
@@ -182,7 +208,7 @@ export const GET = async () => {
 					>
 						<span
 							style={{
-								fontSize: '18px',
+								fontSize: titleSize,
 								fontWeight: 'bold',
 								color: '#ffffff',
 								whiteSpace: 'nowrap',
@@ -192,10 +218,10 @@ export const GET = async () => {
 						>
 							{game.title}
 						</span>
-						{sellerName && (
+						{!isCompact && sellerName && (
 							<span
 								style={{
-									fontSize: '12px',
+									fontSize: subtitleSize,
 									color: '#b3b3b3',
 									whiteSpace: 'nowrap',
 									textOverflow: 'ellipsis',
@@ -346,18 +372,19 @@ export const GET = async () => {
 					}}
 				/>
 
+				{/* Top-Left Date Badge */}
 				<div
 					style={{
 						position: 'absolute',
-						top: '12px',
-						left: '12px',
+						top: topBadgeOffset,
+						left: topBadgeOffset,
 						display: 'flex',
 						alignItems: 'center',
 						backgroundColor: '#0074e4',
 						color: '#ffffff',
-						padding: '4px 10px',
+						padding: badgePadding,
 						borderRadius: '6px',
-						fontSize: '11px',
+						fontSize: badgeFontSize,
 						fontWeight: 'bold',
 					}}
 				>
@@ -369,8 +396,8 @@ export const GET = async () => {
 					<div
 						style={{
 							position: 'absolute',
-							top: '12px',
-							right: '12px',
+							top: topBadgeOffset,
+							right: topBadgeOffset,
 							display: 'flex',
 							backgroundColor: 'rgba(0, 0, 0, 0.75)',
 							color: '#ffffff',
@@ -391,7 +418,7 @@ export const GET = async () => {
 						bottom: 0,
 						left: 0,
 						right: 0,
-						padding: '16px',
+						padding: padding,
 						display: 'flex',
 						flexDirection: 'row',
 						alignItems: 'flex-end',
@@ -409,7 +436,7 @@ export const GET = async () => {
 					>
 						<span
 							style={{
-								fontSize: '18px',
+								fontSize: titleSize,
 								fontWeight: 'bold',
 								color: '#ffffff',
 								whiteSpace: 'nowrap',
@@ -419,10 +446,10 @@ export const GET = async () => {
 						>
 							{game.title}
 						</span>
-						{sellerName && (
+						{!isCompact && sellerName && (
 							<span
 								style={{
-									fontSize: '12px',
+									fontSize: subtitleSize,
 									color: '#b3b3b3',
 									whiteSpace: 'nowrap',
 									textOverflow: 'ellipsis',
@@ -497,7 +524,7 @@ export const GET = async () => {
 					justifyContent: 'space-between',
 					alignItems: 'center',
 					width: '100%',
-					marginBottom: '32px',
+					marginBottom: headerMarginBottom,
 				}}
 			>
 				<div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -542,7 +569,7 @@ export const GET = async () => {
 							display: 'flex',
 							flexDirection: 'row',
 							alignItems: 'center',
-							marginBottom: '16px',
+							marginBottom: columnHeaderMarginBottom,
 						}}
 					>
 						<span
@@ -560,7 +587,7 @@ export const GET = async () => {
 						style={{
 							display: 'flex',
 							flexDirection: 'column',
-							gap: '16px',
+							gap: cardGap,
 							width: '100%',
 						}}
 					>
@@ -576,7 +603,7 @@ export const GET = async () => {
 								display: 'flex',
 								flexDirection: 'row',
 								alignItems: 'center',
-								marginBottom: '16px',
+								marginBottom: columnHeaderMarginBottom,
 							}}
 						>
 							<span
@@ -594,7 +621,7 @@ export const GET = async () => {
 							style={{
 								display: 'flex',
 								flexDirection: 'column',
-								gap: '16px',
+								gap: cardGap,
 								width: '100%',
 							}}
 						>
@@ -610,7 +637,7 @@ export const GET = async () => {
 							display: 'flex',
 							flexDirection: 'row',
 							alignItems: 'center',
-							marginBottom: '16px',
+							marginBottom: columnHeaderMarginBottom,
 						}}
 					>
 						<span
@@ -628,7 +655,7 @@ export const GET = async () => {
 						style={{
 							display: 'flex',
 							flexDirection: 'column',
-							gap: '16px',
+							gap: cardGap,
 							width: '100%',
 						}}
 					>
@@ -645,7 +672,7 @@ export const GET = async () => {
 					justifyContent: 'space-between',
 					alignItems: 'center',
 					width: '100%',
-					marginTop: '24px',
+					marginTop: footerMarginTop,
 					paddingTop: '16px',
 					borderTop: '1px solid rgba(255, 255, 255, 0.05)',
 				}}

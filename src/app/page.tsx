@@ -10,8 +10,10 @@ import Link from 'next/link'
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
-	const games = await getEpicFreeGames()
-	const mobileGames = await getMobileGames()
+	const [games, mobileGames] = await Promise.all([
+		getEpicFreeGames(),
+		getMobileGames(),
+	])
 
 	return (
 		<main className="flex min-h-dvh flex-col text-foreground dark:text-white">
