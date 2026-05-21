@@ -1102,7 +1102,7 @@ export default function List({
 																				target="_blank"
 																				rel="noopener noreferrer"
 																			>
-																				<ExternalLink className="size-4 mr-1.5" /> Claim
+																				<ExternalLink className="size-4" /> Claim
 																			</a>
 																		</Button>
 																		<Button
