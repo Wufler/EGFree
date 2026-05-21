@@ -86,7 +86,7 @@ export default function JsonPreviewContent({
 	inlineButtons?: boolean
 }) {
 	const activeMobile = parsedMobileGames.filter(
-		g => g.promoEndDate && new Date(g.promoEndDate) > new Date(),
+		g => !g.promoEndDate || new Date(g.promoEndDate) > new Date(),
 	)
 	const builderUrl = `https://builder.wolfey.me/?data=${Buffer.from(
 		JSON.stringify(jsonData),

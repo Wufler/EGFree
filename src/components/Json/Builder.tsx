@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { FileJson2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -24,6 +24,12 @@ const defaultColor = '#85ce4b'
 const defaultContent = '<@&847939354978811924>'
 const defaultMobileContent = '<@&1494404105471266936>'
 
+const isValidDiscordWebhook = (url: string) => {
+	const webhookPattern =
+		/^https:\/\/(?:discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+(?:\?[^\s#]*)?\/?$/
+	return webhookPattern.test(url.trim())
+}
+
 export default function Json({
 	games,
 	mobile,
@@ -31,7 +37,6 @@ export default function Json({
 	games: Game
 	mobile: MobileGameData[]
 }) {
-	const [jsonData, setJsonData] = useState({})
 	const [webhookUrl, setWebhookUrl] = useState('')
 	const [webhookUrlMobile, setWebhookUrlMobile] = useState('')
 	const [messageId, setMessageId] = useState('')
@@ -73,7 +78,7 @@ export default function Json({
 	const activeMobileGames = useMemo(
 		() =>
 			mobile.filter(
-				game => game.promoEndDate && new Date(game.promoEndDate) > new Date(),
+				game => !game.promoEndDate || new Date(game.promoEndDate) > new Date(),
 			),
 		[mobile],
 	)
@@ -88,6 +93,76 @@ export default function Json({
 
 		return hasSelectedDesktopGames && hasSelectedMobileGames
 	}, [activeMobileGames, effectiveGames, settings.selectedGames])
+
+	const updateSetting = useCallback(
+		<T extends keyof EgFreeSettings>(key: T, value: EgFreeSettings[T]) => {
+			setSettings(prev => {
+				if (key === 'componentsV2' && prev.componentsV2 !== value) {
+					setMessageId('')
+				}
+				return { ...prev, [key]: value }
+			})
+		},
+		[],
+	)
+
+	const fetchWebhookInfo = useCallback(
+		async (url: string, target: 'desktop' | 'mobile' = 'desktop') => {
+			try {
+				const response = await fetch('/api/webhook-info', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ webhookUrl: url }),
+				})
+
+				if (response.ok) {
+					const webhookInfo = await response.json()
+					if (target === 'mobile') {
+						updateSetting('webhookNameMobile', webhookInfo.name)
+						updateSetting('webhookAvatarMobile', webhookInfo.avatar)
+						updateSetting('webhookChannelNameMobile', webhookInfo.channelName)
+					} else {
+						updateSetting('webhookName', webhookInfo.name)
+						updateSetting('webhookAvatar', webhookInfo.avatar)
+						updateSetting('webhookChannelName', webhookInfo.channelName)
+					}
+				} else {
+					const errorText = await response.text()
+					console.error('Failed to fetch webhook info:', errorText)
+					if (target === 'mobile') {
+						updateSetting('webhookNameMobile', undefined)
+						updateSetting('webhookAvatarMobile', undefined)
+						updateSetting('webhookChannelNameMobile', undefined)
+					} else {
+						updateSetting('webhookName', undefined)
+						updateSetting('webhookAvatar', undefined)
+						updateSetting('webhookChannelName', undefined)
+					}
+				}
+			} catch (error) {
+				console.error('Failed to fetch webhook info:', error)
+			}
+		},
+		[updateSetting],
+	)
+
+	const jsonData = useMemo(() => {
+		return buildDiscordMessagePayload(
+			effectiveGames,
+			settings,
+			checkoutLink,
+			mobile,
+		)
+	}, [effectiveGames, settings, checkoutLink, mobile])
+
+	// Adjust state while rendering if splitDesktopMobile is enabled but cannot be split
+	if (!canSplitDesktopMobile && settings.splitDesktopMobile) {
+		setMessageId('')
+		setMobileMessageId('')
+		setSettings(prev => ({ ...prev, splitDesktopMobile: false }))
+	}
 
 	useEffect(() => {
 		if (typeof window !== 'undefined') {
@@ -192,7 +267,7 @@ export default function Json({
 			}
 			loadSettings()
 		}
-	}, [games, mobile, effectiveGames])
+	}, [games, mobile, effectiveGames, fetchWebhookInfo])
 
 	useEffect(() => {
 		const saveSettings = async () => {
@@ -219,33 +294,9 @@ export default function Json({
 		saveSettings()
 	}, [settings, checkoutLink])
 
-	useEffect(() => {
-		if (!canSplitDesktopMobile && settings.splitDesktopMobile) {
-			setMessageId('')
-			setMobileMessageId('')
-			setSettings(prev => ({ ...prev, splitDesktopMobile: false }))
-		}
-	}, [canSplitDesktopMobile, settings.splitDesktopMobile])
-
-	const updateSetting = <T extends keyof EgFreeSettings>(
-		key: T,
-		value: EgFreeSettings[T],
-	) => {
-		if (key === 'componentsV2' && settings.componentsV2 !== value) {
-			setMessageId('')
-		}
-		setSettings(prev => ({ ...prev, [key]: value }))
-	}
-
 	const handleColorChange = (color: string) => {
 		updateSetting('embedColor', color === defaultColor ? defaultColor : color)
 	}
-
-	useEffect(() => {
-		setJsonData(
-			buildDiscordMessagePayload(effectiveGames, settings, checkoutLink, mobile),
-		)
-	}, [effectiveGames, settings, checkoutLink, mobile])
 
 	const copyToClipboard = async () => {
 		try {
@@ -258,11 +309,6 @@ export default function Json({
 		}
 	}
 
-	const isValidDiscordWebhook = (url: string) => {
-		const webhookPattern =
-			/^https:\/\/(?:discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+(?:\?[^\s#]*)?\/?$/
-		return webhookPattern.test(url.trim())
-	}
 	const canSendWebhook =
 		settings.splitDesktopMobile && canSplitDesktopMobile
 			? (!settings.sendDesktop || isValidDiscordWebhook(webhookUrl)) &&
@@ -422,48 +468,6 @@ export default function Json({
 			})
 		}
 		setIsLoading(false)
-	}
-
-	const fetchWebhookInfo = async (
-		url: string,
-		target: 'desktop' | 'mobile' = 'desktop',
-	) => {
-		try {
-			const response = await fetch('/api/webhook-info', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({ webhookUrl: url }),
-			})
-
-			if (response.ok) {
-				const webhookInfo = await response.json()
-				if (target === 'mobile') {
-					updateSetting('webhookNameMobile', webhookInfo.name)
-					updateSetting('webhookAvatarMobile', webhookInfo.avatar)
-					updateSetting('webhookChannelNameMobile', webhookInfo.channelName)
-				} else {
-					updateSetting('webhookName', webhookInfo.name)
-					updateSetting('webhookAvatar', webhookInfo.avatar)
-					updateSetting('webhookChannelName', webhookInfo.channelName)
-				}
-			} else {
-				const errorText = await response.text()
-				console.error('Failed to fetch webhook info:', errorText)
-				if (target === 'mobile') {
-					updateSetting('webhookNameMobile', undefined)
-					updateSetting('webhookAvatarMobile', undefined)
-					updateSetting('webhookChannelNameMobile', undefined)
-				} else {
-					updateSetting('webhookName', undefined)
-					updateSetting('webhookAvatar', undefined)
-					updateSetting('webhookChannelName', undefined)
-				}
-			}
-		} catch (error) {
-			console.error('Failed to fetch webhook info:', error)
-		}
 	}
 
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null)

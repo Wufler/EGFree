@@ -203,7 +203,7 @@ export default function JsonFormContent({
 	defaultMobileContent: string
 }) {
 	const activeMobile = parsedMobileGames.filter(
-		g => g.promoEndDate && new Date(g.promoEndDate) > new Date(),
+		g => !g.promoEndDate || new Date(g.promoEndDate) > new Date(),
 	)
 	const hasGames =
 		games.currentGames.length > 0 ||
@@ -970,14 +970,14 @@ export default function JsonFormContent({
 										htmlFor={`sidebar-color${idSuffix}`}
 										className="text-sm font-semibold"
 									>
-										Embed Edge Color
+										Embed Color
 									</Label>
 									<div className="flex items-center gap-3">
 										<Popover>
 											<PopoverTrigger asChild>
 												<Button
 													variant="outline"
-													className="w-12 h-10 p-0 rounded-md border-2 shadow-sm transition-all hover:scale-105"
+													className="w-9 h-9 p-0 rounded-md border-2 shadow-sm transition-all hover:scale-105"
 													style={{
 														backgroundColor: settings.embedColor,
 														borderColor: settings.embedColor,

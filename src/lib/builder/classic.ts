@@ -6,6 +6,10 @@ import {
 	isCurrentlyFree,
 	isDiscountedGame,
 	isPermanentlyFree,
+	isMysteryGame,
+	getCheckoutUrl,
+	getMobileCheckoutUrl,
+	formatMobileGamePrice,
 } from '@/lib/builder/shared'
 
 export function buildClassicEmbedPayload(
@@ -40,11 +44,6 @@ export function buildClassicEmbedPayload(
 					? 'Claim Bundle'
 					: 'Claim Game'
 
-		const getCheckoutUrl = () => {
-			if (!game.namespace || !game.id) return null
-			return `https://store.epicgames.com/purchase?offers=1-${game.namespace}-${game.id}-#`
-		}
-
 		const getPriceText = () => {
 			if (!settings.includePrice) return ''
 			if (isCurrent) {
@@ -67,7 +66,7 @@ export function buildClassicEmbedPayload(
 			if (!settings.includeClaimGame) return ''
 			if (isCurrent) {
 				if (isCurrentlyFree(game)) {
-					const checkoutUrl = getCheckoutUrl()
+					const checkoutUrl = getCheckoutUrl(game)
 					if (isPermanentlyFree(game)) {
 						if (!isValidPageSlug || !pageSlug) return ''
 						return `[${getClaimText()}](https://store.epicgames.com/${linkPrefix}${pageSlug})`
@@ -89,7 +88,8 @@ export function buildClassicEmbedPayload(
 			return ''
 		}
 
-		const description = game.title.toLowerCase().includes('mystery')
+		const isMystery = isMysteryGame(game)
+		const description = isMystery
 			? ''
 			: [getPriceText(), getClaimLink()].filter(Boolean).join('\n')
 
@@ -120,19 +120,8 @@ export function buildClassicEmbedPayload(
 		const isCombined = Boolean(game.iosOffer && game.androidOffer)
 		const iosUrl = epicMobileProductPageUrl(game.iosOffer?.pageSlug)
 		const androidUrl = epicMobileProductPageUrl(game.androidOffer?.pageSlug)
-		const offerParams: string[] = []
-		if (game.iosOffer) offerParams.push(`1-${game.namespace}-${game.iosOffer.id}--`)
-		if (game.androidOffer)
-			offerParams.push(`1-${game.namespace}-${game.androidOffer.id}--`)
-		const mobileCheckoutUrl =
-			offerParams.length > 0
-				? `https://store.epicgames.com/purchase?offers=${offerParams.join('&offers=')}#/`
-				: null
-		const priceFormatted = new Intl.NumberFormat('en-US', {
-			style: 'currency',
-			currency: game.currencyCode,
-			minimumFractionDigits: 2,
-		}).format(game.originalPrice / 100)
+		const mobileCheckoutUrl = getMobileCheckoutUrl(game)
+		const priceFormatted = formatMobileGamePrice(game)
 		const descriptionParts: string[] = []
 		if (mobileCheckoutUrl && settings.includeClaimGame) {
 			descriptionParts.push(`[Claim Game](${mobileCheckoutUrl})`)

@@ -148,16 +148,13 @@ export function buildPayloadContext(
 		...effectiveGames.currentGames,
 		...effectiveGames.nextGames,
 	].filter(game => includeDesktopGames && settings.selectedGames[game.id])
-	const mysteryGames = effectiveGames.currentGames.some(
-		game => game.seller?.name === 'Epic Dev Test Account',
-	)
+	const mysteryGames = effectiveGames.currentGames.some(isMysteryGame)
 	const now = new Date()
 	const selectedMobileGames = parsedMobileGames.filter(
 		game =>
 			includeMobileGames &&
 			settings.selectedGames[getMobileGameKey(game)] &&
-			game.promoEndDate &&
-			new Date(game.promoEndDate) > now,
+			(!game.promoEndDate || new Date(game.promoEndDate) > now),
 	)
 	const selectedCurrentGames = effectiveGames.currentGames.filter(
 		game => includeDesktopGames && settings.selectedGames[game.id],
@@ -179,7 +176,49 @@ export function buildPayloadContext(
 	}
 }
 
-function buildBulkCheckoutUrl(
+export function isMysteryGame(game: GameItem): boolean {
+	return (
+		game.seller?.name === 'Epic Dev Test Account' ||
+		game.title.toLowerCase().includes('mystery')
+	)
+}
+
+export function getCheckoutUrl(game: GameItem): string | null {
+	if (!game.namespace || !game.id || isMysteryGame(game)) return null
+	return `https://store.epicgames.com/purchase?offers=1-${game.namespace}-${game.id}-#`
+}
+
+export function getMobileCheckoutUrl(game: MobileGameDataLocal): string | null {
+	const offerParams: string[] = []
+	if (game.iosOffer) offerParams.push(`1-${game.namespace}-${game.iosOffer.id}--`)
+	if (game.androidOffer)
+		offerParams.push(`1-${game.namespace}-${game.androidOffer.id}--`)
+	if (offerParams.length === 0) return null
+	return `https://store.epicgames.com/purchase?offers=${offerParams.join('&offers=')}#/`
+}
+
+export function getMobileCheckoutUrlForPlatform(
+	game: MobileGameDataLocal,
+	platform: 'ios' | 'android',
+): string | null {
+	if (platform === 'ios' && game.iosOffer) {
+		return `https://store.epicgames.com/purchase?offers=1-${game.namespace}-${game.iosOffer.id}--#/`
+	}
+	if (platform === 'android' && game.androidOffer) {
+		return `https://store.epicgames.com/purchase?offers=1-${game.namespace}-${game.androidOffer.id}--#/`
+	}
+	return null
+}
+
+export function formatMobileGamePrice(game: { originalPrice: number; currencyCode: string }): string {
+	return new Intl.NumberFormat('en-US', {
+		style: 'currency',
+		currency: game.currencyCode,
+		minimumFractionDigits: 2,
+	}).format(game.originalPrice / 100)
+}
+
+export function buildBulkCheckoutUrl(
 	selectedCurrentGames: GameItem[],
 	selectedMobileGames: MobileGameDataLocal[],
 	mysteryGames: boolean,

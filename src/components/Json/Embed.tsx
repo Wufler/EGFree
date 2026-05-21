@@ -1,7 +1,20 @@
 import { format } from 'date-fns'
 import { ExternalLink } from 'lucide-react'
 import Image from 'next/image'
-import { epicMobileProductPageUrl } from '@/lib/builder/shared'
+import {
+	buildBulkCheckoutUrl,
+	epicMobileProductPageUrl,
+	formatMobileGamePrice,
+	getCheckoutUrl,
+	getGameLinkMeta,
+	getMobileCheckoutUrl,
+	getPreferredGameImageUrl,
+	isCurrentlyFree,
+	isDiscountedGame,
+	isMysteryGame,
+	isPermanentlyFree,
+	normalizeEpicCheckoutLink,
+} from '@/lib/builder/shared'
 import { getEffectiveGames, getMobileGameKey } from '@/lib/utils'
 import Discord from '../ui/discord'
 
@@ -118,9 +131,7 @@ export default function DiscordPreview({
 		...effectiveGames.nextGames,
 	].filter(game => includeDesktopGames && settings.selectedGames[game.id])
 
-	const mysteryGames = effectiveGames.currentGames.some(
-		game => game.seller?.name === 'Epic Dev Test Account',
-	)
+	const mysteryGames = effectiveGames.currentGames.some(isMysteryGame)
 
 	const selectedMobileCount = parsedMobileGames.filter(
 		game => includeMobileGames && settings.selectedGames[getMobileGameKey(game)],
@@ -138,95 +149,26 @@ export default function DiscordPreview({
 			? settings.webhookAvatarMobile || settings.webhookAvatar
 			: settings.webhookAvatar
 
-	const generateBulkCheckoutUrl = () => {
-		if (mysteryGames) return null
-
-		const pcOffers = effectiveGames.currentGames
-			.filter(game => includeDesktopGames && settings.selectedGames[game.id])
-			.map(game => {
-				if (!game.namespace || !game.id) return null
-				return `1-${game.namespace}-${game.id}-`
-			})
-			.filter(Boolean)
-
-		const mobileOffers = parsedMobileGames
-			.filter(
-				game =>
-					includeMobileGames && settings.selectedGames[getMobileGameKey(game)],
-			)
-			.flatMap(mg => {
-				const offers: string[] = []
-				if (mg.iosOffer) offers.push(`1-${mg.namespace}-${mg.iosOffer.id}--`)
-				if (mg.androidOffer)
-					offers.push(`1-${mg.namespace}-${mg.androidOffer.id}--`)
-				return offers
-			})
-
-		const offers = [...pcOffers, ...mobileOffers]
-		if (offers.length === 0) return null
-
-		const offersParam = offers.map(offer => `offers=${offer}`).join('&')
-		return `https://store.epicgames.com/purchase?${offersParam}#`
-	}
-
-	const bulkCheckoutUrl = generateBulkCheckoutUrl()
-
-	const normalizeCheckoutUrl = (url: string) => {
-		if (!url.trim()) return ''
-
-		try {
-			let fullUrl = url.trim()
-
-			if (fullUrl.startsWith('/purchase')) {
-				fullUrl = `https://store.epicgames.com${fullUrl}`
-			} else if (!fullUrl.startsWith('http')) {
-				fullUrl = `https://store.epicgames.com/${fullUrl}`
-			}
-
-			const urlObj = new URL(fullUrl)
-			const offers = urlObj.searchParams.getAll('offers')
-
-			if (offers.length === 0) return fullUrl
-
-			const offersParam = offers.map(offer => `offers=${offer}`).join('&')
-			return `https://store.epicgames.com/purchase?${offersParam}#`
-		} catch {
-			return url
-		}
-	}
-
-	const normalizedCheckoutLink = normalizeCheckoutUrl(checkoutLink)
-	const selectedCurrentGamesCount = effectiveGames.currentGames.filter(
+	const selectedCurrentGames = effectiveGames.currentGames.filter(
 		game => includeDesktopGames && settings.selectedGames[game.id],
-	).length
+	)
+	const selectedMobileGames = parsedMobileGames.filter(
+		game => includeMobileGames && settings.selectedGames[getMobileGameKey(game)],
+	)
+	const bulkCheckoutUrl = buildBulkCheckoutUrl(
+		selectedCurrentGames,
+		selectedMobileGames,
+		mysteryGames,
+	)
+
+	const normalizedCheckoutLink = normalizeEpicCheckoutLink(checkoutLink)
+	const selectedCurrentGamesCount = selectedCurrentGames.length
 	const componentsV2CheckoutHref =
 		settings.includeCheckout &&
 		selectedCurrentGamesCount + selectedMobileCount > 1 &&
 		(!mysteryGames || normalizedCheckoutLink)
 			? normalizedCheckoutLink || bulkCheckoutUrl
 			: null
-
-	const isCurrentlyFree = (game: GameItem) => {
-		const currentPromo =
-			game.promotions?.promotionalOffers[0]?.promotionalOffers[0]
-		return Boolean(
-			currentPromo?.discountSetting?.discountPercentage === 0 &&
-			game.promotions?.promotionalOffers.length > 0,
-		)
-	}
-
-	const isPermanentlyFree = (game: GameItem) => {
-		return game.price.totalPrice.originalPrice === 0
-	}
-
-	const isDiscountedGame = (game: GameItem) => {
-		const currentPromo =
-			game.promotions?.promotionalOffers[0]?.promotionalOffers[0]
-		return Boolean(
-			currentPromo?.discountSetting?.discountPercentage > 0 &&
-			game.promotions?.promotionalOffers.length > 0,
-		)
-	}
 
 	return (
 		<div className="bg-[#ffffff] dark:bg-[#313338] dark:text-white p-4 wrap-anywhere w-full">
@@ -280,37 +222,14 @@ export default function DiscordPreview({
 							: game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0]
 									.startDate
 						const endDate = new Date(dateInfo)
-						const rawPageSlug =
-							game.productSlug || game.offerMappings?.[0]?.pageSlug || game.urlSlug
-						const pageSlug = rawPageSlug?.replace(/\/[^/]*$/, '') || rawPageSlug
-						const isValidPageSlug =
-							pageSlug && pageSlug !== '[]' && pageSlug.trim() !== ''
-						const isBundleGame = game.categories?.some(
-							(category: { path: string }) => category.path === 'bundles',
-						)
-						const linkPrefix = isBundleGame ? 'bundles/' : 'p/'
-						const imageUrl = game.keyImages.find(
-							(img: { type: string; url: string }) =>
-								img.type === 'VaultClosed' ||
-								img.type === 'DieselStoreFrontWide' ||
-								img.type === 'OfferImageWide' ||
-								img.type === 'DieselGameBoxWide',
-						)?.url
+						const { pageSlug, isValidPageSlug, isBundleGame, linkPrefix, browserUrl: browserHref } = getGameLinkMeta(game)
+						const imageUrl = getPreferredGameImageUrl(game)
 						const isAddOn = game.offerType === 'ADD_ON'
-
-						const getCheckoutUrl = (game: GameItem) => {
-							if (!game.namespace || !game.id) return null
-							const offerParam = `offers=1-${game.namespace}-${game.id}-`
-							return `https://store.epicgames.com/purchase?${offerParam}#`
-						}
-
-						const browserHref = isValidPageSlug
-							? `https://store.epicgames.com/${linkPrefix}${pageSlug}`
-							: null
+						const isMystery = isMysteryGame(game)
 						const checkoutUrlForGame = getCheckoutUrl(game)
 						let claimHrefV2: string | null = null
 						let claimLabelV2 = 'Claim Game'
-						if (settings.includeClaimGame && isCurrent) {
+						if (settings.includeClaimGame && isCurrent && !isMystery) {
 							if (isCurrentlyFree(game)) {
 								if (isPermanentlyFree(game)) {
 									claimHrefV2 = isValidPageSlug
@@ -531,6 +450,7 @@ export default function DiscordPreview({
 										{isCurrent &&
 											isCurrentlyFree(game) &&
 											settings.includeClaimGame &&
+											!isMystery &&
 											(() => {
 												const checkoutUrl = getCheckoutUrl(game)
 												const manualCheckoutUrl =
@@ -592,22 +512,8 @@ export default function DiscordPreview({
 							const iosLink = epicMobileProductPageUrl(game.iosOffer?.pageSlug)
 							const androidLink = epicMobileProductPageUrl(game.androidOffer?.pageSlug)
 							const storeUrl = iosLink ?? androidLink
-
-							const offerParams: string[] = []
-							if (game.iosOffer)
-								offerParams.push(`1-${game.namespace}-${game.iosOffer.id}--`)
-							if (game.androidOffer)
-								offerParams.push(`1-${game.namespace}-${game.androidOffer.id}--`)
-							const checkoutUrl =
-								offerParams.length > 0
-									? `https://store.epicgames.com/purchase?offers=${offerParams.join('&offers=')}#/`
-									: null
-
-							const priceFormatted = new Intl.NumberFormat('en-US', {
-								style: 'currency',
-								currency: game.currencyCode,
-								minimumFractionDigits: 2,
-							}).format(game.originalPrice / 100)
+							const checkoutUrl = getMobileCheckoutUrl(game)
+							const priceFormatted = formatMobileGamePrice(game)
 
 							if (settings.componentsV2) {
 								return (

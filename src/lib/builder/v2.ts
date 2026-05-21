@@ -12,6 +12,10 @@ import {
 	isDiscountedGame,
 	isPermanentlyFree,
 	parseAllowedMentions,
+	isMysteryGame,
+	getCheckoutUrl,
+	getMobileCheckoutUrl,
+	formatMobileGamePrice,
 } from '@/lib/builder/shared'
 
 function buildDesktopComponentsV2Card(
@@ -36,16 +40,12 @@ function buildDesktopComponentsV2Card(
 				? 'Claim Bundle'
 				: 'Claim Game'
 
-	const getCheckoutUrl = () => {
-		if (!game.namespace || !game.id) return null
-		return `https://store.epicgames.com/purchase?offers=1-${game.namespace}-${game.id}-#`
-	}
-
 	const resolveClaimHref = (): string | null => {
 		if (!settings.includeClaimGame) return null
+		if (isMysteryGame(game)) return null
 		if (isCurrent) {
 			if (isCurrentlyFree(game)) {
-				const checkoutUrl = getCheckoutUrl()
+				const checkoutUrl = getCheckoutUrl(game)
 				if (isPermanentlyFree(game)) {
 					if (!isValidPageSlug || !pageSlug) return null
 					return `https://store.epicgames.com/${linkPrefix}${pageSlug}`
@@ -85,7 +85,7 @@ function buildDesktopComponentsV2Card(
 		},
 	]
 
-	if (!game.title.toLowerCase().includes('mystery')) {
+	if (!isMysteryGame(game)) {
 		const priceAndDateParts: string[] = []
 		if (priceText) priceAndDateParts.push(priceText)
 		if (settings.includeFooter) {
@@ -160,20 +160,9 @@ function buildMobileComponentsV2Card(
 	const iosUrl = epicMobileProductPageUrl(game.iosOffer?.pageSlug)
 	const androidUrl = epicMobileProductPageUrl(game.androidOffer?.pageSlug)
 	const isCombined = Boolean(game.iosOffer && game.androidOffer)
-	const offerParams: string[] = []
-	if (game.iosOffer) offerParams.push(`1-${game.namespace}-${game.iosOffer.id}--`)
-	if (game.androidOffer)
-		offerParams.push(`1-${game.namespace}-${game.androidOffer.id}--`)
-	const checkoutUrl =
-		offerParams.length > 0
-			? `https://store.epicgames.com/purchase?offers=${offerParams.join('&offers=')}#/`
-			: null
+	const checkoutUrl = getMobileCheckoutUrl(game)
 	const endDate = game.promoEndDate ? new Date(game.promoEndDate) : null
-	const priceFormatted = new Intl.NumberFormat('en-US', {
-		style: 'currency',
-		currency: game.currencyCode,
-		minimumFractionDigits: 2,
-	}).format(game.originalPrice / 100)
+	const priceFormatted = formatMobileGamePrice(game)
 
 	const textBlocks: Record<string, unknown>[] = [
 		{
