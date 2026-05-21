@@ -68,9 +68,9 @@ function buildDesktopComponentsV2Card(
 
 	const resolveClaimLabel = () =>
 		isCurrent &&
-			!isCurrentlyFree(game) &&
-			isDiscountedGame(game) &&
-			isValidPageSlug
+		!isCurrentlyFree(game) &&
+		isDiscountedGame(game) &&
+		isValidPageSlug
 			? 'Store Page'
 			: getClaimText()
 
@@ -85,20 +85,18 @@ function buildDesktopComponentsV2Card(
 		},
 	]
 
-	if (!isMysteryGame(game)) {
-		const priceAndDateParts: string[] = []
-		if (priceText) priceAndDateParts.push(priceText)
-		if (settings.includeFooter) {
-			priceAndDateParts.push(
-				`${isCurrent ? 'until' : 'starts'} ${getDiscordTimestamp(endDate)}`,
-			)
-		}
-		if (priceAndDateParts.length > 0) {
-			textBlocks.push({
-				type: COMPONENT_TYPES.TEXT_DISPLAY,
-				content: priceAndDateParts.join(' '),
-			})
-		}
+	const priceAndDateParts: string[] = []
+	if (priceText) priceAndDateParts.push(priceText)
+	if (settings.includeFooter) {
+		priceAndDateParts.push(
+			`${isCurrent ? 'until' : 'starts'} ${getDiscordTimestamp(endDate)}`,
+		)
+	}
+	if (priceAndDateParts.length > 0) {
+		textBlocks.push({
+			type: COMPONENT_TYPES.TEXT_DISPLAY,
+			content: priceAndDateParts.join(' '),
+		})
 	}
 
 	const cardComponents: Record<string, unknown>[] = []
@@ -127,15 +125,6 @@ function buildDesktopComponentsV2Card(
 			style: COMPONENT_TYPES.BUTTON_LINK,
 			label: 'Open in Browser',
 			url: browserUrl,
-		})
-	}
-
-	if (isValidPageSlug && pageSlug) {
-		actionButtons.push({
-			type: COMPONENT_TYPES.BUTTON,
-			style: COMPONENT_TYPES.BUTTON_LINK,
-			label: 'Open in Launcher',
-			url: `com.epicgames.launcher://store/p/${pageSlug}`,
 		})
 	}
 
@@ -213,7 +202,6 @@ function buildMobileComponentsV2Card(
 	})
 
 	const actionButtons: Record<string, unknown>[] = []
-
 
 	if (isCombined && iosUrl) {
 		actionButtons.push({
@@ -316,12 +304,15 @@ export function buildComponentsV2MessagePayload(
 		components.push(buildMobileComponentsV2Card(game, settings))
 	}
 
-	const claimablePCGamesCount = selectedCurrentGames.filter(g => !isMysteryGame(g) && g.namespace && g.id).length
+	const claimablePCGamesCount = selectedCurrentGames.filter(
+		g => !isMysteryGame(g) && g.namespace && g.id,
+	).length
 	const claimableMobileOffersCount = selectedMobileGames.reduce(
 		(acc, mg) => acc + (mg.iosOffer || mg.androidOffer ? 1 : 0),
 		0,
 	)
-	const totalSelectedGames = selectedCurrentGames.length + selectedMobileGames.length
+	const totalSelectedGames =
+		selectedCurrentGames.length + selectedMobileGames.length
 	const totalClaimable = claimablePCGamesCount + claimableMobileOffersCount
 	if (totalClaimable > 0 && totalSelectedGames > 1 && settings.includeCheckout) {
 		if (bulkCheckoutUrl || normalizedCheckoutLink) {
