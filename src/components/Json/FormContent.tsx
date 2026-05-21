@@ -214,8 +214,10 @@ export default function JsonFormContent({
 	).length
 	const showDesktopMessageFields = true
 	const showMobileMessageFields = settings.splitDesktopMobile
-	const isDesktopMessageIdDisabled = settings.splitDesktopMobile && !settings.sendDesktop
-	const isMobileMessageIdDisabled = settings.splitDesktopMobile && !settings.sendMobile
+	const isDesktopMessageIdDisabled =
+		settings.splitDesktopMobile && !settings.sendDesktop
+	const isMobileMessageIdDisabled =
+		settings.splitDesktopMobile && !settings.sendMobile
 	const showDesktopWebhookField =
 		!settings.splitDesktopMobile ||
 		(settings.splitDesktopMobile && canSplitDesktopMobile)
@@ -579,10 +581,13 @@ export default function JsonFormContent({
 													? 'Desktop Message ID (Edit mode)'
 													: 'Message ID (Edit mode)'}
 											</Label>
-											<div className={cn(
-												"flex items-center ring-1 ring-input rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-all",
-												isDesktopMessageIdDisabled && "opacity-50 pointer-events-none bg-muted/20"
-											)}>
+											<div
+												className={cn(
+													'flex items-center ring-1 ring-input rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-all',
+													isDesktopMessageIdDisabled &&
+														'opacity-50 pointer-events-none bg-muted/20',
+												)}
+											>
 												<Input
 													id={`message-id${idSuffix}`}
 													placeholder="Leave empty to send as a new message"
@@ -666,10 +671,13 @@ export default function JsonFormContent({
 												<Smartphone className="size-3.5 text-primary" />
 												Mobile Message ID (Edit mode)
 											</Label>
-											<div className={cn(
-												"flex items-center ring-1 ring-input rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-all",
-												isMobileMessageIdDisabled && "opacity-50 pointer-events-none bg-muted/20"
-											)}>
+											<div
+												className={cn(
+													'flex items-center ring-1 ring-input rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-all',
+													isMobileMessageIdDisabled &&
+														'opacity-50 pointer-events-none bg-muted/20',
+												)}
+											>
 												<Input
 													id={`message-id-mobile${idSuffix}`}
 													placeholder="Leave empty to send as a new message"
@@ -1011,7 +1019,7 @@ export default function JsonFormContent({
 													size="sm"
 													className="w-full font-medium"
 												>
-													<Undo2 className="size-4 mr-2" />
+													<Undo2 className="size-4" />
 													Reset Default
 												</Button>
 											</PopoverContent>

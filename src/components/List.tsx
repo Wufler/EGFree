@@ -195,42 +195,11 @@ function DesktopHome({
 		)
 
 	return (
-		<div className="space-y-10">
-			{games.currentGames.length > 0 && (
-				<div>
-					<SectionHeader icon={Monitor} title="Desktop" />
-					<div className={gridClassName}>
-						{games.currentGames.map(game => renderGameCard(game, true))}
-					</div>
-				</div>
-			)}
-			<div>
-				<SectionHeader
-					icon={Smartphone}
-					title="Mobile"
-					titleSuffix={
-						<Link
-							href="https://egdata.app"
-							target="_blank"
-							rel="noopener noreferrer"
-							className="text-xs font-medium text-muted-foreground transition-colors hover:text-epic-blue"
-						>
-							via egdata.app
-						</Link>
-					}
-				/>
-				<div className={gridClassName}>
-					{activeMobileGames.length > 0 ? (
-						activeMobileGames.map(game => renderMobileGameCard(game, false))
-					) : (
-						<MobilePlaceholder />
-					)}
-				</div>
-			</div>
+		<>
 			{bulkCheckoutUrl &&
 				totalClaimable > 0 &&
 				games.currentGames.length + activeMobileGames.length > 1 && (
-					<div className="bg-epic-blue/10 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between p-4 border border-epic-blue/20 rounded-xl">
+					<div className="bg-epic-blue/10 flex flex-col sm:flex-row gap-3 mb-6 items-start sm:items-center justify-between p-4 border border-epic-blue/20 rounded-xl">
 						<div>
 							<h4 className="font-extrabold text-epic-blue flex items-center gap-2">
 								<ShoppingCart className="size-5" /> Claim All Free Games
@@ -276,23 +245,56 @@ function DesktopHome({
 						</div>
 					</div>
 				)}
-			{games.nextGames.length > 0 && (
+			<div className="space-y-10">
+				{games.currentGames.length > 0 && (
+					<div>
+						<SectionHeader icon={Monitor} title="Desktop" />
+						<div className={gridClassName}>
+							{games.currentGames.map(game => renderGameCard(game, true))}
+						</div>
+					</div>
+				)}
 				<div>
-					<SectionHeader icon={Calendar} title="Upcoming" />
+					<SectionHeader
+						icon={Smartphone}
+						title="Mobile"
+						titleSuffix={
+							<Link
+								href="https://egdata.app"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="text-xs font-medium text-muted-foreground transition-colors hover:text-epic-blue"
+							>
+								via egdata.app
+							</Link>
+						}
+					/>
 					<div className={gridClassName}>
-						{games.nextGames.map(game => renderGameCard(game, false))}
+						{activeMobileGames.length > 0 ? (
+							activeMobileGames.map(game => renderMobileGameCard(game, false))
+						) : (
+							<MobilePlaceholder />
+						)}
 					</div>
 				</div>
-			)}
-			{expiredMobileGames.length > 0 && (
-				<div>
-					<SectionHeader icon={XCircle} title="Expired" />
-					<div className={gridClassName}>
-						{expiredMobileGames.map(game => renderMobileGameCard(game, true))}
+				{games.nextGames.length > 0 && (
+					<div>
+						<SectionHeader icon={Calendar} title="Upcoming" />
+						<div className={gridClassName}>
+							{games.nextGames.map(game => renderGameCard(game, false))}
+						</div>
 					</div>
-				</div>
-			)}
-		</div>
+				)}
+				{expiredMobileGames.length > 0 && (
+					<div>
+						<SectionHeader icon={XCircle} title="Expired" />
+						<div className={gridClassName}>
+							{expiredMobileGames.map(game => renderMobileGameCard(game, true))}
+						</div>
+					</div>
+				)}
+			</div>
+		</>
 	)
 }
 
@@ -977,7 +979,7 @@ export default function List({
 											)}
 										</div>
 
-										{/* Date Banner with Real-time countdown */}
+										{/* Date with countdown */}
 										{showDate && dateValue && (
 											<div
 												className={`p-4 rounded-xl border flex flex-col gap-2 ${
@@ -1037,7 +1039,25 @@ export default function List({
 														variant="outline"
 														className="w-full flex items-center gap-2 py-6"
 													>
-														<Copy className="size-4" /> Copy Checkout URL
+														<Copy className="size-4" /> Copy Link
+													</Button>
+
+													{/* Store page button */}
+													<Button
+														asChild
+														variant="secondary"
+														className="w-full flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+													>
+														<a
+															href={
+																getGameLinkMeta(selectedGame as GameItem).browserUrl ||
+																'https://store.epicgames.com/en-US/free-games'
+															}
+															target="_blank"
+															rel="noopener noreferrer"
+														>
+															<ExternalLink className="size-4" /> Store Page
+														</a>
 													</Button>
 												</div>
 											) : isMobile ? (
@@ -1242,7 +1262,7 @@ export default function List({
 																		) : (
 																			<>
 																				<Copy className="size-4" />
-																				<span>Copy Checkout Link</span>
+																				<span>Copy Link</span>
 																			</>
 																		)}
 																	</Button>
