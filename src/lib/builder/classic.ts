@@ -22,7 +22,6 @@ export function buildClassicEmbedPayload(
 		selectedGames,
 		selectedCurrentGames,
 		selectedMobileGames,
-		mysteryGames,
 		bulkCheckoutUrl,
 		normalizedCheckoutLink,
 	} = buildPayloadContext(games, settings, checkoutLink, parsedMobileGames)
@@ -155,9 +154,15 @@ export function buildClassicEmbedPayload(
 		})
 	}
 
-	const totalClaimable = selectedCurrentGames.length + selectedMobileGames.length
-	if (totalClaimable > 1 && settings.includeCheckout) {
-		if (!mysteryGames || normalizedCheckoutLink) {
+	const claimablePCGamesCount = selectedCurrentGames.filter(g => !isMysteryGame(g) && g.namespace && g.id).length
+	const claimableMobileOffersCount = selectedMobileGames.reduce(
+		(acc, mg) => acc + (mg.iosOffer || mg.androidOffer ? 1 : 0),
+		0,
+	)
+	const totalSelectedGames = selectedCurrentGames.length + selectedMobileGames.length
+	const totalClaimable = claimablePCGamesCount + claimableMobileOffersCount
+	if (totalClaimable > 0 && totalSelectedGames > 1 && settings.includeCheckout) {
+		if (bulkCheckoutUrl || normalizedCheckoutLink) {
 			embeds.push({
 				color: parseInt(settings.embedColor.replace('#', ''), 16),
 				title: '🛒 Checkout Link',

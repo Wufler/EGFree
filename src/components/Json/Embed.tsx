@@ -65,14 +65,16 @@ export default function DiscordPreview({
 		return (
 			<div>
 				<div>
-					<div className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-muted/40">
-						Desktop embed in
-						{settings.webhookChannelName && (
-							<span className="ml-1 font-medium normal-case tracking-normal">
-								{settings.webhookChannelName}
-							</span>
-						)}
-					</div>
+					{!settings.useDesktopWebhookForMobile && (
+						<div className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-muted/40">
+							Desktop embed in
+							{settings.webhookChannelName && (
+								<span className="ml-1 font-medium normal-case tracking-normal">
+									{settings.webhookChannelName}
+								</span>
+							)}
+						</div>
+					)}
 					<DiscordPreview
 						games={games}
 						settings={{
@@ -85,18 +87,20 @@ export default function DiscordPreview({
 					/>
 				</div>
 				<div>
-					<div className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-muted/40">
-						Mobile embed in
-						{(settings.useDesktopWebhookForMobile
-							? settings.webhookChannelName
-							: settings.webhookChannelNameMobile) && (
-							<span className="ml-1 font-medium normal-case tracking-normal">
-								{settings.useDesktopWebhookForMobile
-									? settings.webhookChannelName
-									: settings.webhookChannelNameMobile}
-							</span>
-						)}
-					</div>
+					{!settings.useDesktopWebhookForMobile && (
+						<div className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-muted/40">
+							Mobile embed in
+							{(settings.useDesktopWebhookForMobile
+								? settings.webhookChannelName
+								: settings.webhookChannelNameMobile) && (
+								<span className="ml-1 font-medium normal-case tracking-normal">
+									{settings.useDesktopWebhookForMobile
+										? settings.webhookChannelName
+										: settings.webhookChannelNameMobile}
+								</span>
+							)}
+						</div>
+					)}
 					<DiscordPreview
 						games={games}
 						settings={{
@@ -133,9 +137,6 @@ export default function DiscordPreview({
 
 	const mysteryGames = effectiveGames.currentGames.some(isMysteryGame)
 
-	const selectedMobileCount = parsedMobileGames.filter(
-		game => includeMobileGames && settings.selectedGames[getMobileGameKey(game)],
-	).length
 	const messageContent =
 		settings.splitDesktopMobile && !settings.sendDesktop && settings.sendMobile
 			? settings.embedContentMobile || defaultMobileContent
@@ -152,21 +153,27 @@ export default function DiscordPreview({
 	const selectedCurrentGames = effectiveGames.currentGames.filter(
 		game => includeDesktopGames && settings.selectedGames[game.id],
 	)
+	const selectedCurrentGamesCount = selectedCurrentGames.length
 	const selectedMobileGames = parsedMobileGames.filter(
 		game => includeMobileGames && settings.selectedGames[getMobileGameKey(game)],
 	)
 	const bulkCheckoutUrl = buildBulkCheckoutUrl(
 		selectedCurrentGames,
 		selectedMobileGames,
-		mysteryGames,
 	)
 
 	const normalizedCheckoutLink = normalizeEpicCheckoutLink(checkoutLink)
-	const selectedCurrentGamesCount = selectedCurrentGames.length
+	const claimablePCGamesCount = selectedCurrentGames.filter(g => !isMysteryGame(g) && g.namespace && g.id).length
+	const claimableMobileOffersCount = selectedMobileGames.reduce(
+		(acc, mg) => acc + (mg.iosOffer || mg.androidOffer ? 1 : 0),
+		0,
+	)
+	const totalClaimable = claimablePCGamesCount + claimableMobileOffersCount
 	const componentsV2CheckoutHref =
 		settings.includeCheckout &&
-		selectedCurrentGamesCount + selectedMobileCount > 1 &&
-		(!mysteryGames || normalizedCheckoutLink)
+		totalClaimable > 0 &&
+		(selectedCurrentGames.length + selectedMobileGames.length > 1) &&
+		(bulkCheckoutUrl || normalizedCheckoutLink)
 			? normalizedCheckoutLink || bulkCheckoutUrl
 			: null
 
@@ -671,7 +678,8 @@ export default function DiscordPreview({
 						})}
 
 					{!settings.componentsV2 &&
-						selectedCurrentGamesCount + selectedMobileCount > 1 &&
+						totalClaimable > 0 &&
+						(selectedCurrentGames.length + selectedMobileGames.length > 1) &&
 						settings.includeCheckout && (
 							<div
 								className="flex mt-1 rounded-sm overflow-hidden"
@@ -688,13 +696,6 @@ export default function DiscordPreview({
 											>
 												{settings.includeClaimGame ? 'Claim All Games' : 'Checkout'}
 											</a>
-										) : mysteryGames ? (
-											<>
-												<span>Currently disabled due to mystery games</span>
-												<span className="text-xs text-black dark:text-white">
-													This will not appear in the JSON data
-												</span>
-											</>
 										) : bulkCheckoutUrl ? (
 											<a
 												href={bulkCheckoutUrl}
@@ -703,6 +704,13 @@ export default function DiscordPreview({
 											>
 												{settings.includeClaimGame ? 'Claim All Games' : 'Checkout'}
 											</a>
+										) : mysteryGames ? (
+											<>
+												<span>Currently disabled due to mystery games</span>
+												<span className="text-xs text-black dark:text-white">
+													This will not appear in the JSON data
+												</span>
+											</>
 										) : (
 											<span className="text-black dark:text-white">
 												No claimable games available

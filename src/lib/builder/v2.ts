@@ -278,7 +278,6 @@ export function buildComponentsV2MessagePayload(
 		selectedGames,
 		selectedCurrentGames,
 		selectedMobileGames,
-		mysteryGames,
 		bulkCheckoutUrl,
 		normalizedCheckoutLink,
 	} = buildPayloadContext(games, settings, checkoutLink, parsedMobileGames)
@@ -308,9 +307,15 @@ export function buildComponentsV2MessagePayload(
 		components.push(buildMobileComponentsV2Card(game, settings))
 	}
 
-	const totalClaimable = selectedCurrentGames.length + selectedMobileGames.length
-	if (totalClaimable > 1 && settings.includeCheckout) {
-		if (!mysteryGames || normalizedCheckoutLink) {
+	const claimablePCGamesCount = selectedCurrentGames.filter(g => !isMysteryGame(g) && g.namespace && g.id).length
+	const claimableMobileOffersCount = selectedMobileGames.reduce(
+		(acc, mg) => acc + (mg.iosOffer || mg.androidOffer ? 1 : 0),
+		0,
+	)
+	const totalSelectedGames = selectedCurrentGames.length + selectedMobileGames.length
+	const totalClaimable = claimablePCGamesCount + claimableMobileOffersCount
+	if (totalClaimable > 0 && totalSelectedGames > 1 && settings.includeCheckout) {
+		if (bulkCheckoutUrl || normalizedCheckoutLink) {
 			const checkoutHref = normalizedCheckoutLink || bulkCheckoutUrl
 			if (checkoutHref) {
 				components.push({

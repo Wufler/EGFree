@@ -162,7 +162,6 @@ export function buildPayloadContext(
 	const bulkCheckoutUrl = buildBulkCheckoutUrl(
 		selectedCurrentGames,
 		selectedMobileGames,
-		mysteryGames,
 	)
 
 	return {
@@ -221,11 +220,9 @@ export function formatMobileGamePrice(game: { originalPrice: number; currencyCod
 export function buildBulkCheckoutUrl(
 	selectedCurrentGames: GameItem[],
 	selectedMobileGames: MobileGameDataLocal[],
-	mysteryGames: boolean,
 ): string | null {
-	if (mysteryGames) return null
-
 	const pcOffers = selectedCurrentGames
+		.filter(game => !isMysteryGame(game))
 		.map(game => {
 			if (!game.namespace || !game.id) return null
 			return `1-${game.namespace}-${game.id}-`

@@ -214,6 +214,8 @@ export default function JsonFormContent({
 	).length
 	const showDesktopMessageFields = true
 	const showMobileMessageFields = settings.splitDesktopMobile
+	const isDesktopMessageIdDisabled = settings.splitDesktopMobile && !settings.sendDesktop
+	const isMobileMessageIdDisabled = settings.splitDesktopMobile && !settings.sendMobile
 	const showDesktopWebhookField =
 		!settings.splitDesktopMobile ||
 		(settings.splitDesktopMobile && canSplitDesktopMobile)
@@ -577,13 +579,17 @@ export default function JsonFormContent({
 													? 'Desktop Message ID (Edit mode)'
 													: 'Message ID (Edit mode)'}
 											</Label>
-											<div className="flex items-center ring-1 ring-input rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-all">
+											<div className={cn(
+												"flex items-center ring-1 ring-input rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-all",
+												isDesktopMessageIdDisabled && "opacity-50 pointer-events-none bg-muted/20"
+											)}>
 												<Input
 													id={`message-id${idSuffix}`}
 													placeholder="Leave empty to send as a new message"
 													value={messageId}
 													onChange={e => setMessageId(e.target.value)}
 													className="border-0 rounded-none focus-visible:ring-0 text-sm"
+													disabled={isDesktopMessageIdDisabled}
 												/>
 												<Button
 													variant="ghost"
@@ -600,6 +606,7 @@ export default function JsonFormContent({
 														}
 													}}
 													className="px-3 h-full rounded-none border-l hover:bg-accent hover:text-accent-foreground"
+													disabled={isDesktopMessageIdDisabled}
 												>
 													<Clipboard className="size-4" />
 												</Button>
@@ -659,13 +666,17 @@ export default function JsonFormContent({
 												<Smartphone className="size-3.5 text-primary" />
 												Mobile Message ID (Edit mode)
 											</Label>
-											<div className="flex items-center ring-1 ring-input rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-all">
+											<div className={cn(
+												"flex items-center ring-1 ring-input rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-all",
+												isMobileMessageIdDisabled && "opacity-50 pointer-events-none bg-muted/20"
+											)}>
 												<Input
 													id={`message-id-mobile${idSuffix}`}
 													placeholder="Leave empty to send as a new message"
 													value={mobileMessageId}
 													onChange={e => setMobileMessageId(e.target.value)}
 													className="border-0 rounded-none focus-visible:ring-0 text-sm"
+													disabled={isMobileMessageIdDisabled}
 												/>
 												<Button
 													variant="ghost"
@@ -682,6 +693,7 @@ export default function JsonFormContent({
 														}
 													}}
 													className="px-3 h-full rounded-none border-l hover:bg-accent hover:text-accent-foreground"
+													disabled={isMobileMessageIdDisabled}
 												>
 													<Clipboard className="size-4" />
 												</Button>

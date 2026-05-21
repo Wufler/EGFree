@@ -185,64 +185,17 @@ function DesktopHome({
 	const bulkCheckoutUrl = buildBulkCheckoutUrl(
 		games.currentGames,
 		activeMobileGames,
-		games.currentGames.some(isMysteryGame),
 	)
 	const totalClaimable =
-		games.currentGames.filter(g => !isMysteryGame(g) && g.namespace && g.id).length +
+		games.currentGames.filter(g => !isMysteryGame(g) && g.namespace && g.id)
+			.length +
 		activeMobileGames.reduce(
-			(acc, mg) => acc + (mg.iosOffer ? 1 : 0) + (mg.androidOffer ? 1 : 0),
+			(acc, mg) => acc + (mg.iosOffer || mg.androidOffer ? 1 : 0),
 			0,
 		)
 
 	return (
 		<div className="space-y-10">
-			{bulkCheckoutUrl && totalClaimable > 1 && (
-				<div className="bg-epic-blue/10 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between p-4 border border-epic-blue/20 rounded-xl">
-					<div>
-						<h4 className="font-extrabold text-epic-blue flex items-center gap-2">
-							<ShoppingCart className="size-5" /> Claim All Free Games
-						</h4>
-						<p className="text-xs text-muted-foreground mt-0.5">
-							There are currently {totalClaimable} available games that can be
-							automatically claimed.
-						</p>
-					</div>
-					<div className="flex items-center gap-2 w-full sm:w-auto">
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => copyToClipboard(bulkCheckoutUrl)}
-							className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 py-4 px-4 transition-all duration-200 ${
-								copiedUrl === bulkCheckoutUrl
-									? 'border-green-500 text-green-500 bg-green-500/10'
-									: ''
-							}`}
-						>
-							{copiedUrl === bulkCheckoutUrl ? (
-								<>
-									<Check className="size-4 animate-in zoom-in duration-300" />
-									<span>Copied!</span>
-								</>
-							) : (
-								<>
-									<Copy className="size-4" />
-									<span>Copy Link</span>
-								</>
-							)}
-						</Button>
-						<Button
-							size="sm"
-							className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-epic-blue hover:bg-epic-blue/90 text-white font-bold py-4 px-4 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-							asChild
-						>
-							<a href={bulkCheckoutUrl} target="_blank" rel="noopener noreferrer">
-								<ExternalLink className="size-4" />
-								<span>Claim All</span>
-							</a>
-						</Button>
-					</div>
-				</div>
-			)}
 			{games.currentGames.length > 0 && (
 				<div>
 					<SectionHeader icon={Monitor} title="Desktop" />
@@ -274,6 +227,55 @@ function DesktopHome({
 					)}
 				</div>
 			</div>
+			{bulkCheckoutUrl &&
+				totalClaimable > 0 &&
+				games.currentGames.length + activeMobileGames.length > 1 && (
+					<div className="bg-epic-blue/10 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between p-4 border border-epic-blue/20 rounded-xl">
+						<div>
+							<h4 className="font-extrabold text-epic-blue flex items-center gap-2">
+								<ShoppingCart className="size-5" /> Claim All Free Games
+							</h4>
+							<p className="text-xs text-muted-foreground mt-0.5">
+								There are currently {totalClaimable} available games that can be
+								automatically claimed.
+							</p>
+						</div>
+						<div className="flex items-center gap-2 w-full sm:w-auto">
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => copyToClipboard(bulkCheckoutUrl)}
+								className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 py-4 px-4 transition-all duration-200 ${
+									copiedUrl === bulkCheckoutUrl
+										? 'border-green-500 text-green-500 bg-green-500/10'
+										: ''
+								}`}
+							>
+								{copiedUrl === bulkCheckoutUrl ? (
+									<>
+										<Check className="size-4 animate-in zoom-in duration-300" />
+										<span>Copied!</span>
+									</>
+								) : (
+									<>
+										<Copy className="size-4" />
+										<span>Copy Link</span>
+									</>
+								)}
+							</Button>
+							<Button
+								size="sm"
+								className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-epic-blue hover:bg-epic-blue/90 text-white font-bold py-4 px-4 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+								asChild
+							>
+								<a href={bulkCheckoutUrl} target="_blank" rel="noopener noreferrer">
+									<ExternalLink className="size-4" />
+									<span>Claim All</span>
+								</a>
+							</Button>
+						</div>
+					</div>
+				)}
 			{games.nextGames.length > 0 && (
 				<div>
 					<SectionHeader icon={Calendar} title="Upcoming" />
@@ -338,8 +340,6 @@ export default function List({
 			toast.error('Failed to copy URL')
 		}
 	}
-
-
 
 	useEffect(() => {
 		if (typeof window === 'undefined') return
