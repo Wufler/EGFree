@@ -47,6 +47,8 @@ import {
 	SheetDescription,
 } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
+import Theme from './ui/Theme'
+import Github from './ui/github'
 
 function NoOffers() {
 	return (
@@ -708,7 +710,7 @@ export default function List({
 				</div>
 
 				{/* Desktop Sidebar */}
-				<aside className="hidden lg:block lg:self-stretch border-r bg-background/50">
+				<aside className="hidden lg:flex lg:flex-col lg:self-stretch w-64 border-r bg-background/50">
 					<div className="p-6 lg:sticky lg:top-0 lg:max-h-[calc(100dvh-5rem)] lg:overflow-y-auto">
 						<div className="space-y-1">
 							<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
@@ -735,6 +737,25 @@ export default function List({
 							</TabsList>
 						</div>
 					</div>
+					<footer className="px-4 mt-auto border-t border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black text-center py-4">
+						<div className="text-sm text-epic-gray dark:text-muted-foreground">
+							2026,{' '}
+							<Link href="https://wolfey.me" target="_blank">
+								wolfey.me
+							</Link>
+						</div>
+						<div className="mt-1 text-[11px] text-epic-gray dark:text-muted-foreground">
+							This is not affiliated by any means with Epic Games, Inc.
+						</div>
+						<div className="mt-2 flex items-center justify-center gap-1 text-epic-gray dark:text-muted-foreground">
+							<Theme />
+							<Button variant="ghost" size="icon" className="rounded-full" asChild>
+								<Link href="https://github.com/Wufler/EGFree" target="_blank">
+									<Github className="size-5 dark:invert-35 invert" />
+								</Link>
+							</Button>
+						</div>
+					</footer>
 				</aside>
 
 				{/* Content Area */}

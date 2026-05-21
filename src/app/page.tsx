@@ -1,11 +1,11 @@
 import Json from '@/components/Json/Builder'
 import List from '@/components/List'
-import Theme from '@/components/ui/Theme'
-import { Button } from '@/components/ui/button'
-import Github from '@/components/ui/github'
 import { getEpicFreeGames } from '@/lib/getGames'
 import { getMobileGames } from '@/lib/EGData'
 import Link from 'next/link'
+import Theme from '@/components/ui/Theme'
+import { Button } from '@/components/ui/button'
+import Github from '@/components/ui/github'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,10 +38,8 @@ export default async function Home() {
 						</div>
 					</div>
 				</header>
-
 				<List games={games} mobile={mobileGames} />
-
-				<footer className="px-4 mt-auto border-t border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black text-center py-4">
+				<footer className="px-4 mt-auto border-t border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black text-center py-4 flex flex-col lg:hidden">
 					<div className="text-sm text-epic-gray dark:text-muted-foreground">
 						2026,{' '}
 						<Link href="https://wolfey.me" target="_blank">
