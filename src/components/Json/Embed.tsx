@@ -375,7 +375,7 @@ export default function DiscordPreview({
 											</div>
 											<div className="mt-2.5 mb-4 flex flex-wrap gap-2">
 												{browserHref && (
-													<PreviewLinkButton href={browserHref} label="Open in browser" />
+													<PreviewLinkButton href={browserHref} label="Open in Browser" />
 												)}
 												{claimHrefV2 && (
 													<PreviewLinkButton href={claimHrefV2} label={claimLabelV2} />
