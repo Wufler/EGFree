@@ -314,7 +314,7 @@ export function buildComponentsV2MessagePayload(
 	const totalSelectedGames =
 		selectedCurrentGames.length + selectedMobileGames.length
 	const totalClaimable = claimablePCGamesCount + claimableMobileOffersCount
-	if (totalClaimable > 0 && totalSelectedGames > 1 && settings.includeCheckout) {
+	if ((totalClaimable > 0 || Boolean(normalizedCheckoutLink)) && totalSelectedGames > 1 && settings.includeCheckout) {
 		if (bulkCheckoutUrl || normalizedCheckoutLink) {
 			const checkoutHref = normalizedCheckoutLink || bulkCheckoutUrl
 			if (checkoutHref) {

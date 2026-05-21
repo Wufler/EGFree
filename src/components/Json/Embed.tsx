@@ -173,7 +173,7 @@ export default function DiscordPreview({
 	const totalClaimable = claimablePCGamesCount + claimableMobileOffersCount
 	const componentsV2CheckoutHref =
 		settings.includeCheckout &&
-		totalClaimable > 0 &&
+		(totalClaimable > 0 || Boolean(normalizedCheckoutLink)) &&
 		selectedCurrentGames.length + selectedMobileGames.length > 1 &&
 		(bulkCheckoutUrl || normalizedCheckoutLink)
 			? normalizedCheckoutLink || bulkCheckoutUrl
@@ -686,7 +686,7 @@ export default function DiscordPreview({
 						})}
 
 					{!settings.componentsV2 &&
-						totalClaimable > 0 &&
+						(totalClaimable > 0 || Boolean(normalizedCheckoutLink)) &&
 						selectedCurrentGames.length + selectedMobileGames.length > 1 &&
 						settings.includeCheckout && (
 							<div
