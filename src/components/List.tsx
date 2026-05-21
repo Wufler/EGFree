@@ -1149,7 +1149,7 @@ export default function List({
 																				target="_blank"
 																				rel="noopener noreferrer"
 																			>
-																				Claim
+																				Claim Game
 																			</a>
 																		</Button>
 																		<Button
@@ -1198,7 +1198,7 @@ export default function List({
 																				target="_blank"
 																				rel="noopener noreferrer"
 																			>
-																				Claim
+																				Claim Game
 																			</a>
 																		</Button>
 																		<Button
