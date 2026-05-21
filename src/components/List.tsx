@@ -199,11 +199,20 @@ function DesktopHome({
 					<div className="bg-epic-blue/10 flex flex-col sm:flex-row gap-3 mb-6 items-start sm:items-center justify-between p-4 border border-epic-blue/20 rounded-xl">
 						<div>
 							<h4 className="font-extrabold text-epic-blue flex items-center gap-2">
-								<ShoppingCart className="size-5" /> Claim All Free Games
+								<ShoppingCart className="size-5" /> Claim All Free Games (
+								{totalClaimable} available)
 							</h4>
 							<p className="text-xs text-muted-foreground mt-0.5">
-								There are currently {totalClaimable} available games that can be
-								automatically claimed.
+								You are required to be signed in on the&nbsp;
+								<a
+									href="https://store.epicgames.com/"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="text-epic-blue hover:underline"
+								>
+									Epic Games Store
+								</a>{' '}
+								before claiming games.
 							</p>
 						</div>
 						<div className="flex items-center gap-2 w-full sm:w-auto">
