@@ -38,6 +38,7 @@ import {
 	Copy,
 	ExternalLink,
 	AlertTriangle,
+	Minimize2,
 } from 'lucide-react'
 import Image from 'next/image'
 import {
@@ -46,9 +47,15 @@ import {
 	SheetTitle,
 	SheetDescription,
 } from '@/components/ui/sheet'
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import Theme from './ui/Theme'
 import Github from './ui/github'
+import Json from '@/components/Json/Builder'
 
 function NoOffers() {
 	return (
@@ -171,6 +178,11 @@ function DesktopHome({
 	renderMobileGameCard,
 	copiedUrl,
 	copyToClipboard,
+	isClaimAllMinimized,
+	onMinimize,
+	bulkCheckoutUrl,
+	totalClaimable,
+	isMounted,
 }: {
 	games: Game
 	activeMobileGames: MobileGame[]
@@ -180,25 +192,29 @@ function DesktopHome({
 	renderMobileGameCard: (game: MobileGame, isExpired?: boolean) => ReactNode
 	copiedUrl: string
 	copyToClipboard: (url: string) => void
+	isClaimAllMinimized: boolean
+	onMinimize: (val: boolean) => void
+	bulkCheckoutUrl: string | null
+	totalClaimable: number
+	isMounted: boolean
 }) {
-	const bulkCheckoutUrl = buildBulkCheckoutUrl(
-		games.currentGames,
-		activeMobileGames,
-	)
-	const totalClaimable =
-		games.currentGames.filter(g => !isMysteryGame(g) && g.namespace && g.id)
-			.length +
-		activeMobileGames.reduce(
-			(acc, mg) => acc + (mg.iosOffer || mg.androidOffer ? 1 : 0),
-			0,
-		)
-
 	return (
 		<>
 			{bulkCheckoutUrl &&
 				totalClaimable > 0 &&
+				isMounted &&
+				!isClaimAllMinimized &&
 				games.currentGames.length + activeMobileGames.length > 1 && (
-					<div className="bg-epic-blue/10 flex flex-col sm:flex-row gap-3 mb-6 items-start sm:items-center justify-between p-4 border border-epic-blue/20 rounded-xl">
+					<div className="relative bg-epic-blue/10 flex flex-col sm:flex-row gap-3 mb-6 items-start sm:items-center justify-between p-4 pr-12 border border-epic-blue/20 rounded-xl">
+						<Button
+							variant="ghost"
+							size="icon"
+							className="absolute right-2 top-2 h-8 w-8 text-epic-blue hover:bg-epic-blue/20 hover:text-epic-blue rounded-full"
+							onClick={() => onMinimize(true)}
+							title="Minimize to Cart"
+						>
+							<Minimize2 className="size-4" />
+						</Button>
 						<div>
 							<h4 className="font-extrabold text-epic-blue flex items-center gap-2">
 								<ShoppingCart className="size-5" /> Claim All Free Games (
@@ -336,6 +352,44 @@ export default function List({
 		null,
 	)
 	const [copiedUrl, setCopiedUrl] = useState<string>('')
+	const [isClaimAllMinimized, setIsClaimAllMinimized] = useState<boolean>(false)
+	const [isMounted, setIsMounted] = useState<boolean>(false)
+
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setIsMounted(true)
+			if (typeof window !== 'undefined') {
+				const saved = localStorage.getItem('claimAllMinimized')
+				if (saved === 'true') {
+					setIsClaimAllMinimized(true)
+				}
+			}
+		}, 0)
+		return () => clearTimeout(timer)
+	}, [])
+
+	const handleMinimize = (minimized: boolean) => {
+		setIsClaimAllMinimized(minimized)
+		if (typeof window !== 'undefined') {
+			localStorage.setItem('claimAllMinimized', String(minimized))
+		}
+	}
+
+	const bulkCheckoutUrl = useMemo(() => {
+		return buildBulkCheckoutUrl(effectiveGames.currentGames, activeMobileGames)
+	}, [effectiveGames.currentGames, activeMobileGames])
+
+	const totalClaimable = useMemo(() => {
+		return (
+			effectiveGames.currentGames.filter(
+				g => !isMysteryGame(g) && g.namespace && g.id,
+			).length +
+			activeMobileGames.reduce(
+				(acc, mg) => acc + (mg.iosOffer || mg.androidOffer ? 1 : 0),
+				0,
+			)
+		)
+	}, [effectiveGames.currentGames, activeMobileGames])
 
 	const copyToClipboard = async (url: string) => {
 		try {
@@ -670,6 +724,104 @@ export default function List({
 
 	return (
 		<div className="w-full min-w-0 flex-1 flex flex-col">
+			<header className="border-b border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black px-8 shrink-0">
+				<div className="mx-auto flex h-14 sm:h-20 items-center justify-between py-4 sm:py-0 gap-4 md:gap-0">
+					<Link
+						href="https://store.epicgames.com/free-games"
+						target="_blank"
+						className="group flex items-center text-center"
+					>
+						<h1 className="hidden sm:block text-xl sm:text-2xl font-bold text-epic-blue transition-colors duration-200 group-hover:text-foreground dark:group-hover:text-white">
+							Epic Games
+						</h1>
+						<div className="hidden sm:block ml-0 sm:ml-4 h-6 w-px bg-gray-200 dark:bg-white/10" />
+						<span className="ml-0 sm:ml-4 text-base sm:text-lg font-medium dark:text-white text-epic-gray">
+							Free Games
+						</span>
+					</Link>
+					<div className="flex items-center gap-2">
+						<Json games={games} mobile={mobile} />
+						{/* Minimized Cart Button */}
+						{isClaimAllMinimized && bulkCheckoutUrl && totalClaimable > 0 && (
+							<div className="animate-in fade-in zoom-in duration-300 mr-2">
+								<Popover>
+									<PopoverTrigger asChild>
+										<Button
+											size="icon"
+											className="relative h-10 w-10 rounded-full bg-epic-blue hover:bg-epic-blue/90 text-white shadow-sm flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+										>
+											<ShoppingCart className="size-5" />
+										</Button>
+									</PopoverTrigger>
+									<PopoverContent
+										align="end"
+										side="bottom"
+										className="w-64 p-3 bg-background/95 backdrop-blur-md border border-epic-blue/20 rounded-xl shadow-xl z-50"
+									>
+										<div className="space-y-3">
+											<div>
+												<h4 className="font-extrabold text-sm text-epic-blue flex items-center gap-1.5">
+													<ShoppingCart className="size-4" /> Claim All Free Games
+												</h4>
+												<p className="text-xs text-muted-foreground mt-0.5">
+													{totalClaimable} game{totalClaimable > 1 ? 's' : ''} available to
+													claim.
+												</p>
+											</div>
+											<div className="flex flex-col gap-2 pt-2 border-t border-muted/50">
+												<Button
+													size="sm"
+													className="w-full flex items-center justify-center gap-2 bg-epic-blue hover:bg-epic-blue/90 text-white font-bold py-2 transition-all duration-200"
+													asChild
+												>
+													<a
+														href={bulkCheckoutUrl}
+														target="_blank"
+														rel="noopener noreferrer"
+													>
+														<ExternalLink className="size-4" />
+														<span>Claim All</span>
+													</a>
+												</Button>
+												<Button
+													variant="outline"
+													size="sm"
+													onClick={() => copyToClipboard(bulkCheckoutUrl)}
+													className={`w-full flex items-center justify-center gap-2 py-2 transition-all duration-200 ${
+														copiedUrl === bulkCheckoutUrl
+															? 'border-green-500 text-green-500 bg-green-500/10'
+															: ''
+													}`}
+												>
+													{copiedUrl === bulkCheckoutUrl ? (
+														<>
+															<Check className="size-4 animate-in zoom-in duration-300" />
+															<span>Copied!</span>
+														</>
+													) : (
+														<>
+															<Copy className="size-4" />
+															<span>Copy Link</span>
+														</>
+													)}
+												</Button>
+												<Button
+													variant="ghost"
+													size="sm"
+													onClick={() => handleMinimize(false)}
+													className="w-full flex items-center justify-center gap-2 text-xs py-1 text-muted-foreground hover:text-foreground"
+												>
+													<span>Expand to Banner</span>
+												</Button>
+											</div>
+										</div>
+									</PopoverContent>
+								</Popover>
+							</div>
+						)}
+					</div>
+				</div>
+			</header>
 			<Tabs
 				defaultValue="home"
 				value={activeTab}
@@ -737,25 +889,6 @@ export default function List({
 							</TabsList>
 						</div>
 					</div>
-					<footer className="px-4 mt-auto border-t border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black text-center py-4">
-						<div className="text-sm text-epic-gray dark:text-muted-foreground">
-							2026,{' '}
-							<Link href="https://wolfey.me" target="_blank">
-								wolfey.me
-							</Link>
-						</div>
-						<div className="mt-1 text-[11px] text-epic-gray dark:text-muted-foreground">
-							This is not affiliated by any means with Epic Games, Inc.
-						</div>
-						<div className="mt-2 flex items-center justify-center gap-1 text-epic-gray dark:text-muted-foreground">
-							<Theme />
-							<Button variant="ghost" size="icon" className="rounded-full" asChild>
-								<Link href="https://github.com/Wufler/EGFree" target="_blank">
-									<Github className="size-5 dark:invert-35 invert" />
-								</Link>
-							</Button>
-						</div>
-					</footer>
 				</aside>
 
 				{/* Content Area */}
@@ -774,6 +907,11 @@ export default function List({
 								renderMobileGameCard={renderMobileGameCard}
 								copiedUrl={copiedUrl}
 								copyToClipboard={copyToClipboard}
+								isClaimAllMinimized={isClaimAllMinimized}
+								onMinimize={handleMinimize}
+								bulkCheckoutUrl={bulkCheckoutUrl}
+								totalClaimable={totalClaimable}
+								isMounted={isMounted}
 							/>
 						</TabsContent>
 						<TabsContent
@@ -1044,7 +1182,7 @@ export default function List({
 											{isMystery && !isUpcoming ? (
 												<div className="space-y-4">
 													{/* Mystery Banner */}
-													<div className="p-4 rounded-xl border border-amber-500/20 border-l-4 border-l-amber-500 bg-amber-500/5 text-xs leading-relaxed space-y-1.5 shadow-sm">
+													<div className="p-4 rounded-xl border-amber-500/20 border-3 bg-amber-500/5 text-xs leading-relaxed space-y-1.5 shadow-sm">
 														<div className="font-bold flex items-center gap-2 text-sm dark:text-amber-400 text-amber-800 dark:text-amber-250">
 															<AlertTriangle className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
 															<span>Unable to generate checkout link</span>
@@ -1164,7 +1302,7 @@ export default function List({
 																				target="_blank"
 																				rel="noopener noreferrer"
 																			>
-																				<ExternalLink className="size-4" /> Claim
+																				<ExternalLink className="size-4" /> Claim Game
 																			</a>
 																		</Button>
 																		<Button
@@ -1203,15 +1341,14 @@ export default function List({
 																	<div className="flex gap-2">
 																		<Button
 																			asChild
-																			variant="secondary"
-																			className="flex-1 py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+																			className="flex-1 bg-epic-blue hover:bg-epic-blue/90 text-white font-bold py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
 																		>
 																			<a
 																				href={iosCheckoutUrl ?? '#'}
 																				target="_blank"
 																				rel="noopener noreferrer"
 																			>
-																				Claim Game
+																				<ExternalLink className="size-4" /> Claim Game
 																			</a>
 																		</Button>
 																		<Button
@@ -1252,15 +1389,14 @@ export default function List({
 																	<div className="flex gap-2">
 																		<Button
 																			asChild
-																			variant="secondary"
-																			className="flex-1 py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+																			className="flex-1 bg-epic-blue hover:bg-epic-blue/90 text-white font-bold py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
 																		>
 																			<a
 																				href={androidCheckoutUrl ?? '#'}
 																				target="_blank"
 																				rel="noopener noreferrer"
 																			>
-																				Claim Game
+																				<ExternalLink className="size-4" /> Claim Game
 																			</a>
 																		</Button>
 																		<Button
@@ -1377,6 +1513,26 @@ export default function List({
 						})()}
 				</SheetContent>
 			</Sheet>
+
+			<footer className="w-full px-4 border-t border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black text-center py-4 mt-auto shrink-0">
+				<div className="text-sm text-epic-gray dark:text-muted-foreground">
+					2026,{' '}
+					<Link href="https://wolfey.me" target="_blank">
+						wolfey.me
+					</Link>
+				</div>
+				<div className="mt-1 text-[11px] text-epic-gray dark:text-muted-foreground">
+					This is not affiliated by any means with Epic Games, Inc.
+				</div>
+				<div className="mt-2 flex items-center justify-center gap-1 text-epic-gray dark:text-muted-foreground">
+					<Theme />
+					<Button variant="ghost" size="icon" className="rounded-full" asChild>
+						<Link href="https://github.com/Wufler/EGFree" target="_blank">
+							<Github className="size-5 dark:invert-35 invert" />
+						</Link>
+					</Button>
+				</div>
+			</footer>
 		</div>
 	)
 }
