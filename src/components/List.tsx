@@ -724,8 +724,8 @@ export default function List({
 
 	return (
 		<div className="w-full min-w-0 flex-1 flex flex-col">
-			<header className="border-b border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black px-8 shrink-0">
-				<div className="mx-auto flex h-14 sm:h-20 items-center justify-between py-4 sm:py-0 gap-4 md:gap-0">
+			<header className="border-b border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black sm:px-8 px-4 shrink-0">
+				<div className="mx-auto flex h-12 sm:h-18 items-center justify-between py-4 sm:py-0 gap-4 md:gap-0">
 					<Link
 						href="https://store.epicgames.com/free-games"
 						target="_blank"
@@ -739,18 +739,18 @@ export default function List({
 							Free Games
 						</span>
 					</Link>
-					<div className="flex items-center gap-2">
+					<div className="flex items-center gap-1 sm:gap-2">
 						<Json games={games} mobile={mobile} />
 						{/* Minimized Cart Button */}
 						{isClaimAllMinimized && bulkCheckoutUrl && totalClaimable > 0 && (
-							<div className="animate-in fade-in zoom-in duration-300 mr-2">
+							<div className="animate-in fade-in zoom-in duration-300">
 								<Popover>
 									<PopoverTrigger asChild>
 										<Button
 											size="icon"
-											className="relative h-10 w-10 rounded-full bg-epic-blue hover:bg-epic-blue/90 text-white shadow-sm flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+											className="relative size-8 sm:size-10 rounded-full bg-epic-blue hover:bg-epic-blue/90 text-white shadow-sm flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
 										>
-											<ShoppingCart className="size-5" />
+											<ShoppingCart className="size-4 sm:size-5" />
 										</Button>
 									</PopoverTrigger>
 									<PopoverContent
