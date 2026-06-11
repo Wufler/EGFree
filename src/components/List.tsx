@@ -103,16 +103,18 @@ function TimeDisplay({
 	date,
 	type,
 	onExpired,
+	alwaysShowSeconds = false,
 }: {
 	date: Date
 	type: 'end' | 'start'
 	onExpired?: () => void
+	alwaysShowSeconds?: boolean
 }) {
 	const [timeLeft, setTimeLeft] = useState<string>('')
 
 	useEffect(() => {
 		const updateTime = () => {
-			const time = calculateTimeLeft(date)
+			const time = calculateTimeLeft(date, alwaysShowSeconds)
 			setTimeLeft(time)
 
 			if (time === 'Expired' && onExpired) {
@@ -123,7 +125,7 @@ function TimeDisplay({
 		updateTime()
 		const timer = setInterval(updateTime, 1000)
 		return () => clearInterval(timer)
-	}, [date, onExpired])
+	}, [date, onExpired, alwaysShowSeconds])
 
 	if (!timeLeft) return null
 
@@ -1125,22 +1127,30 @@ export default function List({
 										</div>
 
 										{/* Price Section */}
-										<div className="flex items-center gap-3">
+										<div className="flex flex-col items-start gap-2">
 											{isUpcoming ? (
-												<span className="text-lg font-bold text-muted-foreground">
-													Upcoming Offer
-												</span>
+												<span className="text-lg font-bold">Upcoming Offer</span>
 											) : isExpired ? (
 												<span className="text-lg font-bold text-red-500">
 													Offer Expired
 												</span>
 											) : (
-												<span className="rounded-md bg-epic-blue px-2.5 py-1 text-xs font-extrabold text-white shadow-sm">
+												<span className="rounded-md bg-epic-blue px-2.5 py-1 text-xs font-extrabold text-white">
 													FREE
 												</span>
 											)}
 											{originalPriceFormatted && (
-												<span className="text-sm font-medium text-muted-foreground line-through">
+												<span
+													className={`text-sm font-medium text-muted-foreground ${
+														isCurrent ||
+														(isMobile && !isExpired) ||
+														(!isMobile &&
+															(selectedGame as GameItem).price.totalPrice.discountPrice !==
+																(selectedGame as GameItem).price.totalPrice.originalPrice)
+															? 'line-through'
+															: ''
+													}`}
+												>
 													{originalPriceFormatted}
 												</span>
 											)}
@@ -1171,6 +1181,7 @@ export default function List({
 															date={dateValue}
 															type={dateLabel === 'Ends' ? 'end' : 'start'}
 															onExpired={handleExpired}
+															alwaysShowSeconds
 														/>
 													</div>
 												)}

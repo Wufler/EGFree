@@ -13,7 +13,7 @@ export default function NotFound() {
 				</p>
 				<div className="mt-4 flex items-center justify-center gap-x-6">
 					<Link href={'/'}>
-						<Button className="text-white dark:text-black">Back to Home</Button>
+						<Button className="text-white">Back to Home</Button>
 					</Link>
 				</div>
 			</div>
