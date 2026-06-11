@@ -1,5 +1,5 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -40,26 +40,22 @@ export function getEffectiveGames(
 		return endDate ? endDate > referenceDate : true
 	})
 
-	const noActiveCurrent = activeCurrentGames.length === 0
-
 	const promotedUpcomingGames = games.nextGames.filter(game => {
 		const startDate = getUpcomingOfferStartDate(game)
-		if (startDate && startDate <= referenceDate) return true
-		return noActiveCurrent
+		return startDate ? startDate <= referenceDate : false
 	})
 
-	const upcomingGames = noActiveCurrent
-		? []
-		: games.nextGames.filter(game => {
-			const startDate = getUpcomingOfferStartDate(game)
-			return startDate ? startDate > referenceDate : true
-		})
+	const upcomingGames = games.nextGames.filter(game => {
+		const startDate = getUpcomingOfferStartDate(game)
+		return startDate ? startDate > referenceDate : true
+	})
 
 	const existingIds = new Set(activeCurrentGames.map(game => game.id))
 	const uniquePromotedGames = promotedUpcomingGames
 		.filter(game => !existingIds.has(game.id))
 		.map(game => {
-			const upcoming = game.promotions?.upcomingPromotionalOffers?.[0]?.promotionalOffers?.[0]
+			const upcoming =
+				game.promotions?.upcomingPromotionalOffers?.[0]?.promotionalOffers?.[0]
 			if (!upcoming) return game
 			return {
 				...game,

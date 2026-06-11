@@ -1129,7 +1129,7 @@ export default function List({
 										{/* Price Section */}
 										<div className="flex flex-col items-start gap-2">
 											{isUpcoming ? (
-												<span className="text-lg font-bold">Upcoming Offer</span>
+												<span className="text-lg font-bold">Upcoming Free Offer</span>
 											) : isExpired ? (
 												<span className="text-lg font-bold text-red-500">
 													Offer Expired
