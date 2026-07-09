@@ -78,6 +78,7 @@ function NoOffers() {
 	)
 }
 
+/* 
 function MobilePlaceholder() {
 	return (
 		<div className="relative aspect-video overflow-hidden rounded-xl bg-epic-dark-blue/30 border border-dashed border-epic-blue/30 flex flex-col justify-between p-6 hover:border-epic-blue/50 hover:bg-epic-dark-blue/40 transition-all duration-300 group">
@@ -98,6 +99,7 @@ function MobilePlaceholder() {
 		</div>
 	)
 }
+*/
 
 function TimeDisplay({
 	date,
@@ -280,29 +282,27 @@ function DesktopHome({
 						</div>
 					</div>
 				)}
-				<div>
-					<SectionHeader
-						icon={Smartphone}
-						title="Mobile"
-						titleSuffix={
-							<Link
-								href="https://egdata.app"
-								target="_blank"
-								rel="noopener noreferrer"
-								className="text-xs font-medium text-muted-foreground transition-colors hover:text-epic-blue"
-							>
-								via egdata.app
-							</Link>
-						}
-					/>
-					<div className={gridClassName}>
-						{activeMobileGames.length > 0 ? (
-							activeMobileGames.map(game => renderMobileGameCard(game, false))
-						) : (
-							<MobilePlaceholder />
-						)}
+				{activeMobileGames.length > 0 && (
+					<div>
+						<SectionHeader
+							icon={Smartphone}
+							title="Mobile"
+							titleSuffix={
+								<Link
+									href="https://egdata.app"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="text-xs font-medium text-muted-foreground transition-colors hover:text-epic-blue"
+								>
+									via egdata.app
+								</Link>
+							}
+						/>
+						<div className={gridClassName}>
+							{activeMobileGames.map(game => renderMobileGameCard(game, false))}
+						</div>
 					</div>
-				</div>
+				)}
 				{games.nextGames.length > 0 && (
 					<div>
 						<SectionHeader icon={Calendar} title="Upcoming" />
@@ -694,13 +694,10 @@ export default function List({
 					<NoOffers />
 				)
 			case 'mobile':
-				return activeMobileGames.length > 0 ? (
+				return (
 					<div className={tabGridClass}>
-						{activeMobileGames.map(game => renderMobileGameCard(game, false))}
-					</div>
-				) : (
-					<div className={tabGridClass}>
-						<MobilePlaceholder />
+						{activeMobileGames.length > 0 &&
+							activeMobileGames.map(game => renderMobileGameCard(game, false))}
 					</div>
 				)
 			case 'upcoming':
@@ -846,10 +843,12 @@ export default function List({
 							<Monitor className="size-4" />
 							{activeTab === 'current' && <span>Desktop</span>}
 						</TabsTrigger>
-						<TabsTrigger value="mobile" className={mobileTabTriggerClass}>
-							<Smartphone className="size-4" />
-							{activeTab === 'mobile' && <span>Mobile</span>}
-						</TabsTrigger>
+						{mobileGames.length > 0 && (
+							<TabsTrigger value="mobile" className={mobileTabTriggerClass}>
+								<Smartphone className="size-4" />
+								{activeTab === 'mobile' && <span>Mobile</span>}
+							</TabsTrigger>
+						)}
 						<TabsTrigger value="upcoming" className={mobileTabTriggerClass}>
 							<Calendar className="size-4" />
 							{activeTab === 'upcoming' && <span>Upcoming</span>}
@@ -877,9 +876,11 @@ export default function List({
 								<TabsTrigger value="current" className={desktopSidebarTriggerClass}>
 									<Monitor className="size-4" /> Desktop
 								</TabsTrigger>
-								<TabsTrigger value="mobile" className={desktopSidebarTriggerClass}>
-									<Smartphone className="size-4" /> Mobile
-								</TabsTrigger>
+								{mobileGames.length > 0 && (
+									<TabsTrigger value="mobile" className={desktopSidebarTriggerClass}>
+										<Smartphone className="size-4" /> Mobile
+									</TabsTrigger>
+								)}
 								{expiredMobileGames.length > 0 && (
 									<TabsTrigger value="expired" className={desktopSidebarTriggerClass}>
 										<XCircle className="size-4" /> Expired
