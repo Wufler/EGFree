@@ -553,12 +553,20 @@ export default function DiscordPreview({
 														<div className="mt-1 flex flex-wrap items-baseline gap-x-1 gap-y-0.5 text-sm">
 															{settings.includePrice && (
 																<span className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5">
-																	<span className="font-light line-through text-black dark:text-white">
-																		{priceFormatted}
-																	</span>
-																	<span className="font-semibold text-black dark:text-white">
-																		Free
-																	</span>
+																	{game.originalPrice > 0 ? (
+																		<>
+																			<span className="font-light line-through text-black dark:text-white">
+																				{priceFormatted}
+																			</span>
+																			<span className="font-semibold text-black dark:text-white">
+																				Free
+																			</span>
+																		</>
+																	) : (
+																		<span className="font-semibold text-black dark:text-white">
+																			Free
+																		</span>
+																	)}
 																</span>
 															)}
 															{settings.includeFooter && endDate && (
@@ -641,10 +649,16 @@ export default function DiscordPreview({
 											)}
 											{settings.includePrice && (
 												<span>
-													<span className="line-through font-extralight">
-														{priceFormatted}
-													</span>{' '}
-													<span className="font-semibold">Free</span>
+													{game.originalPrice > 0 ? (
+														<>
+															<span className="line-through font-extralight">
+																{priceFormatted}
+															</span>{' '}
+															<span className="font-semibold">Free</span>
+														</>
+													) : (
+														<span className="font-semibold">Free</span>
+													)}
 												</span>
 											)}
 											{isCombined && iosLink && (

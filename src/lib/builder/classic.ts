@@ -30,8 +30,7 @@ export function buildClassicEmbedPayload(
 		const isCurrent = game.promotions.promotionalOffers.length > 0
 		const dateInfo = isCurrent
 			? game.promotions.promotionalOffers[0].promotionalOffers[0].endDate
-			: game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0]
-				.startDate
+			: game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0].startDate
 		const endDate = new Date(dateInfo)
 		const { browserUrl, isValidPageSlug, isBundleGame, linkPrefix, pageSlug } =
 			getGameLinkMeta(game)
@@ -126,7 +125,11 @@ export function buildClassicEmbedPayload(
 			descriptionParts.push(`[Claim Game](${mobileCheckoutUrl})`)
 		}
 		if (settings.includePrice) {
-			descriptionParts.push(`~~${priceFormatted}~~ **Free**`)
+			if (game.originalPrice > 0) {
+				descriptionParts.push(`~~${priceFormatted}~~ **Free**`)
+			} else {
+				descriptionParts.push(`**Free**`)
+			}
 		}
 		if (isCombined && iosUrl) {
 			descriptionParts.push(`[iOS](${iosUrl})`)
@@ -146,20 +149,23 @@ export function buildClassicEmbedPayload(
 			description: descriptionParts.join('\n'),
 			...(settings.includeFooter &&
 				game.promoEndDate && {
-				footer: { text: 'Offer ends' },
-				timestamp: new Date(game.promoEndDate).toISOString(),
-			}),
+					footer: { text: 'Offer ends' },
+					timestamp: new Date(game.promoEndDate).toISOString(),
+				}),
 			...(settings.includeImage &&
 				game.imageUrl && { image: { url: game.imageUrl } }),
 		})
 	}
 
-	const claimablePCGamesCount = selectedCurrentGames.filter(g => !isMysteryGame(g) && g.namespace && g.id).length
+	const claimablePCGamesCount = selectedCurrentGames.filter(
+		g => !isMysteryGame(g) && g.namespace && g.id,
+	).length
 	const claimableMobileOffersCount = selectedMobileGames.reduce(
 		(acc, mg) => acc + (mg.iosOffer || mg.androidOffer ? 1 : 0),
 		0,
 	)
-	const totalSelectedGames = selectedCurrentGames.length + selectedMobileGames.length
+	const totalSelectedGames =
+		selectedCurrentGames.length + selectedMobileGames.length
 	const totalClaimable = claimablePCGamesCount + claimableMobileOffersCount
 	if (totalClaimable > 0 && totalSelectedGames > 1 && settings.includeCheckout) {
 		if (bulkCheckoutUrl || normalizedCheckoutLink) {

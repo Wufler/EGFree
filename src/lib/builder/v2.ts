@@ -68,9 +68,9 @@ function buildDesktopComponentsV2Card(
 
 	const resolveClaimLabel = () =>
 		isCurrent &&
-			!isCurrentlyFree(game) &&
-			isDiscountedGame(game) &&
-			isValidPageSlug
+		!isCurrentlyFree(game) &&
+		isDiscountedGame(game) &&
+		isValidPageSlug
 			? 'Store Page'
 			: getClaimText()
 
@@ -171,7 +171,11 @@ function buildMobileComponentsV2Card(
 
 	const mobilePriceParts: string[] = []
 	if (settings.includePrice) {
-		mobilePriceParts.push(`~~${priceFormatted}~~ **Free**`)
+		if (game.originalPrice > 0) {
+			mobilePriceParts.push(`~~${priceFormatted}~~ **Free**`)
+		} else {
+			mobilePriceParts.push(`**Free**`)
+		}
 	}
 	if (settings.includeFooter && endDate) {
 		mobilePriceParts.push(`until ${getDiscordTimestamp(endDate)}`)
@@ -314,7 +318,11 @@ export function buildComponentsV2MessagePayload(
 	const totalSelectedGames =
 		selectedCurrentGames.length + selectedMobileGames.length
 	const totalClaimable = claimablePCGamesCount + claimableMobileOffersCount
-	if ((totalClaimable > 0 || Boolean(normalizedCheckoutLink)) && totalSelectedGames > 1 && settings.includeCheckout) {
+	if (
+		(totalClaimable > 0 || Boolean(normalizedCheckoutLink)) &&
+		totalSelectedGames > 1 &&
+		settings.includeCheckout
+	) {
 		if (bulkCheckoutUrl || normalizedCheckoutLink) {
 			const checkoutHref = normalizedCheckoutLink || bulkCheckoutUrl
 			if (checkoutHref) {

@@ -11,6 +11,7 @@ function getPlatform(tags: EgDataTag[]): 'ios' | 'android' | null {
 
 export async function getMobileGame(
 	offerId: string,
+	initialOffer?: EgDataOffer,
 ): Promise<{
 	gameData: MobileGameData
 	enteredPlatform: 'ios' | 'android' | null
@@ -19,9 +20,15 @@ export async function getMobileGame(
 		const logs = false
 		if (logs) console.log('Fetching mobile game data for offerId:', offerId)
 
-		const offerRes = await fetch(`${EGDATA_API}/offers/${offerId}`)
-		if (!offerRes.ok) return null
-		const offer: EgDataOffer = await offerRes.json()
+		let offer = initialOffer
+		if (!offer) {
+			const offerRes = await fetch(`${EGDATA_API}/offers/${offerId}`)
+			if (!offerRes.ok) return null
+			offer = await offerRes.json()
+		}
+
+		if (!offer) return null
+
 		if (logs) console.log('Offer title:', offer.title)
 		const enteredPlatform = getPlatform(offer.tags || [])
 
@@ -32,27 +39,37 @@ export async function getMobileGame(
 			),
 		])
 
-		if (!priceRes.ok) return null
-		const priceData: EgDataPrice = await priceRes.json()
+		let originalPrice = 0
+		let currencyCode = 'USD'
+		let promoEndDate = offer.giveaway?.endDate || ''
+		let appliedRules: EgDataAppliedRule[] = []
 
-		if (logs) console.log('Price data appliedRules:', priceData.appliedRules)
+		if (priceRes.ok) {
+			const priceData: EgDataPrice = await priceRes.json()
+			originalPrice = priceData.price.originalPrice
+			currencyCode = priceData.price.currencyCode
+			appliedRules = priceData.appliedRules || []
 
-		const freeRules = priceData.appliedRules.filter(
-			rule => rule.discountSetting.discountPercentage === 0,
-		)
-		if (logs) console.log('Free rules found:', freeRules.length, freeRules)
+			const freeRules = appliedRules.filter(
+				rule => rule.discountSetting?.discountPercentage === 0,
+			)
+			if (logs) console.log('Free rules found:', freeRules.length, freeRules)
 
-		const promoRule =
-			freeRules.length > 0
-				? freeRules.reduce((latest, current) => {
-						const latestDate = new Date(latest.endDate)
-						const currentDate = new Date(current.endDate)
-						return currentDate > latestDate ? current : latest
-					})
-				: null
-		if (logs) console.log('Selected promo rule:', promoRule)
+			const promoRule =
+				freeRules.length > 0
+					? freeRules.reduce((latest, current) => {
+							const latestDate = new Date(latest.endDate)
+							const currentDate = new Date(current.endDate)
+							return currentDate > latestDate ? current : latest
+						})
+					: null
+			if (logs) console.log('Selected promo rule:', promoRule)
 
-		const promoEndDate = promoRule?.endDate || ''
+			if (promoRule?.endDate) {
+				promoEndDate = promoRule.endDate
+			}
+		}
+
 		if (logs) {
 			console.log(
 				'Final promoEndDate:',
@@ -98,7 +115,7 @@ export async function getMobileGame(
 
 		if (!iosOffer || !androidOffer) {
 			const siblingIds = new Set<string>()
-			for (const rule of priceData.appliedRules || []) {
+			for (const rule of appliedRules) {
 				for (const entry of rule.promotionSetting?.discountOffers || []) {
 					if (entry.offerId && entry.offerId !== offer.id) {
 						siblingIds.add(entry.offerId)
@@ -136,8 +153,8 @@ export async function getMobileGame(
 			title: offer.title,
 			namespace: offer.namespace,
 			imageUrl: imageUrl + '?w=720&quality=high&resize=1',
-			originalPrice: priceData.price.originalPrice,
-			currencyCode: priceData.price.currencyCode,
+			originalPrice,
+			currencyCode,
 			promoEndDate,
 			seller: offer.seller ? { name: offer.seller.name } : undefined,
 			iosOffer,
@@ -159,7 +176,7 @@ export async function getMobileGames(): Promise<MobileGameData[]> {
 		if (!Array.isArray(offers)) return []
 
 		const results = await Promise.all(
-			offers.map(offer => getMobileGame(offer.id)),
+			offers.map(offer => getMobileGame(offer.id, offer)),
 		)
 
 		const getEndTime = (promoEndDate: string) => {
@@ -232,8 +249,12 @@ export function generateDiscordEmbed(gameData: MobileGameData): object {
 		fieldParts.push(`[Claim Game](${checkoutUrl})`)
 	}
 
-	const priceStr = formatPrice(originalPrice, currencyCode)
-	fieldParts.push(`~~${priceStr}~~ **Free**`)
+	if (originalPrice > 0) {
+		const priceStr = formatPrice(originalPrice, currencyCode)
+		fieldParts.push(`~~${priceStr}~~ **Free**`)
+	} else {
+		fieldParts.push(`**Free**`)
+	}
 
 	if (isCombined && iosOffer?.pageSlug) {
 		fieldParts.push(

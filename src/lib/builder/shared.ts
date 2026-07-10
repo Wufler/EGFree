@@ -45,10 +45,7 @@ export function getDiscordTimestamp(date: Date): string {
 }
 
 export function escapeDiscordMarkdownLinkLabel(label: string): string {
-	return label
-		.replace(/\\/g, '\\\\')
-		.replace(/\[/g, '\\[')
-		.replace(/\]/g, '\\]')
+	return label.replace(/\\/g, '\\\\').replace(/\[/g, '\\[').replace(/\]/g, '\\]')
 }
 
 export function epicMobileProductPageUrl(
@@ -79,7 +76,8 @@ export function normalizeEpicCheckoutLink(url: string): string {
 }
 
 export function isCurrentlyFree(game: GameItem): boolean {
-	const currentPromo = game.promotions?.promotionalOffers[0]?.promotionalOffers[0]
+	const currentPromo =
+		game.promotions?.promotionalOffers[0]?.promotionalOffers[0]
 	return Boolean(
 		currentPromo?.discountSetting?.discountPercentage === 0 &&
 		game.promotions?.promotionalOffers.length > 0,
@@ -91,7 +89,8 @@ export function isPermanentlyFree(game: GameItem): boolean {
 }
 
 export function isDiscountedGame(game: GameItem): boolean {
-	const currentPromo = game.promotions?.promotionalOffers[0]?.promotionalOffers[0]
+	const currentPromo =
+		game.promotions?.promotionalOffers[0]?.promotionalOffers[0]
 	return Boolean(
 		currentPromo?.discountSetting?.discountPercentage > 0 &&
 		game.promotions?.promotionalOffers.length > 0,
@@ -142,7 +141,8 @@ export function buildPayloadContext(
 	parsedMobileGames: MobileGame[],
 ): PayloadBuildContext {
 	const effectiveGames = getEffectiveGames(games)
-	const includeDesktopGames = !settings.splitDesktopMobile || settings.sendDesktop
+	const includeDesktopGames =
+		!settings.splitDesktopMobile || settings.sendDesktop
 	const includeMobileGames = !settings.splitDesktopMobile || settings.sendMobile
 	const selectedGames = [
 		...effectiveGames.currentGames,
@@ -189,7 +189,8 @@ export function getCheckoutUrl(game: GameItem): string | null {
 
 export function getMobileCheckoutUrl(game: MobileGame): string | null {
 	const offerParams: string[] = []
-	if (game.iosOffer) offerParams.push(`1-${game.namespace}-${game.iosOffer.id}--`)
+	if (game.iosOffer)
+		offerParams.push(`1-${game.namespace}-${game.iosOffer.id}--`)
 	if (game.androidOffer)
 		offerParams.push(`1-${game.namespace}-${game.androidOffer.id}--`)
 	if (offerParams.length === 0) return null
@@ -209,7 +210,10 @@ export function getMobileCheckoutUrlForPlatform(
 	return null
 }
 
-export function formatMobileGamePrice(game: { originalPrice: number; currencyCode: string }): string {
+export function formatMobileGamePrice(game: {
+	originalPrice: number
+	currencyCode: string
+}): string {
 	return new Intl.NumberFormat('en-US', {
 		style: 'currency',
 		currency: game.currencyCode,
