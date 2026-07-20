@@ -97,6 +97,7 @@ type EgDataSandboxResponse = {
 }
 
 type MobileGameData = {
+	id: string
 	title: string
 	namespace: string
 	imageUrl: string

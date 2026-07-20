@@ -89,7 +89,7 @@ function buildDesktopComponentsV2Card(
 	if (priceText) priceAndDateParts.push(priceText)
 	if (settings.includeFooter) {
 		priceAndDateParts.push(
-			`${isCurrent ? 'until' : 'starts'} ${getDiscordTimestamp(endDate)}`,
+			`${isCurrent ? 'until' : 'Free offer starts'} ${getDiscordTimestamp(endDate)}`,
 		)
 	}
 	if (priceAndDateParts.length > 0) {
@@ -264,9 +264,13 @@ function getDesktopPriceText(
 		}
 		return game.price.totalPrice.fmtPrice.originalPrice
 	}
-	return isPermanentlyFree(game)
-		? 'Free'
-		: game.price.totalPrice.fmtPrice.originalPrice
+	if (isPermanentlyFree(game)) return 'Free'
+	if (
+		game.price.totalPrice.discountPrice !== game.price.totalPrice.originalPrice
+	) {
+		return `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **${game.price.totalPrice.fmtPrice.discountPrice}**`
+	}
+	return game.price.totalPrice.fmtPrice.originalPrice
 }
 
 export function buildComponentsV2MessagePayload(

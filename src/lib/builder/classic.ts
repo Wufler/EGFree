@@ -55,9 +55,11 @@ export function buildClassicEmbedPayload(
 				}
 				return game.price.totalPrice.fmtPrice.originalPrice
 			}
-			return isPermanentlyFree(game)
-				? 'Free'
-				: game.price.totalPrice.fmtPrice.originalPrice
+			if (isPermanentlyFree(game)) return 'Free'
+			if (game.price.totalPrice.discountPrice !== game.price.totalPrice.originalPrice) {
+				return `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **${game.price.totalPrice.fmtPrice.discountPrice}**`
+			}
+			return game.price.totalPrice.fmtPrice.originalPrice
 		}
 
 		const getClaimLink = () => {
@@ -105,7 +107,7 @@ export function buildClassicEmbedPayload(
 			description,
 			...(settings.includeFooter && {
 				footer: {
-					text: isCurrent ? 'Offer ends' : 'Offer starts',
+					text: isCurrent ? 'Offer ends' : 'Free offer starts',
 				},
 				timestamp: endDate.toISOString(),
 			}),

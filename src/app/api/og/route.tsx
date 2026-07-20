@@ -275,15 +275,39 @@ export const GET = async () => {
 							originalPrice &&
 							originalPrice !== '0' &&
 							originalPrice !== 'Free' && (
-								<span
-									style={{
-										fontSize: '13px',
-										color: '#ffffff',
-										fontWeight: 'bold',
-									}}
-								>
-									{originalPrice}
-								</span>
+								game.price?.totalPrice?.discountPrice !== game.price?.totalPrice?.originalPrice ? (
+									<div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+										<span
+											style={{
+												fontSize: '11px',
+												color: '#8a8a8a',
+												textDecoration: 'line-through',
+												marginRight: '6px',
+											}}
+										>
+											{originalPrice}
+										</span>
+										<span
+											style={{
+												fontSize: '13px',
+												color: '#ffffff',
+												fontWeight: 'bold',
+											}}
+										>
+											{game.price.totalPrice.fmtPrice.discountPrice}
+										</span>
+									</div>
+								) : (
+									<span
+										style={{
+											fontSize: '13px',
+											color: '#ffffff',
+											fontWeight: 'bold',
+										}}
+									>
+										{originalPrice}
+									</span>
+								)
 							)
 						)}
 					</div>

@@ -11,7 +11,7 @@ import {
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { calculateTimeLeft } from '@/lib/calculateTime'
-import { getEffectiveGames, getMobileGameKey } from '@/lib/utils'
+import { getEffectiveGames } from '@/lib/utils'
 import {
 	isMysteryGame,
 	getCheckoutUrl,
@@ -331,9 +331,11 @@ const isMobileGame = (game: GameItem | MobileGame): game is MobileGame => {
 export default function List({
 	games,
 	mobile,
+	initialGameId,
 }: {
 	games: Game
 	mobile: MobileGameData[]
+	initialGameId?: string
 }) {
 	const router = useRouter()
 	const hasToastShown = useRef(false)
@@ -351,7 +353,16 @@ export default function List({
 	)
 
 	const [selectedGame, setSelectedGame] = useState<GameItem | MobileGame | null>(
-		null,
+		() => {
+			if (!initialGameId) return null
+			const allGames = [
+				...games.currentGames,
+				...games.nextGames,
+				...mobileGames,
+			] as (GameItem | MobileGame)[]
+			const foundGame = allGames.find(g => g.id === initialGameId)
+			return foundGame || null
+		},
 	)
 	const [copiedUrl, setCopiedUrl] = useState<string>('')
 	const [isClaimAllMinimized, setIsClaimAllMinimized] = useState<boolean>(false)
@@ -369,6 +380,33 @@ export default function List({
 		}, 0)
 		return () => clearTimeout(timer)
 	}, [])
+
+	useEffect(() => {
+		if (typeof window === 'undefined') return
+		const params = new URLSearchParams(window.location.search)
+		const current = params.get('offer')
+		const next = selectedGame?.id || null
+
+		if (current !== next) {
+			if (next) params.set('offer', next)
+			else params.delete('offer')
+			const newUrl = `${window.location.pathname}?${params.toString()}`
+			window.history.pushState(null, '', newUrl.replace(/\?$/, ''))
+		}
+	}, [selectedGame])
+
+	useEffect(() => {
+		const handleState = () => {
+			const id = new URLSearchParams(window.location.search).get('offer')
+			const all = [...games.currentGames, ...games.nextGames, ...mobileGames] as (
+				| GameItem
+				| MobileGame
+			)[]
+			setSelectedGame(all.find(g => g.id === id) || null)
+		}
+		window.addEventListener('state', handleState)
+		return () => window.removeEventListener('state', handleState)
+	}, [games, mobileGames])
 
 	const handleMinimize = (minimized: boolean) => {
 		setIsClaimAllMinimized(minimized)
@@ -639,7 +677,7 @@ export default function List({
 		return (
 			<button
 				type="button"
-				key={getMobileGameKey(game)}
+				key={game.id}
 				className="w-full text-left h-full animate-in fade-in zoom-in-95 duration-300 block focus-visible:outline-hidden"
 				onClick={() => setSelectedGame(game)}
 			>
@@ -1140,21 +1178,34 @@ export default function List({
 													FREE
 												</span>
 											)}
-											{originalPriceFormatted && (
-												<span
-													className={`text-sm font-medium text-muted-foreground ${
-														isCurrent ||
-														(isMobile && !isExpired) ||
-														(!isMobile &&
-															(selectedGame as GameItem).price.totalPrice.discountPrice !==
-																(selectedGame as GameItem).price.totalPrice.originalPrice)
-															? 'line-through'
-															: ''
-													}`}
-												>
-													{originalPriceFormatted}
-												</span>
-											)}
+											<div className="flex items-center gap-1.5">
+												{!isMobile &&
+													!isCurrent &&
+													(selectedGame as GameItem).price.totalPrice.discountPrice !==
+														(selectedGame as GameItem).price.totalPrice.originalPrice && (
+														<span className="text-sm font-bold text-foreground">
+															{
+																(selectedGame as GameItem).price.totalPrice.fmtPrice
+																	.discountPrice
+															}
+														</span>
+													)}
+												{originalPriceFormatted && (
+													<span
+														className={`text-sm font-medium text-muted-foreground ${
+															isCurrent ||
+															(isMobile && !isExpired) ||
+															(!isMobile &&
+																(selectedGame as GameItem).price.totalPrice.discountPrice !==
+																	(selectedGame as GameItem).price.totalPrice.originalPrice)
+																? 'line-through'
+																: ''
+														}`}
+													>
+														{originalPriceFormatted}
+													</span>
+												)}
+											</div>
 										</div>
 
 										{/* Date with countdown */}

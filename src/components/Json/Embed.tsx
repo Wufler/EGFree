@@ -314,6 +314,16 @@ export default function DiscordPreview({
 																		<span className="font-light text-black dark:text-white">
 																			Free
 																		</span>
+																	) : game.price.totalPrice.discountPrice !==
+																	  game.price.totalPrice.originalPrice ? (
+																		<>
+																			<span className="font-light line-through text-black dark:text-white">
+																				{game.price.totalPrice.fmtPrice.originalPrice}
+																			</span>
+																			<span className="font-semibold text-black dark:text-white">
+																				{game.price.totalPrice.fmtPrice.discountPrice}
+																			</span>
+																		</>
 																	) : (
 																		<span className="font-light text-black dark:text-white">
 																			{game.price.totalPrice.fmtPrice.originalPrice}
@@ -359,7 +369,7 @@ export default function DiscordPreview({
 															))}
 														{settings.includeFooter && (
 															<PreviewTimestampChip
-																label={isCurrent ? 'until' : 'starts'}
+																label={isCurrent ? 'until' : 'Free offer starts'}
 																date={endDate}
 															/>
 														)}
@@ -425,6 +435,16 @@ export default function DiscordPreview({
 												<span>
 													{game.price.totalPrice.originalPrice === 0 ? (
 														<span className="font-light">Free</span>
+													) : game.price.totalPrice.discountPrice !==
+													  game.price.totalPrice.originalPrice ? (
+														<span>
+															<span className="line-through font-extralight mr-1">
+																{game.price.totalPrice.fmtPrice.originalPrice}
+															</span>{' '}
+															<span className="font-semibold">
+																{game.price.totalPrice.fmtPrice.discountPrice}
+															</span>
+														</span>
 													) : (
 														<span>{game.price.totalPrice.fmtPrice.originalPrice}</span>
 													)}
@@ -507,7 +527,7 @@ export default function DiscordPreview({
 									</div>
 									{settings.includeFooter && (
 										<div className="text-xs font-light mt-2!">
-											{isCurrent ? 'Offer ends' : 'Offer starts'} •{' '}
+											{isCurrent ? 'Offer ends' : 'Free offer starts'} •{' '}
 											{format(endDate, 'dd/MM/yyyy')}
 										</div>
 									)}

@@ -150,6 +150,7 @@ export async function getMobileGame(
 			''
 
 		const gameData: MobileGameData = {
+			id: offer.id,
 			title: offer.title,
 			namespace: offer.namespace,
 			imageUrl: imageUrl + '?w=720&quality=high&resize=1',
