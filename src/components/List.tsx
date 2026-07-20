@@ -404,8 +404,8 @@ export default function List({
 			)[]
 			setSelectedGame(all.find(g => g.id === id) || null)
 		}
-		window.addEventListener('state', handleState)
-		return () => window.removeEventListener('state', handleState)
+		window.addEventListener('popstate', handleState)
+		return () => window.removeEventListener('popstate', handleState)
 	}, [games, mobileGames])
 
 	const handleMinimize = (minimized: boolean) => {
