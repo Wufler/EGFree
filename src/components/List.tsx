@@ -209,33 +209,28 @@ function DesktopHome({
 				isMounted &&
 				!isClaimAllMinimized &&
 				games.currentGames.length + activeMobileGames.length > 1 && (
-					<div className="relative bg-epic-blue/10 flex flex-col sm:flex-row gap-3 mb-6 items-start sm:items-center justify-between p-4 pr-12 border border-epic-blue/20 rounded-xl">
-						<Button
-							variant="ghost"
-							size="icon"
-							className="absolute right-2 top-2 h-8 w-8 text-epic-blue hover:bg-epic-blue/20 hover:text-epic-blue rounded-full"
-							onClick={() => onMinimize(true)}
-							title="Minimize to Cart"
-						>
-							<Minimize2 className="size-4" />
-						</Button>
-						<div>
-							<h4 className="font-extrabold text-epic-blue flex items-center gap-2">
-								<ShoppingCart className="size-5" /> Claim All Free Games (
-								{totalClaimable} available)
-							</h4>
-							<p className="text-xs text-muted-foreground mt-0.5">
-								You are required to be signed in on the&nbsp;
-								<a
-									href="https://store.epicgames.com/"
-									target="_blank"
-									rel="noopener noreferrer"
-									className="text-epic-blue hover:underline"
-								>
-									Epic Games Store
-								</a>{' '}
-								before claiming games.
-							</p>
+					<div className="bg-epic-blue/10 flex flex-col sm:flex-row gap-4 mb-6 sm:items-center justify-between p-5 border border-epic-blue/20 rounded-xl">
+						<div className="flex items-start gap-3 min-w-0">
+							<div className="shrink-0 size-9 rounded-lg bg-epic-blue/15 flex items-center justify-center">
+								<ShoppingCart className="size-4 text-epic-blue" />
+							</div>
+							<div className="min-w-0">
+								<h4 className="font-extrabold text-epic-blue text-sm">
+									Claim All Free Games ({totalClaimable} available)
+								</h4>
+								<p className="text-xs text-muted-foreground mt-0.5">
+									You are required to be signed in on the{' '}
+									<a
+										href="https://store.epicgames.com/"
+										target="_blank"
+										rel="noopener noreferrer"
+										className="text-epic-blue hover:underline"
+									>
+										Epic Games Store
+									</a>{' '}
+									before claiming games.
+								</p>
+							</div>
 						</div>
 						<div className="flex items-center gap-2 w-full sm:w-auto">
 							<Button
@@ -256,7 +251,7 @@ function DesktopHome({
 								) : (
 									<>
 										<Copy className="size-4" />
-										<span>Copy Link</span>
+										<span>Copy Checkout Link</span>
 									</>
 								)}
 							</Button>
@@ -269,6 +264,15 @@ function DesktopHome({
 									<ExternalLink className="size-4" />
 									<span>Claim All</span>
 								</a>
+							</Button>
+							<Button
+								variant="ghost"
+								size="icon"
+								className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground rounded-full"
+								onClick={() => onMinimize(true)}
+								title="Minimize to Cart"
+							>
+								<Minimize2 className="size-4" />
 							</Button>
 						</div>
 					</div>
@@ -838,7 +842,7 @@ export default function List({
 													) : (
 														<>
 															<Copy className="size-4" />
-															<span>Copy Link</span>
+															<span>Copy Checkout Link</span>
 														</>
 													)}
 												</Button>
@@ -1260,7 +1264,7 @@ export default function List({
 													{/* Disabled buttons */}
 													<Button
 														disabled
-														className="w-full flex items-center gap-2 py-6 text-base font-bold"
+														className="w-full flex items-center gap-2 py-6 font-bold"
 													>
 														<ShoppingCart className="size-5" /> Claim Game
 													</Button>
@@ -1269,7 +1273,7 @@ export default function List({
 														variant="outline"
 														className="w-full flex items-center gap-2 py-6"
 													>
-														<Copy className="size-4" /> Copy Link
+														<Copy className="size-4" /> Copy Checkout Link
 													</Button>
 
 													{/* Store Page / Launcher buttons */}
@@ -1377,7 +1381,9 @@ export default function List({
 																			}`}
 																			onClick={() => copyToClipboard(combinedCheckoutUrl)}
 																		>
-																			{copiedUrl === combinedCheckoutUrl ? 'Copied!' : 'Copy Link'}
+																			{copiedUrl === combinedCheckoutUrl
+																				? 'Copied!'
+																				: 'Copy Checkout Link'}
 																		</Button>
 																	</div>
 																</div>
@@ -1425,7 +1431,9 @@ export default function List({
 																				iosCheckoutUrl && copyToClipboard(iosCheckoutUrl)
 																			}
 																		>
-																			{copiedUrl === iosCheckoutUrl ? 'Copied!' : 'Copy Link'}
+																			{copiedUrl === iosCheckoutUrl
+																				? 'Copied!'
+																				: 'Copy Checkout Link'}
 																		</Button>
 																	</div>
 																</div>
@@ -1473,7 +1481,9 @@ export default function List({
 																				androidCheckoutUrl && copyToClipboard(androidCheckoutUrl)
 																			}
 																		>
-																			{copiedUrl === androidCheckoutUrl ? 'Copied!' : 'Copy Link'}
+																			{copiedUrl === androidCheckoutUrl
+																				? 'Copied!'
+																				: 'Copy Checkout Link'}
 																		</Button>
 																	</div>
 																</div>
@@ -1498,7 +1508,7 @@ export default function List({
 																<>
 																	<Button
 																		asChild
-																		className="w-full flex items-center justify-center gap-2 py-6 text-base font-bold bg-epic-blue hover:bg-epic-blue/90 text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg"
+																		className="w-full flex items-center justify-center gap-2 py-6 font-bold bg-epic-blue hover:bg-epic-blue/90 text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg"
 																	>
 																		<a
 																			href={checkoutUrl}
@@ -1527,7 +1537,7 @@ export default function List({
 																		) : (
 																			<>
 																				<Copy className="size-4" />
-																				<span>Copy Link</span>
+																				<span>Copy Checkout Link</span>
 																			</>
 																		)}
 																	</Button>
