@@ -211,8 +211,8 @@ function DesktopHome({
 				games.currentGames.length + activeMobileGames.length > 1 && (
 					<div className="bg-epic-blue/10 flex flex-col sm:flex-row gap-4 mb-6 sm:items-center justify-between p-5 border border-epic-blue/20 rounded-xl">
 						<div className="flex items-start gap-3 min-w-0">
-							<div className="shrink-0 size-9 rounded-lg bg-epic-blue/15 flex items-center justify-center">
-								<ShoppingCart className="size-4 text-epic-blue" />
+							<div className="shrink-0 size-10 rounded-lg bg-epic-blue/15 flex items-center justify-center">
+								<ShoppingCart className="size-5 text-epic-blue" />
 							</div>
 							<div className="min-w-0">
 								<h4 className="font-extrabold text-epic-blue text-sm">
@@ -228,7 +228,7 @@ function DesktopHome({
 									>
 										Epic Games Store
 									</a>{' '}
-									before claiming games.
+									before claiming the offers.
 								</p>
 							</div>
 						</div>
@@ -251,7 +251,7 @@ function DesktopHome({
 								) : (
 									<>
 										<Copy className="size-4" />
-										<span>Copy Checkout Link</span>
+										<span>Checkout Link</span>
 									</>
 								)}
 							</Button>
@@ -842,7 +842,7 @@ export default function List({
 													) : (
 														<>
 															<Copy className="size-4" />
-															<span>Copy Checkout Link</span>
+															<span>Checkout Link</span>
 														</>
 													)}
 												</Button>
@@ -1273,7 +1273,7 @@ export default function List({
 														variant="outline"
 														className="w-full flex items-center gap-2 py-6"
 													>
-														<Copy className="size-4" /> Copy Checkout Link
+														<Copy className="size-4" /> Checkout Link
 													</Button>
 
 													{/* Store Page / Launcher buttons */}
@@ -1381,9 +1381,10 @@ export default function List({
 																			}`}
 																			onClick={() => copyToClipboard(combinedCheckoutUrl)}
 																		>
+																			<Copy className="size-4" />
 																			{copiedUrl === combinedCheckoutUrl
 																				? 'Copied!'
-																				: 'Copy Checkout Link'}
+																				: 'Checkout Link'}
 																		</Button>
 																	</div>
 																</div>
@@ -1431,9 +1432,8 @@ export default function List({
 																				iosCheckoutUrl && copyToClipboard(iosCheckoutUrl)
 																			}
 																		>
-																			{copiedUrl === iosCheckoutUrl
-																				? 'Copied!'
-																				: 'Copy Checkout Link'}
+																			<Copy className="size-4" />
+																			{copiedUrl === iosCheckoutUrl ? 'Copied!' : 'Checkout Link'}
 																		</Button>
 																	</div>
 																</div>
@@ -1481,9 +1481,10 @@ export default function List({
 																				androidCheckoutUrl && copyToClipboard(androidCheckoutUrl)
 																			}
 																		>
+																			<Copy className="size-4" />
 																			{copiedUrl === androidCheckoutUrl
 																				? 'Copied!'
-																				: 'Copy Checkout Link'}
+																				: 'Checkout Link'}
 																		</Button>
 																	</div>
 																</div>
@@ -1537,7 +1538,7 @@ export default function List({
 																		) : (
 																			<>
 																				<Copy className="size-4" />
-																				<span>Copy Checkout Link</span>
+																				<span>Checkout Link</span>
 																			</>
 																		)}
 																	</Button>
