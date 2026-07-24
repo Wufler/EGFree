@@ -245,7 +245,7 @@ function DesktopHome({
 							>
 								{copiedUrl === bulkCheckoutUrl ? (
 									<>
-										<Check className="size-4 animate-in zoom-in duration-300" />
+										<Check className="size-4 animate-in zoom-in duration-150" />
 										<span>Copied!</span>
 									</>
 								) : (
@@ -836,7 +836,7 @@ export default function List({
 												>
 													{copiedUrl === bulkCheckoutUrl ? (
 														<>
-															<Check className="size-4 animate-in zoom-in duration-300" />
+															<Check className="size-4 animate-in zoom-in duration-150" />
 															<span>Copied!</span>
 														</>
 													) : (
@@ -1381,10 +1381,17 @@ export default function List({
 																			}`}
 																			onClick={() => copyToClipboard(combinedCheckoutUrl)}
 																		>
-																			<Copy className="size-4" />
-																			{copiedUrl === combinedCheckoutUrl
-																				? 'Copied!'
-																				: 'Checkout Link'}
+																			{copiedUrl === combinedCheckoutUrl ? (
+																				<>
+																					<Check className="size-4 animate-in zoom-in duration-150" />
+																					<span>Copied!</span>
+																				</>
+																			) : (
+																				<>
+																					<Copy className="size-4" />
+																					<span>Checkout Link</span>
+																				</>
+																			)}
 																		</Button>
 																	</div>
 																</div>
@@ -1432,8 +1439,17 @@ export default function List({
 																				iosCheckoutUrl && copyToClipboard(iosCheckoutUrl)
 																			}
 																		>
-																			<Copy className="size-4" />
-																			{copiedUrl === iosCheckoutUrl ? 'Copied!' : 'Checkout Link'}
+																			{copiedUrl === iosCheckoutUrl ? (
+																				<>
+																					<Check className="size-4 animate-in zoom-in duration-150" />
+																					<span>Copied!</span>
+																				</>
+																			) : (
+																				<>
+																					<Copy className="size-4" />
+																					<span>Checkout Link</span>
+																				</>
+																			)}
 																		</Button>
 																	</div>
 																</div>
@@ -1481,10 +1497,17 @@ export default function List({
 																				androidCheckoutUrl && copyToClipboard(androidCheckoutUrl)
 																			}
 																		>
-																			<Copy className="size-4" />
-																			{copiedUrl === androidCheckoutUrl
-																				? 'Copied!'
-																				: 'Checkout Link'}
+																			{copiedUrl === androidCheckoutUrl ? (
+																				<>
+																					<Check className="size-4 animate-in zoom-in duration-150" />
+																					<span>Copied!</span>
+																				</>
+																			) : (
+																				<>
+																					<Copy className="size-4" />
+																					<span>Checkout Link</span>
+																				</>
+																			)}
 																		</Button>
 																	</div>
 																</div>
@@ -1532,7 +1555,7 @@ export default function List({
 																	>
 																		{copiedUrl === checkoutUrl ? (
 																			<>
-																				<Check className="size-4 animate-in zoom-in duration-300" />
+																				<Check className="size-4 animate-in zoom-in duration-150" />
 																				<span>Copied!</span>
 																			</>
 																		) : (
