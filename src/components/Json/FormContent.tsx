@@ -714,10 +714,10 @@ export default function JsonFormContent({
 						<CardFooter>
 							<Button
 								onClick={handleWebhook}
-								className={`w-full py-6 text-lg transition-all duration-300 ${
+								className={`w-full py-6 text-md transition-all duration-300 ${
 									showWarning
 										? 'bg-yellow-500 hover:bg-yellow-600 text-black outline-8 outline-yellow-500/20'
-										: 'bg-primary hover:bg-primary/90 text-primary-foreground'
+										: 'bg-primary hover:bg-primary/90 text-white'
 								}`}
 								disabled={isLoading || !canSendWebhook}
 							>

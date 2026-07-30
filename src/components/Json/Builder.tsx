@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { FileJson2, X } from 'lucide-react'
+import { FileJson2, X, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import {
@@ -11,6 +11,16 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { encrypt, decrypt } from '@/lib/encryption'
@@ -172,6 +182,8 @@ export default function Json({
 					try {
 						const parsed = JSON.parse(savedSettings) as Partial<EgFreeSettings> & {
 							openAccordions?: string[]
+							lastCurrentGameIds?: string[]
+							lastMobileGameKeys?: string[]
 						}
 						const { openAccordions, ...parsedRest } = parsed
 						void openAccordions
@@ -182,38 +194,30 @@ export default function Json({
 							? await decrypt(parsedRest.webhookUrlMobile)
 							: ''
 
-						const validGameIds = new Set([
-							...effectiveGames.currentGames.map(game => game.id),
-							...effectiveGames.nextGames.map(game => game.id),
-						])
+						const savedCurrentGameIds = new Set(parsedRest.lastCurrentGameIds || [])
+						const savedMobileKeys = new Set(parsedRest.lastMobileGameKeys || [])
 
 						const cleanedSelectedGames: Record<string, boolean> = {}
-						Object.entries(parsedRest.selectedGames || {}).forEach(
-							([gameId, isSelected]) => {
-								if (validGameIds.has(gameId)) {
-									cleanedSelectedGames[gameId] = isSelected as boolean
-								} else if (gameId.startsWith('mobile-')) {
-									const mobileExists = mobile.some(g => getMobileGameKey(g) === gameId)
-									if (mobileExists) {
-										cleanedSelectedGames[gameId] = isSelected as boolean
-									}
-								}
-							},
-						)
 
 						effectiveGames.currentGames.forEach(game => {
-							if (cleanedSelectedGames[game.id] === undefined) {
+							if (savedCurrentGameIds.has(game.id)) {
+								cleanedSelectedGames[game.id] =
+									parsedRest.selectedGames?.[game.id] ?? true
+							} else {
 								cleanedSelectedGames[game.id] = true
 							}
 						})
+
 						effectiveGames.nextGames.forEach(game => {
-							if (cleanedSelectedGames[game.id] === undefined) {
-								cleanedSelectedGames[game.id] = false
-							}
+							cleanedSelectedGames[game.id] =
+								parsedRest.selectedGames?.[game.id] ?? false
 						})
+
 						mobile.forEach(game => {
 							const key = getMobileGameKey(game)
-							if (cleanedSelectedGames[key] === undefined) {
+							if (savedMobileKeys.has(key)) {
+								cleanedSelectedGames[key] = parsedRest.selectedGames?.[key] ?? true
+							} else {
 								cleanedSelectedGames[key] = true
 							}
 						})
@@ -284,6 +288,8 @@ export default function Json({
 						webhookUrl: encryptedWebhook,
 						webhookUrlMobile: encryptedMobileWebhook,
 						checkoutLink,
+						lastCurrentGameIds: effectiveGames.currentGames.map(g => g.id),
+						lastMobileGameKeys: mobile.map(g => getMobileGameKey(g)),
 					}
 					localStorage.setItem('egFreeSettings', JSON.stringify(settingsToSave))
 				} catch (error) {
@@ -292,7 +298,7 @@ export default function Json({
 			}
 		}
 		saveSettings()
-	}, [settings, checkoutLink])
+	}, [settings, checkoutLink, effectiveGames, mobile])
 
 	const handleColorChange = (color: string) => {
 		updateSetting('embedColor', color === defaultColor ? defaultColor : color)
@@ -318,40 +324,40 @@ export default function Json({
 					))
 			: isValidDiscordWebhook(webhookUrl)
 
-	const handleWebhook = async () => {
+	const [noOffers, setNoOffers] = useState(false)
+
+	const hasSelectedGames = useMemo(() => {
+		const hasSelectedDesktop = [
+			...effectiveGames.currentGames,
+			...effectiveGames.nextGames,
+		].some(game => settings.selectedGames[game.id])
+
+		const hasSelectedMobile = activeMobileGames.some(
+			game => settings.selectedGames[getMobileGameKey(game)],
+		)
+
+		if (settings.splitDesktopMobile && canSplitDesktopMobile) {
+			if (settings.sendDesktop && !hasSelectedDesktop) return false
+			if (settings.sendMobile && !hasSelectedMobile) return false
+			return true
+		}
+
+		return hasSelectedDesktop || hasSelectedMobile
+	}, [
+		effectiveGames,
+		activeMobileGames,
+		settings.selectedGames,
+		settings.splitDesktopMobile,
+		canSplitDesktopMobile,
+		settings.sendDesktop,
+		settings.sendMobile,
+	])
+
+	const executeSendWebhook = async () => {
 		const desktopWebhookUrl = webhookUrl.trim()
 		const mobileWebhookTargetUrl = (
 			settings.useDesktopWebhookForMobile ? webhookUrl : webhookUrlMobile
 		).trim()
-		if (settings.splitDesktopMobile && canSplitDesktopMobile) {
-			if (!settings.sendDesktop && !settings.sendMobile) {
-				toast.error('Select at least desktop or mobile to send.')
-				return
-			}
-			if (settings.sendDesktop && !isValidDiscordWebhook(desktopWebhookUrl)) {
-				toast.error('Insert a valid desktop webhook URL.')
-				return
-			}
-			if (settings.sendMobile && !isValidDiscordWebhook(mobileWebhookTargetUrl)) {
-				toast.error('Insert a valid mobile webhook URL.')
-				return
-			}
-		} else {
-			if (!desktopWebhookUrl) {
-				toast.error('Insert a webhook.')
-				return
-			}
-			if (!isValidDiscordWebhook(desktopWebhookUrl)) {
-				toast.error('Invalid Discord webhook URL format.')
-				return
-			}
-		}
-
-		if (!showWarning) {
-			setShowWarning(true)
-			setTimeout(() => setShowWarning(false), 3000)
-			return
-		}
 
 		try {
 			setIsLoading(true)
@@ -470,6 +476,50 @@ export default function Json({
 		setIsLoading(false)
 	}
 
+	const handleWebhook = async () => {
+		const desktopWebhookUrl = webhookUrl.trim()
+		const mobileWebhookTargetUrl = (
+			settings.useDesktopWebhookForMobile ? webhookUrl : webhookUrlMobile
+		).trim()
+		if (settings.splitDesktopMobile && canSplitDesktopMobile) {
+			if (!settings.sendDesktop && !settings.sendMobile) {
+				toast.error('Select at least desktop or mobile to send.')
+				return
+			}
+			if (settings.sendDesktop && !isValidDiscordWebhook(desktopWebhookUrl)) {
+				toast.error('Insert a valid desktop webhook URL.')
+				return
+			}
+			if (settings.sendMobile && !isValidDiscordWebhook(mobileWebhookTargetUrl)) {
+				toast.error('Insert a valid mobile webhook URL.')
+				return
+			}
+		} else {
+			if (!desktopWebhookUrl) {
+				toast.error('Insert a webhook.')
+				return
+			}
+			if (!isValidDiscordWebhook(desktopWebhookUrl)) {
+				toast.error('Invalid Discord webhook URL format.')
+				return
+			}
+		}
+
+		if (!showWarning) {
+			setShowWarning(true)
+			setTimeout(() => setShowWarning(false), 3000)
+			return
+		}
+
+		if (!hasSelectedGames) {
+			setShowWarning(false)
+			setNoOffers(true)
+			return
+		}
+
+		await executeSendWebhook()
+	}
+
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 	const debouncedFetchWebhookInfo = (url: string) => {
 		if (timeoutRef.current) {
@@ -547,99 +597,128 @@ export default function Json({
 	}
 
 	return (
-		<Dialog>
-			<DialogTrigger asChild>
-				<Button variant="ghost" className="rounded-full">
-					<FileJson2 className="size-5!" />
-					JSON
-				</Button>
-			</DialogTrigger>
-			<DialogContent
-				onOpenAutoFocus={e => e.preventDefault()}
-				hideCloseButton
-				className="max-w-7xl! w-full max-h-[90vh] h-[90vh] overflow-hidden p-0 z-70 flex flex-col"
-			>
-				<div className="flex flex-col lg:flex-row flex-1 min-h-0">
-					<div className="w-full lg:w-2/5 lg:min-w-0 lg:max-w-130 border-b lg:border-b-0 lg:border-r flex flex-col flex-1 lg:flex-none lg:shrink-0 min-h-0">
-						<div className="px-6 py-5 lg:border-b shrink-0 bg-background flex flex-col gap-1.5 items-start justify-center relative z-10">
-							<div className="flex w-full items-center justify-between">
-								<DialogTitle className="flex items-center gap-3 text-xl font-bold tracking-tight">
-									<div className="flex items-center justify-center p-1.5 rounded-lg bg-primary/10 text-primary">
-										<FileJson2 className="size-5" />
-									</div>
-									JSON Builder
-								</DialogTitle>
-								<DialogClose className="rounded-full bg-muted/40 p-2 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-									<X className="size-4" />
-									<span className="sr-only">Close</span>
-								</DialogClose>
+		<>
+			<Dialog>
+				<DialogTrigger asChild>
+					<Button variant="ghost" className="rounded-full">
+						<FileJson2 className="size-5!" />
+						JSON
+					</Button>
+				</DialogTrigger>
+				<DialogContent
+					onOpenAutoFocus={e => e.preventDefault()}
+					hideCloseButton
+					className="max-w-7xl! w-full max-h-[90vh] h-[90vh] overflow-hidden p-0 z-70 flex flex-col"
+				>
+					<div className="flex flex-col lg:flex-row flex-1 min-h-0">
+						<div className="w-full lg:w-2/5 lg:min-w-0 lg:max-w-130 border-b lg:border-b-0 lg:border-r flex flex-col flex-1 lg:flex-none lg:shrink-0 min-h-0">
+							<div className="px-6 py-5 lg:border-b shrink-0 bg-background flex flex-col gap-1.5 items-start justify-center relative z-10">
+								<div className="flex w-full items-center justify-between">
+									<DialogTitle className="flex items-center gap-3 text-xl font-bold tracking-tight">
+										<div className="flex items-center justify-center p-1.5 rounded-lg bg-primary/10 text-primary">
+											<FileJson2 className="size-5" />
+										</div>
+										JSON Builder
+									</DialogTitle>
+									<DialogClose className="rounded-full bg-muted/40 p-2 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+										<X className="size-4" />
+										<span className="sr-only">Close</span>
+									</DialogClose>
+								</div>
+								<DialogDescription className="text-sm font-medium">
+									Configure settings to customize your Discord embeds.
+								</DialogDescription>
 							</div>
-							<DialogDescription className="text-sm font-medium">
-								Configure settings to customize your Discord embeds.
-							</DialogDescription>
-						</div>
 
-						<div className="block lg:hidden flex-1 min-h-0">
-							<Tabs
-								defaultValue="settings"
-								className="flex h-full flex-col min-h-0 gap-0"
-							>
-								<TabsList className="w-full h-auto rounded-none border-b border-border bg-transparent p-0 shrink-0">
-									<TabsTrigger
+							<div className="block lg:hidden flex-1 min-h-0">
+								<Tabs
+									defaultValue="settings"
+									className="flex h-full flex-col min-h-0 gap-0"
+								>
+									<TabsList className="w-full h-auto rounded-none border-b border-border bg-transparent p-0 shrink-0">
+										<TabsTrigger
+											value="settings"
+											className="flex-1 relative rounded-none py-2.5 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
+										>
+											Settings
+										</TabsTrigger>
+										<TabsTrigger
+											value="preview"
+											className="flex-1 relative rounded-none py-2.5 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
+										>
+											Preview
+										</TabsTrigger>
+									</TabsList>
+									<TabsContent
 										value="settings"
-										className="flex-1 relative rounded-none py-2.5 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
+										className="overflow-hidden mt-0 pb-0 border-0 flex-1 min-h-0"
 									>
-										Settings
-									</TabsTrigger>
-									<TabsTrigger
+										<ScrollArea className="h-full">
+											<JsonFormContent idSuffix="-mobile" {...formProps} />
+										</ScrollArea>
+									</TabsContent>
+									<TabsContent
 										value="preview"
-										className="flex-1 relative rounded-none py-2.5 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
+										className="overflow-hidden mt-0 pb-0 border-0 flex-1 min-h-0"
 									>
-										Preview
-									</TabsTrigger>
-								</TabsList>
-								<TabsContent
-									value="settings"
-									className="overflow-hidden mt-0 pb-0 border-0 flex-1 min-h-0"
-								>
-									<ScrollArea className="h-full">
-										<JsonFormContent idSuffix="-mobile" {...formProps} />
-									</ScrollArea>
-								</TabsContent>
-								<TabsContent
-									value="preview"
-									className="overflow-hidden mt-0 pb-0 border-0 flex-1 min-h-0"
-								>
-									<ScrollArea className="h-full">
-										<JsonPreviewContent
-											idSuffix="-mobile"
-											inlineButtons
-											{...previewProps}
-										/>
-									</ScrollArea>
-								</TabsContent>
-							</Tabs>
+										<ScrollArea className="h-full">
+											<JsonPreviewContent
+												idSuffix="-mobile"
+												inlineButtons
+												{...previewProps}
+											/>
+										</ScrollArea>
+									</TabsContent>
+								</Tabs>
+							</div>
+
+							<div className="hidden lg:block overflow-hidden flex-1 min-h-0">
+								<ScrollArea className="h-full">
+									<JsonFormContent {...formProps} />
+								</ScrollArea>
+							</div>
 						</div>
 
-						<div className="hidden lg:block overflow-hidden flex-1 min-h-0">
-							<ScrollArea className="h-full">
-								<JsonFormContent {...formProps} />
-							</ScrollArea>
+						<div className="hidden lg:flex flex-col flex-1 min-w-0 min-h-0 bg-muted/10 rounded-r-lg border-l border-border/50">
+							<div className="flex justify-end gap-3 p-2 shrink-0 border-b border-border/50 bg-background/50 backdrop-blur-sm z-10 w-full items-center">
+								<JsonPreviewButtons {...previewProps} />
+							</div>
+							<div className="overflow-hidden grow min-h-0">
+								<ScrollArea className="h-full border border-border/40 bg-background shadow-xs overflow-hidden">
+									<JsonPreviewContent inlineButtons={false} {...previewProps} />
+								</ScrollArea>
+							</div>
 						</div>
 					</div>
+				</DialogContent>
+			</Dialog>
 
-					<div className="hidden lg:flex flex-col flex-1 min-w-0 min-h-0 bg-muted/10 rounded-r-lg border-l border-border/50">
-						<div className="flex justify-end gap-3 p-2 shrink-0 border-b border-border/50 bg-background/50 backdrop-blur-sm z-10 w-full items-center">
-							<JsonPreviewButtons {...previewProps} />
-						</div>
-						<div className="overflow-hidden grow min-h-0">
-							<ScrollArea className="h-full border border-border/40 bg-background shadow-xs overflow-hidden">
-								<JsonPreviewContent inlineButtons={false} {...previewProps} />
-							</ScrollArea>
-						</div>
-					</div>
-				</div>
-			</DialogContent>
-		</Dialog>
+			<AlertDialog open={noOffers} onOpenChange={setNoOffers}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle className="flex items-center gap-2 text-yellow-500">
+							<AlertTriangle className="size-5" />
+							No Offers Selected
+						</AlertDialogTitle>
+						<AlertDialogDescription>
+							You haven&apos;t selected any offers to include in the webhook message.
+							Are you sure you want to send without any offers?
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={() => {
+								setNoOffers(false)
+								executeSendWebhook()
+							}}
+							className="text-white"
+						>
+							Send Anyway
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</>
 	)
 }
