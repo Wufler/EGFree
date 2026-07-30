@@ -22,7 +22,10 @@ export default function Error({ reset }: { reset: () => void }) {
 							Proceed to the Epic Games Store
 						</Link>
 					</Button>
-					<Button className="w-full sm:w-1/2 text-white" onClick={() => reset()}>
+					<Button
+						className="w-full sm:w-1/2 text-white dark:text-black"
+						onClick={() => reset()}
+					>
 						Try Again
 					</Button>
 				</div>

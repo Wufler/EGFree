@@ -712,7 +712,7 @@ export default function Json({
 								setNoOffers(false)
 								executeSendWebhook()
 							}}
-							className="text-white"
+							className="text-white dark:text-black"
 						>
 							Send Anyway
 						</AlertDialogAction>

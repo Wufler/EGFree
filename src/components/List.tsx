@@ -134,7 +134,7 @@ function TimeDisplay({
 	return (
 		<div
 			className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-bold text-white ${
-				type === 'end' ? 'bg-epic-blue' : 'bg-black'
+				type === 'end' ? 'bg-epic-blue dark:text-black' : 'bg-black'
 			}`}
 		>
 			<Clock className="size-3.5" />
@@ -158,7 +158,7 @@ function SectionHeader({
 		<div className="mb-5 flex items-center gap-3">
 			<div
 				className={`rounded-xl p-2.5 shadow-sm ${
-					primary ? 'bg-epic-blue text-white' : 'bg-secondary text-foreground'
+					primary ? 'bg-epic-blue text-white dark:text-black' : 'bg-secondary text-foreground'
 				}`}
 			>
 				<Icon className="size-5" />
@@ -257,7 +257,7 @@ function DesktopHome({
 							</Button>
 							<Button
 								size="sm"
-								className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-epic-blue hover:bg-epic-blue/90 text-white font-bold py-4 px-4 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+								className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black font-bold py-4 px-4 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
 								asChild
 							>
 								<a href={bulkCheckoutUrl} target="_blank" rel="noopener noreferrer">
@@ -548,7 +548,7 @@ export default function List({
 							</div>
 							<div className="flex flex-col items-end shrink-0">
 								{isCurrentGame && (
-									<span className="rounded-md bg-epic-blue px-2 py-0.5 text-xs font-bold text-white shadow-sm">
+									<span className="rounded-md bg-epic-blue px-2 py-0.5 text-xs font-bold text-white dark:text-black shadow-sm">
 										FREE
 									</span>
 								)}
@@ -656,7 +656,7 @@ export default function List({
 							</div>
 							<div className="flex flex-col items-end shrink-0">
 								{!isExpired && (
-									<span className="rounded-md bg-epic-blue px-2 py-0.5 text-xs font-bold text-white shadow-sm">
+									<span className="rounded-md bg-epic-blue px-2 py-0.5 text-xs font-bold text-white dark:text-black shadow-sm">
 										FREE
 									</span>
 								)}
@@ -789,7 +789,7 @@ export default function List({
 									<PopoverTrigger asChild>
 										<Button
 											size="icon"
-											className="relative size-8 sm:size-10 rounded-full bg-epic-blue hover:bg-epic-blue/90 text-white shadow-sm flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+											className="relative size-8 sm:size-10 rounded-full bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black shadow-sm flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
 										>
 											<ShoppingCart className="size-4 sm:size-5" />
 										</Button>
@@ -812,7 +812,7 @@ export default function List({
 											<div className="flex flex-col gap-2 pt-2 border-t border-muted/50">
 												<Button
 													size="sm"
-													className="w-full flex items-center justify-center gap-2 bg-epic-blue hover:bg-epic-blue/90 text-white font-bold py-2 transition-all duration-200"
+													className="w-full flex items-center justify-center gap-2 bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black font-bold py-2 transition-all duration-200"
 													asChild
 												>
 													<a
@@ -1178,7 +1178,7 @@ export default function List({
 													Offer Expired
 												</span>
 											) : (
-												<span className="rounded-md bg-epic-blue px-2.5 py-1 text-xs font-extrabold text-white">
+												<span className="rounded-md bg-epic-blue px-2.5 py-1 text-xs font-extrabold text-white dark:text-black">
 													FREE
 												</span>
 											)}
@@ -1362,7 +1362,7 @@ export default function List({
 																	<div className="flex gap-2">
 																		<Button
 																			asChild
-																			className="flex-1 bg-epic-blue hover:bg-epic-blue/90 text-white font-bold py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+																			className="flex-1 bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black font-bold py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
 																		>
 																			<a
 																				href={combinedCheckoutUrl}
@@ -1418,7 +1418,7 @@ export default function List({
 																	<div className="flex gap-2">
 																		<Button
 																			asChild
-																			className="flex-1 bg-epic-blue hover:bg-epic-blue/90 text-white font-bold py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+																			className="flex-1 bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black font-bold py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
 																		>
 																			<a
 																				href={iosCheckoutUrl ?? '#'}
@@ -1476,7 +1476,7 @@ export default function List({
 																	<div className="flex gap-2">
 																		<Button
 																			asChild
-																			className="flex-1 bg-epic-blue hover:bg-epic-blue/90 text-white font-bold py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+																			className="flex-1 bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black font-bold py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
 																		>
 																			<a
 																				href={androidCheckoutUrl ?? '#'}
@@ -1532,7 +1532,7 @@ export default function List({
 																<>
 																	<Button
 																		asChild
-																		className="w-full flex items-center justify-center gap-2 py-6 font-bold bg-epic-blue hover:bg-epic-blue/90 text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg"
+																		className="w-full flex items-center justify-center gap-2 py-6 font-bold bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg"
 																	>
 																		<a
 																			href={checkoutUrl}

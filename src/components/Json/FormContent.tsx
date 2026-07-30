@@ -717,7 +717,7 @@ export default function JsonFormContent({
 								className={`w-full py-6 text-md transition-all duration-300 ${
 									showWarning
 										? 'bg-yellow-500 hover:bg-yellow-600 text-black outline-8 outline-yellow-500/20'
-										: 'bg-primary hover:bg-primary/90 text-white'
+										: 'bg-primary hover:bg-primary/90 text-white dark:text-black'
 								}`}
 								disabled={isLoading || !canSendWebhook}
 							>
