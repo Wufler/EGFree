@@ -309,27 +309,25 @@ export default function DiscordPreview({
 													<div className="mt-1 flex flex-wrap items-baseline gap-x-1 gap-y-0.5 text-sm">
 														{settings.includePrice &&
 															(!isCurrent ? (
-																<span className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5">
-																	{game.price.totalPrice.originalPrice === 0 ? (
-																		<span className="font-light text-black dark:text-white">
-																			Free
-																		</span>
-																	) : game.price.totalPrice.discountPrice !==
-																	  game.price.totalPrice.originalPrice ? (
-																		<>
-																			<span className="font-light line-through text-black dark:text-white">
+																game.price.totalPrice.originalPrice === 0 ? null : (
+																	<span className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5">
+																		{game.price.totalPrice.discountPrice !==
+																		game.price.totalPrice.originalPrice ? (
+																			<>
+																				<span className="font-light line-through text-black dark:text-white">
+																					{game.price.totalPrice.fmtPrice.originalPrice}
+																				</span>
+																				<span className="font-semibold text-black dark:text-white">
+																					{game.price.totalPrice.fmtPrice.discountPrice}
+																				</span>
+																			</>
+																		) : (
+																			<span className="font-light text-black dark:text-white">
 																				{game.price.totalPrice.fmtPrice.originalPrice}
 																			</span>
-																			<span className="font-semibold text-black dark:text-white">
-																				{game.price.totalPrice.fmtPrice.discountPrice}
-																			</span>
-																		</>
-																	) : (
-																		<span className="font-light text-black dark:text-white">
-																			{game.price.totalPrice.fmtPrice.originalPrice}
-																		</span>
-																	)}
-																</span>
+																		)}
+																	</span>
+																)
 															) : (
 																<span className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5">
 																	{isCurrentlyFree(game) ? (
@@ -347,11 +345,7 @@ export default function DiscordPreview({
 																				</span>
 																			</>
 																		)
-																	) : isPermanentlyFree(game) ? (
-																		<span className="font-semibold text-black dark:text-white">
-																			Free
-																		</span>
-																	) : isDiscountedGame(game) ? (
+																	) : isPermanentlyFree(game) ? null : isDiscountedGame(game) ? (
 																		<>
 																			<span className="font-light line-through text-black dark:text-white">
 																				{game.price.totalPrice.fmtPrice.originalPrice}
@@ -432,23 +426,23 @@ export default function DiscordPreview({
 										)}
 										{settings.includePrice &&
 											(!isCurrent ? (
-												<span>
-													{game.price.totalPrice.originalPrice === 0 ? (
-														<span className="font-light">Free</span>
-													) : game.price.totalPrice.discountPrice !==
-													  game.price.totalPrice.originalPrice ? (
-														<span>
-															<span className="line-through font-extralight mr-1">
-																{game.price.totalPrice.fmtPrice.originalPrice}
-															</span>{' '}
-															<span className="font-semibold">
-																{game.price.totalPrice.fmtPrice.discountPrice}
+												game.price.totalPrice.originalPrice === 0 ? null : (
+													<span>
+														{game.price.totalPrice.discountPrice !==
+														game.price.totalPrice.originalPrice ? (
+															<span>
+																<span className="line-through font-extralight mr-1">
+																	{game.price.totalPrice.fmtPrice.originalPrice}
+																</span>{' '}
+																<span className="font-semibold">
+																	{game.price.totalPrice.fmtPrice.discountPrice}
+																</span>
 															</span>
-														</span>
-													) : (
-														<span>{game.price.totalPrice.fmtPrice.originalPrice}</span>
-													)}
-												</span>
+														) : (
+															<span>{game.price.totalPrice.fmtPrice.originalPrice}</span>
+														)}
+													</span>
+												)
 											) : (
 												<>
 													{isCurrentlyFree(game) ? (
@@ -464,9 +458,7 @@ export default function DiscordPreview({
 																</span>
 															)}
 														</span>
-													) : isPermanentlyFree(game) ? (
-														<span className="font-semibold">Free</span>
-													) : isDiscountedGame(game) ? (
+													) : isPermanentlyFree(game) ? null : isDiscountedGame(game) ? (
 														<span>
 															<span className="line-through font-extralight">
 																{game.price.totalPrice.fmtPrice.originalPrice}

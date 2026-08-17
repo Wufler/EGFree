@@ -1,0 +1,16 @@
+services:
+ egfree:
+  build:
+   context: ..
+   dockerfile: bot/Dockerfile
+  container_name: egfree
+  restart: unless-stopped
+  env_file:
+   - ../.env
+  volumes:
+   - ./data:/app/bot/data
+  networks:
+   - egfree-network
+networks:
+ egfree-network:
+  driver: bridge

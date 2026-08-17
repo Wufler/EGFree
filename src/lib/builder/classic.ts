@@ -55,7 +55,7 @@ export function buildClassicEmbedPayload(
 				}
 				return game.price.totalPrice.fmtPrice.originalPrice
 			}
-			if (isPermanentlyFree(game)) return 'Free'
+			if (isPermanentlyFree(game)) return ''
 			if (game.price.totalPrice.discountPrice !== game.price.totalPrice.originalPrice) {
 				return `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **${game.price.totalPrice.fmtPrice.discountPrice}**`
 			}
@@ -184,7 +184,7 @@ export function buildClassicEmbedPayload(
 	}
 
 	return {
-		content: settings.embedContent || '<@&847939354978811924>',
+		content: settings.embedContent || '',
 		embeds,
 	}
 }

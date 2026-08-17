@@ -78,13 +78,6 @@ function buildDesktopComponentsV2Card(
 	const titleContent = browserUrl
 		? `## [${escapeDiscordMarkdownLinkLabel(game.title)}](${browserUrl})`
 		: `## ${game.title}`
-	const textBlocks: Record<string, unknown>[] = [
-		{
-			type: COMPONENT_TYPES.TEXT_DISPLAY,
-			content: titleContent,
-		},
-	]
-
 	const priceAndDateParts: string[] = []
 	if (priceText) priceAndDateParts.push(priceText)
 	if (settings.includeFooter) {
@@ -92,12 +85,18 @@ function buildDesktopComponentsV2Card(
 			`${isCurrent ? 'until' : 'Free offer starts'} ${getDiscordTimestamp(endDate)}`,
 		)
 	}
-	if (priceAndDateParts.length > 0) {
-		textBlocks.push({
+
+	const sectionContent =
+		priceAndDateParts.length > 0
+			? `${titleContent}\n${priceAndDateParts.join(' ')}`
+			: titleContent
+
+	const textBlocks: Record<string, unknown>[] = [
+		{
 			type: COMPONENT_TYPES.TEXT_DISPLAY,
-			content: priceAndDateParts.join(' '),
-		})
-	}
+			content: sectionContent,
+		},
+	]
 
 	const cardComponents: Record<string, unknown>[] = []
 
@@ -162,13 +161,6 @@ function buildMobileComponentsV2Card(
 	const endDate = game.promoEndDate ? new Date(game.promoEndDate) : null
 	const priceFormatted = formatMobileGamePrice(game)
 
-	const textBlocks: Record<string, unknown>[] = [
-		{
-			type: COMPONENT_TYPES.TEXT_DISPLAY,
-			content: `## ${game.title}`,
-		},
-	]
-
 	const mobilePriceParts: string[] = []
 	if (settings.includePrice) {
 		if (game.originalPrice > 0) {
@@ -180,12 +172,18 @@ function buildMobileComponentsV2Card(
 	if (settings.includeFooter && endDate) {
 		mobilePriceParts.push(`until ${getDiscordTimestamp(endDate)}`)
 	}
-	if (mobilePriceParts.length > 0) {
-		textBlocks.push({
+
+	const sectionContent =
+		mobilePriceParts.length > 0
+			? `## ${game.title}\n${mobilePriceParts.join(' ')}`
+			: `## ${game.title}`
+
+	const textBlocks: Record<string, unknown>[] = [
+		{
 			type: COMPONENT_TYPES.TEXT_DISPLAY,
-			content: mobilePriceParts.join(' '),
-		})
-	}
+			content: sectionContent,
+		},
+	]
 
 	const cardComponents: Record<string, unknown>[] = []
 
@@ -264,7 +262,7 @@ function getDesktopPriceText(
 		}
 		return game.price.totalPrice.fmtPrice.originalPrice
 	}
-	if (isPermanentlyFree(game)) return 'Free'
+	if (isPermanentlyFree(game)) return ''
 	if (
 		game.price.totalPrice.discountPrice !== game.price.totalPrice.originalPrice
 	) {
@@ -288,7 +286,7 @@ export function buildComponentsV2MessagePayload(
 	} = buildPayloadContext(games, settings, checkoutLink, parsedMobileGames)
 
 	const components: Record<string, unknown>[] = []
-	const messageContent = settings.embedContent || '<@&847939354978811924>'
+	const messageContent = settings.embedContent || ''
 
 	if (messageContent.trim()) {
 		components.push({
