@@ -73,7 +73,7 @@ export async function fetchCurrentOffers(
 
 	for (const g of effectiveGames.currentGames) {
 		const isNew = !previousOfferIds.includes(g.id)
-		titles.push(`• **${g.title}** (PC)${isNew ? ' *(New)*' : ''}`)
+		titles.push(`**${g.title}** (PC)${isNew ? ' *(New)*' : ''}`)
 	}
 
 	for (const g of activeMobileGames) {
@@ -85,13 +85,13 @@ export async function fetchCurrentOffers(
 				: g.iosOffer
 					? 'iOS'
 					: 'Android'
-		titles.push(`• **${g.title}** (${plat})${isNew ? ' *(New)*' : ''}`)
+		titles.push(`**${g.title}** (${plat})${isNew ? ' *(New)*' : ''}`)
 	}
 
 	if (options.includeUpcoming) {
 		for (const g of effectiveGames.nextGames) {
 			const isNew = !previousOfferIds.includes(g.id)
-			titles.push(`• **${g.title}** (Upcoming)${isNew ? ' *(New)*' : ''}`)
+			titles.push(`**${g.title}** (Upcoming)${isNew ? ' *(New)*' : ''}`)
 		}
 	}
 

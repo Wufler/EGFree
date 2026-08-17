@@ -11,7 +11,10 @@ import { getMobileGameKey } from '@/lib/utils'
 import { buildDiscordMessagePayload } from '@/lib/builder/payload'
 import { buildClassicEmbedPayload } from '@/lib/builder/classic'
 import { getGuildSettings } from '../state'
-import { convertMobileGameData, type FetchedOffers } from '../services/offerService'
+import {
+	convertMobileGameData,
+	type FetchedOffers,
+} from '../services/offerService'
 import { dispatchDiscordPayload } from '../services/discordService'
 import type { DiscordRawComponent, DiscordV2Payload } from '../types'
 
@@ -95,7 +98,7 @@ export async function sendConfirmationPrompt(
 			components: [
 				{
 					type: COMPONENT_TYPES.TEXT_DISPLAY,
-					content: `# Offer Approval & Preview\n${rolePing ? `${rolePing}\n` : ''}New offers detected and are awaiting approval before posting.\n\n**Detected Offers:**\n${offers.titles.join('\n')}\n\n**Target Channels:**\n${channelDetails.join('\n')}`,
+					content: `# Offer Approval & Preview\nNew offers detected and are awaiting approval before posting.${rolePing ? `\n${rolePing}` : ''}\n**Detected Offers:**\n${offers.titles.join('\n')}\n\n**Target Channels:**\n${channelDetails.join('\n')}`,
 				},
 				{
 					type: COMPONENT_TYPES.ACTION_ROW,

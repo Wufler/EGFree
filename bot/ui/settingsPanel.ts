@@ -106,7 +106,7 @@ export function getSettingsComponentsV2Payload(
 			components: [
 				{
 					type: COMPONENT_TYPES.TEXT_DISPLAY,
-					content: `**Scheduler**\n${windowInfo.inWindow ? '🟢 **Active**' : '⚪ **Idle**'} • Last checked: ${lastCheck}`,
+					content: `**Scheduler**\n${windowInfo.inWindow ? '🟢 **Active**' : '**Idle**'} • Last checked: ${lastCheck}`,
 				},
 			],
 			accessory: {
