@@ -27,12 +27,6 @@ export function getSlashCommands() {
           .setDescription("Publish offers or request review")
           .addBooleanOption((option) =>
             option
-              .setName("upcoming")
-              .setDescription("Include upcoming free games")
-              .setRequired(false),
-          )
-          .addBooleanOption((option) =>
-            option
               .setName("force")
               .setDescription("Post even if already posted before")
               .setRequired(false),
@@ -41,6 +35,20 @@ export function getSlashCommands() {
             option
               .setName("confirm")
               .setDescription("Require approval buttons before posting")
+              .setRequired(false),
+          )
+          .addBooleanOption((option) =>
+            option
+              .setName("upcoming")
+              .setDescription("Include upcoming free games")
+              .setRequired(false),
+          )
+          .addBooleanOption((option) =>
+            option
+              .setName("addons")
+              .setDescription(
+                "Include add-ons / DLCs (defaults to server setting)",
+              )
               .setRequired(false),
           ),
       ),

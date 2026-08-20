@@ -92,6 +92,7 @@ export class OfferSchedulerService {
       includeUpcoming?: boolean;
       onlyNew?: boolean;
       guildId?: string | null;
+      includeAddOns?: boolean;
     } = {},
   ): Promise<{ success: boolean; error?: string }> {
     const s = getGuildSettings(options.guildId);
@@ -208,6 +209,7 @@ export class OfferSchedulerService {
 
           const offers = await fetchCurrentOffers(prevOfferIds, {
             previousUpcomingOfferIds: prevUpcomingIds,
+            includeAddOns: s.includeAddOns,
           });
 
           if (!offers.hasNewOffers) {

@@ -79,6 +79,7 @@ export function getSettingsComponentsV2Payload(
     if (s.includeClaimGame) activeToggles.push("Claim Button");
     if (s.includeCheckout) activeToggles.push("Quick Checkout");
     if (s.includeFooter) activeToggles.push("Footer");
+    if (s.includeAddOns) activeToggles.push("Add-ons");
     const togglesSummary =
       activeToggles.length > 0 ? activeToggles.join(", ") : "None";
 
@@ -387,6 +388,22 @@ export function getSettingsComponentsV2Payload(
         style: s.includeFooter ? 3 : 2,
         label: s.includeFooter ? "Disable" : "Enable",
         custom_id: "toggle_include_footer",
+      },
+    });
+
+    containerComponents.push({
+      type: COMPONENT_TYPES.SECTION,
+      components: [
+        {
+          type: COMPONENT_TYPES.TEXT_DISPLAY,
+          content: `**Include Add-ons**\n${s.includeAddOns ? "Enabled" : "Disabled"}`,
+        },
+      ],
+      accessory: {
+        type: COMPONENT_TYPES.BUTTON,
+        style: s.includeAddOns ? 3 : 2,
+        label: s.includeAddOns ? "Disable" : "Enable",
+        custom_id: "toggle_include_add_ons",
       },
     });
   } else if (currentCategory === "scheduler") {

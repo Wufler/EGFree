@@ -48,15 +48,36 @@ export class DiscordOfferBot {
       this.scheduler.start();
     });
 
+    this.client.on("error", (error) => {
+      console.error("[EGFree] Discord client error:", error);
+    });
+
     this.client.on("interactionCreate", async (interaction: Interaction) => {
-      if (interaction.isChatInputCommand()) {
-        await handleChatInputCommand(
-          interaction,
-          this.scheduler,
-          this.credentials,
-        );
-      } else {
-        await handleInteraction(interaction, this.scheduler, this.credentials);
+      try {
+        if (interaction.isChatInputCommand()) {
+          await handleChatInputCommand(
+            interaction,
+            this.scheduler,
+            this.credentials,
+          );
+        } else {
+          await handleInteraction(
+            interaction,
+            this.scheduler,
+            this.credentials,
+          );
+        }
+      } catch (err: unknown) {
+        if (
+          typeof err === "object" &&
+          err !== null &&
+          "code" in err &&
+          (err as { code: number }).code === 10062
+        ) {
+          console.warn("[EGFree] Interaction expired or already acknowledged.");
+          return;
+        }
+        console.error("[EGFree] Uncaught error handling interaction:", err);
       }
     });
   }

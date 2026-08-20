@@ -27,9 +27,11 @@ export async function handleOffersCommand(
       const prevOfferIds = getGuildPostedOfferIds(guildId);
       const prevUpcomingIds = getGuildSeenUpcomingOfferIds(guildId);
 
+      const s = getGuildSettings(guildId);
       const offers = await fetchCurrentOffers(prevOfferIds, {
         includeUpcoming: true,
         previousUpcomingOfferIds: prevUpcomingIds,
+        includeAddOns: s.includeAddOns,
       });
 
       if (offers.upcomingOfferIds.length > 0) {
@@ -39,7 +41,6 @@ export async function handleOffersCommand(
         offers.effectiveGames.currentGames.length +
         offers.activeMobileGames.length +
         offers.effectiveGames.nextGames.length;
-      const s = getGuildSettings(guildId);
 
       if (count === 0) {
         await interaction.editReply("No free offers currently detected.");
@@ -126,6 +127,10 @@ export async function handleOffersCommand(
         interaction.options.getBoolean("include_upcoming") ??
         false;
       const guildSettings = getGuildSettings(guildId);
+      const includeAddOns =
+        interaction.options.getBoolean("addons") ??
+        interaction.options.getBoolean("include_addons") ??
+        guildSettings.includeAddOns;
       const reqConfirm =
         interaction.options.getBoolean("confirm") ??
         interaction.options.getBoolean("require_confirmation") ??
@@ -137,6 +142,7 @@ export async function handleOffersCommand(
       const offers = await fetchCurrentOffers(prevOfferIds, {
         includeUpcoming,
         previousUpcomingOfferIds: prevUpcomingIds,
+        includeAddOns,
       });
 
       if (!offers.hasNewOffers && !force) {
@@ -156,12 +162,14 @@ export async function handleOffersCommand(
           {
             includeUpcoming,
             guildId,
+            includeAddOns,
           },
         );
       } else {
         const result = await scheduler.broadcastOffers(offers, {
           includeUpcoming,
           guildId,
+          includeAddOns,
         });
         if (result.success) {
           recordGuildPostedOffers(

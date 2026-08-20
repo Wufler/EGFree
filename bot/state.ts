@@ -37,6 +37,7 @@ export interface BotPersistentSettings {
   includeFooter: boolean;
   includeCheckout: boolean;
   includeClaimGame: boolean;
+  includeAddOns: boolean;
   lastPostedOfferIds?: string[];
   seenUpcomingOfferIds?: string[];
 }
@@ -58,6 +59,7 @@ export const DEFAULT_BOT_SETTINGS: BotPersistentSettings = {
   includeFooter: true,
   includeCheckout: true,
   includeClaimGame: true,
+  includeAddOns: false,
   lastPostedOfferIds: [],
   seenUpcomingOfferIds: [],
 };
@@ -144,8 +146,10 @@ export function getGuildSettings(
     state.guildSettings[guildId] = {
       ...DEFAULT_BOT_SETTINGS,
       ...(state.settings || {}),
-      lastPostedOfferIds: state.settings.lastPostedOfferIds || state.lastPostedOfferIds || [],
-      seenUpcomingOfferIds: state.settings.seenUpcomingOfferIds || state.seenUpcomingOfferIds || [],
+      lastPostedOfferIds:
+        state.settings.lastPostedOfferIds || state.lastPostedOfferIds || [],
+      seenUpcomingOfferIds:
+        state.settings.seenUpcomingOfferIds || state.seenUpcomingOfferIds || [],
     };
     saveBotState(state);
   }
@@ -155,7 +159,9 @@ export function getGuildSettings(
   };
 }
 
-export function getGuildPostedOfferIds(guildId: string | null | undefined): string[] {
+export function getGuildPostedOfferIds(
+  guildId: string | null | undefined,
+): string[] {
   const s = getGuildSettings(guildId);
   if (Array.isArray(s.lastPostedOfferIds) && s.lastPostedOfferIds.length > 0) {
     return s.lastPostedOfferIds;
@@ -168,7 +174,10 @@ export function getGuildSeenUpcomingOfferIds(
   guildId: string | null | undefined,
 ): string[] {
   const s = getGuildSettings(guildId);
-  if (Array.isArray(s.seenUpcomingOfferIds) && s.seenUpcomingOfferIds.length > 0) {
+  if (
+    Array.isArray(s.seenUpcomingOfferIds) &&
+    s.seenUpcomingOfferIds.length > 0
+  ) {
     return s.seenUpcomingOfferIds;
   }
   const state = loadBotState();

@@ -39,6 +39,7 @@ export async function fetchCurrentOffers(
   options: {
     includeUpcoming?: boolean;
     previousUpcomingOfferIds?: string[];
+    includeAddOns?: boolean;
   } = {},
 ): Promise<FetchedOffers> {
   const [rawGames, rawMobile] = await Promise.all([
@@ -46,7 +47,17 @@ export async function fetchCurrentOffers(
     getMobileGames(),
   ]);
 
-  const effectiveGames = getEffectiveGames(rawGames);
+  let effectiveGames = getEffectiveGames(rawGames);
+  if (options.includeAddOns === false) {
+    effectiveGames = {
+      currentGames: effectiveGames.currentGames.filter(
+        (g) => g.offerType !== "ADD_ON",
+      ),
+      nextGames: effectiveGames.nextGames.filter(
+        (g) => g.offerType !== "ADD_ON",
+      ),
+    };
+  }
   const now = new Date();
 
   const activeMobileGames = (rawMobile || []).filter(
@@ -76,7 +87,8 @@ export async function fetchCurrentOffers(
 
   for (const g of effectiveGames.currentGames) {
     const isNew = !previousOfferIds.includes(g.id);
-    titles.push(`**${g.title}** (PC)${isNew ? " *(New)*" : ""}`);
+    const tag = g.offerType === "ADD_ON" ? "PC Add-on" : "PC";
+    titles.push(`**${g.title}** (${tag})${isNew ? " *(New)*" : ""}`);
   }
 
   for (const g of activeMobileGames) {
@@ -95,7 +107,8 @@ export async function fetchCurrentOffers(
     const prevUpcoming = options.previousUpcomingOfferIds || [];
     for (const g of effectiveGames.nextGames) {
       const isNew = !prevUpcoming.includes(g.id);
-      titles.push(`**${g.title}** (Upcoming)${isNew ? " *(New)*" : ""}`);
+      const tag = g.offerType === "ADD_ON" ? "Upcoming Add-on" : "Upcoming";
+      titles.push(`**${g.title}** (${tag})${isNew ? " *(New)*" : ""}`);
     }
   }
 

@@ -50,6 +50,9 @@ export async function handleButtonInteraction(
     const parts = interaction.customId.split(":");
     const includeUpcoming = parts[1] === "1";
     const guildId = parts[2] || interaction.guildId || null;
+    const s = getGuildSettings(guildId);
+    const includeAddOns =
+      parts[3] !== undefined ? parts[3] === "1" : s.includeAddOns;
 
     const prevOfferIds = getGuildPostedOfferIds(guildId);
     const prevUpcomingIds = getGuildSeenUpcomingOfferIds(guildId);
@@ -57,12 +60,13 @@ export async function handleButtonInteraction(
     const offers = await fetchCurrentOffers(prevOfferIds, {
       includeUpcoming,
       previousUpcomingOfferIds: prevUpcomingIds,
+      includeAddOns,
     });
-    const s = getGuildSettings(guildId);
 
     const result = await scheduler.broadcastOffers(offers, {
       includeUpcoming,
       guildId,
+      includeAddOns,
     });
     if (result.success) {
       recordGuildPostedOffers(
@@ -462,6 +466,8 @@ export async function handleButtonInteraction(
         updates.includeClaimGame = !currentSettings.includeClaimGame;
       } else if (toggleKey === "include_checkout") {
         updates.includeCheckout = !currentSettings.includeCheckout;
+      } else if (toggleKey === "include_add_ons") {
+        updates.includeAddOns = !currentSettings.includeAddOns;
       } else if (toggleKey === "include_footer") {
         updates.includeFooter = !currentSettings.includeFooter;
       }

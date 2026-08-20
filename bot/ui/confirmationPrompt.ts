@@ -24,16 +24,24 @@ export async function sendConfirmationPrompt(
   clientId: string,
   interaction: ChatInputCommandInteraction | null,
   offers: FetchedOffers,
-  options: { includeUpcoming?: boolean; guildId?: string | null } = {},
+  options: {
+    includeUpcoming?: boolean;
+    guildId?: string | null;
+    includeAddOns?: boolean;
+  } = {},
 ): Promise<void> {
   const guildId = options.guildId;
   const s = getGuildSettings(guildId);
   const targetChannelId = s.reviewChannelId || s.announcementChannelId;
+  const includeAddOns =
+    options.includeAddOns !== undefined
+      ? options.includeAddOns
+      : s.includeAddOns;
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(
-        `confirm_post_offers:${options.includeUpcoming ? "1" : "0"}:${guildId || ""}`,
+        `confirm_post_offers:${options.includeUpcoming ? "1" : "0"}:${guildId || ""}:${includeAddOns ? "1" : "0"}`,
       )
       .setLabel("Approve & Post")
       .setStyle(ButtonStyle.Success),
@@ -105,7 +113,7 @@ export async function sendConfirmationPrompt(
           components: [
             {
               type: COMPONENT_TYPES.BUTTON,
-              custom_id: `confirm_post_offers:${options.includeUpcoming ? "1" : "0"}:${guildId || ""}`,
+              custom_id: `confirm_post_offers:${options.includeUpcoming ? "1" : "0"}:${guildId || ""}:${includeAddOns ? "1" : "0"}`,
               label: "Approve & Post",
               style: 3,
             },
