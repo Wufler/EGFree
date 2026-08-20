@@ -1,29 +1,29 @@
-import { MessageFlags, type ChatInputCommandInteraction } from 'discord.js'
+import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import {
-	canManageSettings,
-	sendInteractionResponse,
-} from '../services/discordService'
-import { getSettingsComponentsV2Payload } from '../ui/settingsPanel'
-import type { BotCredentials } from '../state'
+  canManageSettings,
+  sendInteractionResponse,
+} from "../services/discordService";
+import type { BotCredentials } from "../state";
+import { getSettingsComponentsV2Payload } from "../ui/settingsPanel";
 
 export async function handleSettingsCommand(
-	interaction: ChatInputCommandInteraction,
-	credentials: BotCredentials,
+  interaction: ChatInputCommandInteraction,
+  credentials: BotCredentials,
 ): Promise<void> {
-	if (!canManageSettings(interaction)) {
-		await interaction.reply({
-			content:
-				'Access Denied: You need Administrator or Manage Server permissions to configure bot settings.',
-			flags: MessageFlags.Ephemeral,
-		})
-		return
-	}
+  if (!canManageSettings(interaction)) {
+    await interaction.reply({
+      content:
+        "Access Denied: You need Administrator or Manage Server permissions to configure bot settings.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
 
-	const payload = getSettingsComponentsV2Payload('main', interaction.guildId)
-	await sendInteractionResponse(
-		credentials.discordToken,
-		interaction,
-		payload,
-		false,
-	)
+  const payload = getSettingsComponentsV2Payload("main", interaction.guildId);
+  await sendInteractionResponse(
+    credentials.discordToken,
+    interaction,
+    payload,
+    false,
+  );
 }
