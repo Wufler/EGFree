@@ -21,9 +21,7 @@ import {
   getGuildPostedOfferIds,
   getGuildSeenUpcomingOfferIds,
   getGuildSettings,
-  loadBotState,
   recordGuildPostedOffers,
-  saveBotState,
   updateGuildSettings,
 } from "../state";
 import type { SettingsCategory } from "../types";
