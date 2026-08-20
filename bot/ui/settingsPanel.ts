@@ -1,6 +1,6 @@
 import { MessageFlags } from "discord.js";
 import { COMPONENT_TYPES, IS_COMPONENTS_V2 } from "@/lib/builder/shared";
-import { isThursdayDropWindow } from "../services/schedulerService";
+import { getDropWindow } from "../services/schedulerService";
 import { getGuildSettings, loadBotState } from "../state";
 import type {
   DiscordRawComponent,
@@ -8,7 +8,7 @@ import type {
   SettingsCategory,
 } from "../types";
 
-export function getSettingsComponentsV2Payload(
+export function getSettingsPayload(
   currentCategory: SettingsCategory = "main",
   guildId: string | null | undefined = null,
 ): DiscordV2Payload {
@@ -99,7 +99,7 @@ export function getSettingsComponentsV2Payload(
       },
     });
 
-    const windowInfo = isThursdayDropWindow();
+    const windowInfo = getDropWindow();
     const lastCheck = state.lastCheckTimestamp
       ? `<t:${Math.floor(new Date(state.lastCheckTimestamp).getTime() / 1000)}:R>`
       : "*Never*";
@@ -407,7 +407,7 @@ export function getSettingsComponentsV2Payload(
       },
     });
   } else if (currentCategory === "scheduler") {
-    const windowInfo = isThursdayDropWindow();
+    const windowInfo = getDropWindow();
     containerComponents.push({
       type: COMPONENT_TYPES.TEXT_DISPLAY,
       content: `### Scheduler`,
@@ -418,7 +418,7 @@ export function getSettingsComponentsV2Payload(
       components: [
         {
           type: COMPONENT_TYPES.TEXT_DISPLAY,
-          content: `**Status:** ${windowInfo.description}\n\n**Primary Offer Check**: Thursday 15:00 UTC\n**Catch-up window**: Thursday 15:00-23:59 UTC (every 15m)\n**Regular Checks**: Every 6 hours`,
+          content: `**Status:** ${windowInfo.description}\n\n**Primary Offer Check**: Thursday 15:00 UTC\n**Catch-up window**: Thursday 15:00-18:00 UTC (every 15m)\n**Regular Checks**: Every 6 hours`,
         },
       ],
       accessory: {

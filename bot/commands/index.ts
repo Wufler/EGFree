@@ -1,4 +1,5 @@
 import {
+  type AutocompleteInteraction,
   type ChatInputCommandInteraction,
   type Client,
   PermissionFlagsBits,
@@ -6,6 +7,10 @@ import {
   Routes,
   SlashCommandBuilder,
 } from "discord.js";
+import {
+  fetchCurrentOffers,
+  getCandidateGames,
+} from "../services/offerService";
 import type { OfferSchedulerService } from "../services/schedulerService";
 import type { BotCredentials } from "../state";
 import { handleOffersCommand } from "./offers";
@@ -25,6 +30,13 @@ export function getSlashCommands() {
         sub
           .setName("post")
           .setDescription("Publish offers or request review")
+          .addStringOption((option) =>
+            option
+              .setName("game")
+              .setDescription("Select a specific game or offer to post")
+              .setRequired(false)
+              .setAutocomplete(true),
+          )
           .addBooleanOption((option) =>
             option
               .setName("force")
@@ -121,6 +133,38 @@ export async function registerSlashCommands(
     }
   } catch (error) {
     console.error("[EGFree] Failed to register slash commands:", error);
+  }
+}
+
+export async function handleAutocompleteInteraction(
+  interaction: AutocompleteInteraction,
+): Promise<void> {
+  if (interaction.commandName === "offers") {
+    const focusedOption = interaction.options.getFocused(true);
+    if (focusedOption.name === "game") {
+      try {
+        const offers = await fetchCurrentOffers([], { includeUpcoming: true });
+        const candidateGames = getCandidateGames(offers, {
+          includeUpcoming: true,
+        });
+        const query = focusedOption.value.toLowerCase().trim();
+        const filtered = candidateGames.filter(
+          (g) =>
+            !query ||
+            g.title.toLowerCase().includes(query) ||
+            g.platformLabel.toLowerCase().includes(query),
+        );
+        await interaction.respond(
+          filtered.slice(0, 25).map((g) => ({
+            name: `${g.emoji} ${g.title} (${g.platformLabel})`.slice(0, 100),
+            value: g.id,
+          })),
+        );
+      } catch (err) {
+        console.error("[EGFree] Autocomplete error:", err);
+        await interaction.respond([]);
+      }
+    }
   }
 }
 

@@ -1,4 +1,5 @@
 import type { Client, TextChannel } from "discord.js";
+import { getMobileGameKey } from "@/lib/utils";
 import type { BotCredentials } from "../state";
 import {
   getGuildPostedOfferIds,
@@ -14,9 +15,10 @@ import {
   type FetchedOffers,
   fetchCurrentOffers,
   generateOfferPayloads,
+  toMobileGame,
 } from "./offerService";
 
-export function isThursdayDropWindow(now: Date = new Date()): {
+export function getDropWindow(now: Date = new Date()): {
   inWindow: boolean;
   nextDropDate: Date;
   description: string;
@@ -26,7 +28,7 @@ export function isThursdayDropWindow(now: Date = new Date()): {
   const currentMinute = now.getUTCMinutes();
 
   const isThursday = dayOfWeek === 4;
-  const inWindow = isThursday && currentHour >= 15;
+  const inWindow = isThursday && currentHour >= 15 && currentHour < 18;
 
   const nextDrop = new Date(now);
   let daysUntilThursday = (4 - dayOfWeek + 7) % 7;
@@ -68,7 +70,7 @@ export class OfferSchedulerService {
     this.pollIntervalHandle = setInterval(
       () => {
         const now = new Date();
-        const { inWindow } = isThursdayDropWindow(now);
+        const { inWindow } = getDropWindow(now);
         const state = loadBotState();
         const lastCheckMs = state.lastCheckTimestamp
           ? new Date(state.lastCheckTimestamp).getTime()
@@ -76,7 +78,10 @@ export class OfferSchedulerService {
         const timeSinceLastCheckMinutes =
           (Date.now() - lastCheckMs) / (60 * 1000);
 
-        const thresholdMinutes = inWindow ? 15 : 360;
+        const checkInterval = state.settings.checkIntervalMinutes || 30;
+        const thresholdMinutes = inWindow
+          ? Math.min(15, checkInterval)
+          : checkInterval;
 
         if (timeSinceLastCheckMinutes >= thresholdMinutes) {
           this.runOfferCheck();
@@ -93,10 +98,13 @@ export class OfferSchedulerService {
       onlyNew?: boolean;
       guildId?: string | null;
       includeAddOns?: boolean;
+      selectedGameIds?: string[];
     } = {},
   ): Promise<{ success: boolean; error?: string }> {
     const s = getGuildSettings(options.guildId);
-    if (!s.announcementChannelId) {
+    const mainChannelId =
+      s.announcementChannelId || s.mobileAnnouncementChannelId;
+    if (!mainChannelId) {
       return {
         success: false,
         error:
@@ -105,29 +113,6 @@ export class OfferSchedulerService {
     }
 
     try {
-      const desktopChannel = await this.client.channels.fetch(
-        s.announcementChannelId,
-      );
-      if (!desktopChannel?.isTextBased()) {
-        return {
-          success: false,
-          error: "Target announcement channel not found or not text-based.",
-        };
-      }
-
-      let mobileChannel = desktopChannel as TextChannel;
-      if (
-        s.mobileAnnouncementChannelId &&
-        s.mobileAnnouncementChannelId !== s.announcementChannelId
-      ) {
-        const fetchedMobile = await this.client.channels.fetch(
-          s.mobileAnnouncementChannelId,
-        );
-        if (fetchedMobile?.isTextBased()) {
-          mobileChannel = fetchedMobile as TextChannel;
-        }
-      }
-
       const shouldSplit =
         s.splitDesktopMobile || Boolean(s.mobileAnnouncementChannelId);
       const { desktopPayload, mobilePayload, combinedPayload } =
@@ -137,42 +122,82 @@ export class OfferSchedulerService {
           options,
         );
 
+      let sentCount = 0;
+
       if (shouldSplit) {
-        const shouldSendDesktop = options.onlyNew
+        let shouldSendDesktop = options.onlyNew
           ? offers.hasNewDesktopOffers
           : true;
-        const shouldSendMobile = options.onlyNew
+        let shouldSendMobile = options.onlyNew
           ? offers.hasNewMobileOffers
           : true;
+
+        if (options.selectedGameIds && options.selectedGameIds.length > 0) {
+          shouldSendDesktop = offers.effectiveGames.currentGames.some((g) =>
+            options.selectedGameIds?.includes(g.id),
+          );
+          shouldSendMobile = offers.activeMobileGames.some((m) =>
+            options.selectedGameIds?.includes(
+              getMobileGameKey(toMobileGame(m)),
+            ),
+          );
+        }
 
         if (
           shouldSendDesktop &&
           desktopPayload &&
+          s.announcementChannelId &&
           offers.effectiveGames.currentGames.length > 0
         ) {
-          await dispatchDiscordPayload(
-            this.credentials.discordToken,
-            desktopChannel as TextChannel,
-            desktopPayload,
+          const desktopChannel = await this.client.channels.fetch(
+            s.announcementChannelId,
           );
+          if (desktopChannel?.isTextBased()) {
+            await dispatchDiscordPayload(
+              this.credentials.discordToken,
+              desktopChannel as TextChannel,
+              desktopPayload,
+            );
+            sentCount++;
+          }
         }
+
+        const mobileTargetId =
+          s.mobileAnnouncementChannelId || s.announcementChannelId;
         if (
           shouldSendMobile &&
           mobilePayload &&
+          mobileTargetId &&
           offers.activeMobileGames.length > 0
         ) {
+          const mobileChannel =
+            await this.client.channels.fetch(mobileTargetId);
+          if (mobileChannel?.isTextBased()) {
+            await dispatchDiscordPayload(
+              this.credentials.discordToken,
+              mobileChannel as TextChannel,
+              mobilePayload,
+            );
+            sentCount++;
+          }
+        }
+      } else if (combinedPayload && mainChannelId) {
+        const targetChannel = await this.client.channels.fetch(mainChannelId);
+        if (targetChannel?.isTextBased()) {
           await dispatchDiscordPayload(
             this.credentials.discordToken,
-            mobileChannel,
-            mobilePayload,
+            targetChannel as TextChannel,
+            combinedPayload,
           );
+          sentCount++;
         }
-      } else if (combinedPayload) {
-        await dispatchDiscordPayload(
-          this.credentials.discordToken,
-          desktopChannel as TextChannel,
-          combinedPayload,
-        );
+      }
+
+      if (sentCount === 0) {
+        return {
+          success: false,
+          error: "No channels reached or no matching offers to post.",
+        };
       }
 
       return { success: true };
@@ -188,7 +213,7 @@ export class OfferSchedulerService {
   public async runOfferCheck(): Promise<void> {
     try {
       const now = new Date();
-      const { inWindow } = isThursdayDropWindow(now);
+      const { inWindow } = getDropWindow(now);
       console.log(
         `[EGFree] Checking for Epic free games... (Window: ${inWindow ? "Thursday Active" : "Idle"})`,
       );
@@ -242,6 +267,7 @@ export class OfferSchedulerService {
             const res = await this.broadcastOffers(offers, {
               onlyNew: true,
               guildId,
+              includeAddOns: s.includeAddOns,
             });
             if (res.success) {
               recordGuildPostedOffers(

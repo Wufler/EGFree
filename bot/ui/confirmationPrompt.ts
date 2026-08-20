@@ -4,6 +4,8 @@ import {
   ButtonStyle,
   type ChatInputCommandInteraction,
   type Client,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
   type TextChannel,
 } from "discord.js";
 import { buildClassicEmbedPayload } from "@/lib/builder/classic";
@@ -12,44 +14,80 @@ import { COMPONENT_TYPES, IS_COMPONENTS_V2 } from "@/lib/builder/shared";
 import { getMobileGameKey } from "@/lib/utils";
 import { dispatchDiscordPayload } from "../services/discordService";
 import {
-  convertMobileGameData,
   type FetchedOffers,
+  getCandidateGames,
+  toMobileGame,
 } from "../services/offerService";
-import { getGuildSettings } from "../state";
+import {
+  getGuildPostedOfferIds,
+  getGuildSeenUpcomingOfferIds,
+  getGuildSettings,
+} from "../state";
 import type { DiscordRawComponent, DiscordV2Payload } from "../types";
 
-export async function sendConfirmationPrompt(
-  client: Client,
-  discordToken: string,
-  clientId: string,
-  interaction: ChatInputCommandInteraction | null,
+export interface ConfirmationOptions {
+  includeUpcoming?: boolean;
+  guildId?: string | null;
+  includeAddOns?: boolean;
+  selectedIndices?: number[];
+}
+
+export function buildConfirmationPayload(
   offers: FetchedOffers,
-  options: {
-    includeUpcoming?: boolean;
-    guildId?: string | null;
-    includeAddOns?: boolean;
-  } = {},
-): Promise<void> {
+  options: ConfirmationOptions = {},
+): {
+  isV2: boolean;
+  v2Payload?: DiscordV2Payload;
+  classicPayload?: {
+    content?: string;
+    embeds: DiscordEmbed[];
+    components: (
+      | ActionRowBuilder<StringSelectMenuBuilder>
+      | ActionRowBuilder<ButtonBuilder>
+    )[];
+  };
+} {
   const guildId = options.guildId;
   const s = getGuildSettings(guildId);
-  const targetChannelId = s.reviewChannelId || s.announcementChannelId;
   const includeAddOns =
     options.includeAddOns !== undefined
       ? options.includeAddOns
       : s.includeAddOns;
+  const includeUpcoming = Boolean(options.includeUpcoming);
 
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(
-        `confirm_post_offers:${options.includeUpcoming ? "1" : "0"}:${guildId || ""}:${includeAddOns ? "1" : "0"}`,
-      )
-      .setLabel("Approve & Post")
-      .setStyle(ButtonStyle.Success),
-    new ButtonBuilder()
-      .setCustomId(`dismiss_post_offers:${guildId || ""}`)
-      .setLabel("Dismiss")
-      .setStyle(ButtonStyle.Danger),
-  );
+  const prevOfferIds = getGuildPostedOfferIds(guildId);
+  const prevUpcomingIds = getGuildSeenUpcomingOfferIds(guildId);
+
+  const candidateGames = getCandidateGames(offers, {
+    includeUpcoming,
+    previousOfferIds: prevOfferIds,
+    previousUpcomingOfferIds: prevUpcomingIds,
+  });
+
+  const selectedIndices =
+    options.selectedIndices !== undefined && options.selectedIndices.length > 0
+      ? options.selectedIndices.filter(
+          (idx) => idx >= 0 && idx < candidateGames.length,
+        )
+      : candidateGames.map((c) => c.index);
+
+  const selectedGameIds = candidateGames
+    .filter((c) => selectedIndices.includes(c.index))
+    .map((c) => c.id);
+
+  const parsedMobile = offers.activeMobileGames.map(toMobileGame);
+
+  const selectedGames: Record<string, boolean> = {};
+  for (const g of offers.effectiveGames.currentGames) {
+    selectedGames[g.id] = selectedGameIds.includes(g.id);
+  }
+  for (const g of offers.effectiveGames.nextGames) {
+    selectedGames[g.id] = selectedGameIds.includes(g.id);
+  }
+  for (const g of parsedMobile) {
+    const key = getMobileGameKey(g);
+    selectedGames[key] = selectedGameIds.includes(key);
+  }
 
   const channelDetails = [
     `Desktop: ${s.announcementChannelId ? `<#${s.announcementChannelId}>` : "*Not configured*"}`,
@@ -60,18 +98,6 @@ export async function sendConfirmationPrompt(
 
   const pingId = s.reviewMentionRoleId || s.mentionRoleId;
   const rolePing = pingId ? `<@&${pingId}>` : "";
-
-  const parsedMobile = offers.activeMobileGames.map(convertMobileGameData);
-  const selectedGames: Record<string, boolean> = {};
-  for (const g of offers.effectiveGames.currentGames) {
-    selectedGames[g.id] = true;
-  }
-  for (const g of offers.effectiveGames.nextGames) {
-    selectedGames[g.id] = !!options.includeUpcoming;
-  }
-  for (const g of parsedMobile) {
-    selectedGames[getMobileGameKey(g)] = true;
-  }
 
   const previewSettings: EgFreeSettings = {
     selectedGames,
@@ -93,6 +119,16 @@ export async function sendConfirmationPrompt(
     showDiscordPreview: true,
   };
 
+  const selectedTitlesList = candidateGames
+    .filter((c) => selectedIndices.includes(c.index))
+    .map((c) => `${c.emoji} **${c.title}** (${c.platformLabel})`);
+  const selectedTitles =
+    selectedTitlesList.length > 0
+      ? selectedTitlesList.join("\n")
+      : "*No games selected*";
+
+  const selParam = selectedIndices.join(",");
+
   if (s.useComponentsV2) {
     const v2Payload = buildDiscordMessagePayload(
       offers.effectiveGames,
@@ -101,38 +137,191 @@ export async function sendConfirmationPrompt(
       parsedMobile,
     ) as { components?: DiscordRawComponent[] };
 
-    const reviewBanner: DiscordRawComponent = {
-      type: COMPONENT_TYPES.CONTAINER,
+    const selectOptions = candidateGames.map((cg) => ({
+      label: cg.title.slice(0, 100),
+      value: `${cg.index}`,
+      description: `${cg.platformLabel}${cg.isNew ? " • New offer" : ""}`.slice(
+        0,
+        100,
+      ),
+      emoji: { name: cg.emoji },
+      default: selectedIndices.includes(cg.index),
+    }));
+
+    const reviewComponents: DiscordRawComponent[] = [
+      {
+        type: COMPONENT_TYPES.TEXT_DISPLAY,
+        content: `# Offer Approval & Preview\nSelect which games to publish and review the preview below before approving.${rolePing ? `\n${rolePing}` : ""}\n\n**Selected Offers (${selectedIndices.length}/${candidateGames.length}):**\n${selectedTitles}\n\n**Target Channels:**\n${channelDetails.join("\n")}`,
+      },
+    ];
+
+    if (candidateGames.length > 0) {
+      reviewComponents.push({
+        type: COMPONENT_TYPES.ACTION_ROW,
+        components: [
+          {
+            type: 3, // String Select Menu
+            custom_id: `select_post_games:${includeUpcoming ? "1" : "0"}:${guildId || ""}:${includeAddOns ? "1" : "0"}`,
+            placeholder: `Select games to publish (${selectedIndices.length}/${candidateGames.length} selected)`,
+            min_values: 1,
+            max_values: candidateGames.length,
+            options: selectOptions,
+          } as unknown as DiscordRawComponent,
+        ],
+      });
+    }
+
+    reviewComponents.push({
+      type: COMPONENT_TYPES.ACTION_ROW,
       components: [
         {
-          type: COMPONENT_TYPES.TEXT_DISPLAY,
-          content: `# Offer Approval & Preview\nNew offers detected and are awaiting approval before posting.${rolePing ? `\n${rolePing}` : ""}\n\n**Detected Offers:**\n${offers.titles.join("\n")}\n\n**Target Channels:**\n${channelDetails.join("\n")}`,
+          type: COMPONENT_TYPES.BUTTON,
+          custom_id: `confirm_post_offers:${selParam}:${includeUpcoming ? "1" : "0"}:${guildId || ""}:${includeAddOns ? "1" : "0"}`,
+          label: `Approve & Post (${selectedIndices.length})`,
+          style: 3,
         },
         {
-          type: COMPONENT_TYPES.ACTION_ROW,
-          components: [
-            {
-              type: COMPONENT_TYPES.BUTTON,
-              custom_id: `confirm_post_offers:${options.includeUpcoming ? "1" : "0"}:${guildId || ""}:${includeAddOns ? "1" : "0"}`,
-              label: "Approve & Post",
-              style: 3,
-            },
-            {
-              type: COMPONENT_TYPES.BUTTON,
-              custom_id: `dismiss_post_offers:${guildId || ""}`,
-              label: "Dismiss",
-              style: 4,
-            },
-          ],
+          type: COMPONENT_TYPES.BUTTON,
+          custom_id: `dismiss_post_offers:${guildId || ""}`,
+          label: "Dismiss",
+          style: 4,
         },
       ],
+    });
+
+    const reviewBanner: DiscordRawComponent = {
+      type: COMPONENT_TYPES.CONTAINER,
+      components: reviewComponents,
     };
 
     const components = [...(v2Payload.components || []), reviewBanner];
-    const payload: DiscordV2Payload = {
-      flags: IS_COMPONENTS_V2,
-      components: components as DiscordV2Payload["components"],
+    return {
+      isV2: true,
+      v2Payload: {
+        flags: IS_COMPONENTS_V2,
+        components: components as DiscordV2Payload["components"],
+      },
     };
+  }
+
+  const previewEmbedPayload = buildClassicEmbedPayload(
+    offers.effectiveGames,
+    previewSettings,
+    "",
+    parsedMobile,
+  ) as { embeds: DiscordEmbed[] };
+
+  const embedColorHex = parseInt(s.embedColor.replace("#", ""), 16) || 0x5865f2;
+
+  const headerEmbed: DiscordEmbed = {
+    color: embedColorHex,
+    author: {
+      name: "Epic Games Store • Approval Required",
+      url: "https://free.wolfey.me/",
+      icon_url: "https://up.wolfey.me/mFG3IGgV",
+    },
+    title: "Offer Approval & Action",
+    description:
+      "Select which games to publish from the dropdown menu, review the preview above, and click Approve to publish.",
+    fields: [
+      {
+        name: `Selected Offers (${selectedIndices.length}/${candidateGames.length})`,
+        value: selectedTitles,
+        inline: false,
+      },
+      {
+        name: "Target Channels",
+        value: channelDetails.join("\n"),
+        inline: true,
+      },
+    ],
+    footer: {
+      text: "Click Approve to publish immediately, or Dismiss to cancel.",
+    },
+    timestamp: new Date().toISOString(),
+  };
+
+  const allEmbeds: DiscordEmbed[] = [
+    ...(previewEmbedPayload.embeds || []),
+    headerEmbed,
+  ];
+
+  const rows: (
+    | ActionRowBuilder<StringSelectMenuBuilder>
+    | ActionRowBuilder<ButtonBuilder>
+  )[] = [];
+
+  if (candidateGames.length > 0) {
+    const selectMenu = new StringSelectMenuBuilder()
+      .setCustomId(
+        `select_post_games:${includeUpcoming ? "1" : "0"}:${guildId || ""}:${includeAddOns ? "1" : "0"}`,
+      )
+      .setPlaceholder(
+        `Select games to publish (${selectedIndices.length}/${candidateGames.length} selected)`,
+      )
+      .setMinValues(1)
+      .setMaxValues(candidateGames.length)
+      .addOptions(
+        candidateGames.map((cg) =>
+          new StringSelectMenuOptionBuilder()
+            .setLabel(cg.title.slice(0, 100))
+            .setValue(`${cg.index}`)
+            .setDescription(
+              `${cg.platformLabel}${cg.isNew ? " • New offer" : ""}`.slice(
+                0,
+                100,
+              ),
+            )
+            .setEmoji(cg.emoji)
+            .setDefault(selectedIndices.includes(cg.index)),
+        ),
+      );
+
+    rows.push(
+      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu),
+    );
+  }
+
+  const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(
+        `confirm_post_offers:${selParam}:${includeUpcoming ? "1" : "0"}:${guildId || ""}:${includeAddOns ? "1" : "0"}`,
+      )
+      .setLabel(`Approve & Post (${selectedIndices.length})`)
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId(`dismiss_post_offers:${guildId || ""}`)
+      .setLabel("Dismiss")
+      .setStyle(ButtonStyle.Danger),
+  );
+  rows.push(buttonRow);
+
+  return {
+    isV2: false,
+    classicPayload: {
+      content: rolePing || undefined,
+      embeds: allEmbeds,
+      components: rows,
+    },
+  };
+}
+
+export async function sendConfirmationPrompt(
+  client: Client,
+  discordToken: string,
+  clientId: string,
+  interaction: ChatInputCommandInteraction | null,
+  offers: FetchedOffers,
+  options: ConfirmationOptions = {},
+): Promise<void> {
+  const guildId = options.guildId;
+  const s = getGuildSettings(guildId);
+  const targetChannelId = s.reviewChannelId || s.announcementChannelId;
+
+  const payloadData = buildConfirmationPayload(offers, options);
+
+  if (payloadData.isV2 && payloadData.v2Payload) {
+    const payload = payloadData.v2Payload;
 
     if (targetChannelId && !interaction) {
       const channel = await client.channels.fetch(targetChannelId);
@@ -161,6 +350,8 @@ export async function sendConfirmationPrompt(
           );
         }
       } else {
+        const pingId = s.reviewMentionRoleId || s.mentionRoleId;
+        const rolePing = pingId ? `<@&${pingId}>` : "";
         if (rolePing && interaction.channel?.isTextBased()) {
           await dispatchDiscordPayload(
             discordToken,
@@ -189,92 +380,54 @@ export async function sendConfirmationPrompt(
     return;
   }
 
-  const previewEmbedPayload = buildClassicEmbedPayload(
-    offers.effectiveGames,
-    previewSettings,
-    "",
-    parsedMobile,
-  ) as { embeds: DiscordEmbed[] };
+  if (payloadData.classicPayload) {
+    const { content, embeds, components } = payloadData.classicPayload;
 
-  const embedColorHex = parseInt(s.embedColor.replace("#", ""), 16) || 0x5865f2;
-
-  const headerEmbed: DiscordEmbed = {
-    color: embedColorHex,
-    author: {
-      name: "Epic Games Store • Approval Required",
-      url: "https://free.wolfey.me/",
-      icon_url: "https://up.wolfey.me/mFG3IGgV",
-    },
-    title: "Offer Approval & Action",
-    description:
-      "Review the free offers above. Click Approve to publish to announcement channels, or Dismiss to cancel.",
-    fields: [
-      {
-        name: "Detected Offers",
-        value: offers.titles.length > 0 ? offers.titles.join("\n") : "*None*",
-        inline: false,
-      },
-      {
-        name: "Target Channels",
-        value: channelDetails.join("\n"),
-        inline: true,
-      },
-    ],
-    footer: {
-      text: "Click Approve to publish immediately, or Dismiss to cancel.",
-    },
-    timestamp: new Date().toISOString(),
-  };
-
-  const allEmbeds: DiscordEmbed[] = [
-    ...(previewEmbedPayload.embeds || []),
-    headerEmbed,
-  ];
-
-  if (targetChannelId && !interaction) {
-    const channel = await client.channels.fetch(targetChannelId);
-    if (channel?.isTextBased()) {
-      await (channel as TextChannel).send({
-        content: rolePing || undefined,
-        embeds: allEmbeds,
-        components: [row],
-      });
-    }
-  } else if (interaction) {
-    if (s.reviewChannelId && s.reviewChannelId !== interaction.channelId) {
-      const reviewChannel = await client.channels.fetch(s.reviewChannelId);
-      if (reviewChannel?.isTextBased()) {
-        await (reviewChannel as TextChannel).send({
-          content: rolePing || undefined,
-          embeds: allEmbeds,
-          components: [row],
+    if (targetChannelId && !interaction) {
+      const channel = await client.channels.fetch(targetChannelId);
+      if (channel?.isTextBased()) {
+        await (channel as TextChannel).send({
+          content,
+          embeds,
+          components,
         });
-        await interaction.editReply(
-          `Approval prompt sent to <#${s.reviewChannelId}>.`,
-        );
-        return;
       }
-    }
+    } else if (interaction) {
+      if (s.reviewChannelId && s.reviewChannelId !== interaction.channelId) {
+        const reviewChannel = await client.channels.fetch(s.reviewChannelId);
+        if (reviewChannel?.isTextBased()) {
+          await (reviewChannel as TextChannel).send({
+            content,
+            embeds,
+            components,
+          });
+          await interaction.editReply(
+            `Approval prompt sent to <#${s.reviewChannelId}>.`,
+          );
+          return;
+        }
+      }
 
-    if (interaction.channel?.isTextBased()) {
-      await (interaction.channel as TextChannel).send({
-        content: rolePing || undefined,
-        embeds: allEmbeds,
-        components: [row],
-      });
-      try {
-        await interaction.deleteReply();
-      } catch {
+      if (interaction.channel?.isTextBased()) {
+        await (interaction.channel as TextChannel).send({
+          content,
+          embeds,
+          components,
+        });
+        try {
+          await interaction.deleteReply();
+        } catch {
+          await interaction.editReply({
+            content: "Approval prompt posted below.",
+          });
+        }
+      } else {
         await interaction.editReply({
-          content: "Approval prompt posted below.",
+          content,
+          embeds,
+          components,
         });
       }
-    } else {
-      await interaction.editReply({
-        content: rolePing || undefined,
-        embeds: allEmbeds,
-        components: [row],
-      });
     }
   }
 }

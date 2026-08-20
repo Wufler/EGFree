@@ -4,10 +4,8 @@ import dotenv from "dotenv";
 
 const isProd = process.env.NODE_ENV === "production";
 
-// Load .env first
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
-// Use .env.local if in development
 if (!isProd) {
   dotenv.config({
     path: path.resolve(process.cwd(), ".env.local"),

@@ -39,3 +39,15 @@ export interface DiscordV2Payload {
       >
   >;
 }
+
+export interface CandidateGame {
+  index: number;
+  id: string;
+  title: string;
+  type: "pc" | "pc_addon" | "mobile" | "upcoming" | "upcoming_addon";
+  platformLabel: string;
+  emoji: string;
+  isNew: boolean;
+  rawDesktopGame?: GameItem;
+  rawMobileGame?: MobileGameData;
+}

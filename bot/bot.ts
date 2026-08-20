@@ -1,5 +1,9 @@
 import { Client, type Interaction } from "discord.js";
-import { handleChatInputCommand, registerSlashCommands } from "./commands";
+import {
+  handleAutocompleteInteraction,
+  handleChatInputCommand,
+  registerSlashCommands,
+} from "./commands";
 import { handleInteraction } from "./interactions";
 import { OfferSchedulerService } from "./services/schedulerService";
 import {
@@ -60,6 +64,8 @@ export class DiscordOfferBot {
             this.scheduler,
             this.credentials,
           );
+        } else if (interaction.isAutocomplete()) {
+          await handleAutocompleteInteraction(interaction);
         } else {
           await handleInteraction(
             interaction,

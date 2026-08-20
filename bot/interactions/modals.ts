@@ -6,7 +6,7 @@ import {
 import type { OfferSchedulerService } from "../services/schedulerService";
 import type { BotCredentials } from "../state";
 import { updateGuildSettings } from "../state";
-import { getSettingsComponentsV2Payload } from "../ui/settingsPanel";
+import { getSettingsPayload } from "../ui/settingsPanel";
 
 export async function handleModalSubmitInteraction(
   interaction: ModalSubmitInteraction,
@@ -32,7 +32,7 @@ export async function handleModalSubmitInteraction(
     await sendInteractionResponse(
       token,
       interaction,
-      getSettingsComponentsV2Payload("format", interaction.guildId),
+      getSettingsPayload("format", interaction.guildId),
       true,
     );
   } else if (interaction.customId === "settings_modal_interval") {
@@ -53,7 +53,7 @@ export async function handleModalSubmitInteraction(
     await sendInteractionResponse(
       token,
       interaction,
-      getSettingsComponentsV2Payload("scheduler", interaction.guildId),
+      getSettingsPayload("scheduler", interaction.guildId),
       true,
     );
   }

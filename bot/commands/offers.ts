@@ -1,7 +1,10 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { COMPONENT_TYPES, IS_COMPONENTS_V2 } from "@/lib/builder/shared";
 import { canManageSettings } from "../services/discordService";
-import { fetchCurrentOffers } from "../services/offerService";
+import {
+  fetchCurrentOffers,
+  getCandidateGames,
+} from "../services/offerService";
 import type { OfferSchedulerService } from "../services/schedulerService";
 import type { BotCredentials } from "../state";
 import {
@@ -135,6 +138,7 @@ export async function handleOffersCommand(
         interaction.options.getBoolean("confirm") ??
         interaction.options.getBoolean("require_confirmation") ??
         guildSettings.requireConfirmation;
+      const specificGame = interaction.options.getString("game")?.trim();
 
       const prevOfferIds = getGuildPostedOfferIds(guildId);
       const prevUpcomingIds = getGuildSeenUpcomingOfferIds(guildId);
@@ -145,11 +149,37 @@ export async function handleOffersCommand(
         includeAddOns,
       });
 
-      if (!offers.hasNewOffers && !force) {
+      if (!offers.hasNewOffers && !force && !specificGame) {
         await interaction.editReply(
-          "No new offers found. Use `/offers post force:True` to post anyway.",
+          "No new offers found. Use `/offers post force:True` to post anyway, or select a specific game.",
         );
         return;
+      }
+
+      const candidateGames = getCandidateGames(offers, {
+        includeUpcoming,
+        previousOfferIds: prevOfferIds,
+        previousUpcomingOfferIds: prevUpcomingIds,
+      });
+
+      let selectedIndices: number[] | undefined;
+      let selectedGameIds: string[] | undefined;
+
+      if (specificGame) {
+        const matched = candidateGames.find(
+          (c) =>
+            c.id === specificGame ||
+            c.title.toLowerCase().includes(specificGame.toLowerCase()),
+        );
+        if (matched) {
+          selectedIndices = [matched.index];
+          selectedGameIds = [matched.id];
+        } else {
+          await interaction.editReply(
+            `Could not find an offer matching \`${specificGame}\`.`,
+          );
+          return;
+        }
       }
 
       if (reqConfirm) {
@@ -163,6 +193,7 @@ export async function handleOffersCommand(
             includeUpcoming,
             guildId,
             includeAddOns,
+            selectedIndices,
           },
         );
       } else {
@@ -170,13 +201,17 @@ export async function handleOffersCommand(
           includeUpcoming,
           guildId,
           includeAddOns,
+          selectedGameIds,
         });
         if (result.success) {
-          recordGuildPostedOffers(
-            guildId,
-            offers.currentOfferIds,
-            offers.upcomingOfferIds,
-          );
+          const postedCurrentIds = (
+            selectedGameIds || offers.currentOfferIds
+          ).filter((id) => offers.currentOfferIds.includes(id));
+          const postedUpcomingIds = (
+            selectedGameIds || offers.upcomingOfferIds
+          ).filter((id) => offers.upcomingOfferIds.includes(id));
+
+          recordGuildPostedOffers(guildId, postedCurrentIds, postedUpcomingIds);
           await interaction.editReply(
             "Offers posted successfully to the announcement channel.",
           );

@@ -4,7 +4,7 @@ import {
   sendInteractionResponse,
 } from "../services/discordService";
 import type { BotCredentials } from "../state";
-import { getSettingsComponentsV2Payload } from "../ui/settingsPanel";
+import { getSettingsPayload } from "../ui/settingsPanel";
 
 export async function handleSettingsCommand(
   interaction: ChatInputCommandInteraction,
@@ -19,7 +19,7 @@ export async function handleSettingsCommand(
     return;
   }
 
-  const payload = getSettingsComponentsV2Payload("main", interaction.guildId);
+  const payload = getSettingsPayload("main", interaction.guildId);
   await sendInteractionResponse(
     credentials.discordToken,
     interaction,

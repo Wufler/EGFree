@@ -3,6 +3,7 @@ import { getMobileGames } from "@/lib/EGData";
 import { getEpicFreeGames } from "@/lib/getGames";
 import { getEffectiveGames, getMobileGameKey } from "@/lib/utils";
 import type { BotPersistentSettings } from "../state";
+import type { CandidateGame } from "../types";
 
 export interface FetchedOffers {
   games: Game;
@@ -19,7 +20,7 @@ export interface FetchedOffers {
   titles: string[];
 }
 
-export function convertMobileGameData(m: MobileGameData): MobileGame {
+export function toMobileGame(m: MobileGameData): MobileGame {
   return {
     id: m.id,
     title: m.title,
@@ -32,6 +33,72 @@ export function convertMobileGameData(m: MobileGameData): MobileGame {
     iosOffer: m.iosOffer,
     androidOffer: m.androidOffer,
   };
+}
+
+export function getCandidateGames(
+  offers: FetchedOffers,
+  options: {
+    includeUpcoming?: boolean;
+    previousOfferIds?: string[];
+    previousUpcomingOfferIds?: string[];
+  } = {},
+): CandidateGame[] {
+  const list: CandidateGame[] = [];
+  let index = 0;
+  const prevIds = options.previousOfferIds || [];
+  const prevUpcoming = options.previousUpcomingOfferIds || [];
+
+  for (const g of offers.effectiveGames.currentGames) {
+    const isAddon = g.offerType === "ADD_ON";
+    list.push({
+      index: index++,
+      id: g.id,
+      title: g.title,
+      type: isAddon ? "pc_addon" : "pc",
+      platformLabel: isAddon ? "PC Add-on" : "PC",
+      emoji: isAddon ? "🎁" : "💻",
+      isNew: !prevIds.includes(g.id),
+      rawDesktopGame: g,
+    });
+  }
+
+  for (const m of offers.activeMobileGames) {
+    const key = getMobileGameKey(toMobileGame(m));
+    const plat =
+      m.iosOffer && m.androidOffer
+        ? "iOS & Android"
+        : m.iosOffer
+          ? "iOS"
+          : "Android";
+    list.push({
+      index: index++,
+      id: key,
+      title: m.title,
+      type: "mobile",
+      platformLabel: `Mobile (${plat})`,
+      emoji: "📱",
+      isNew: !prevIds.includes(key),
+      rawMobileGame: m,
+    });
+  }
+
+  if (options.includeUpcoming) {
+    for (const g of offers.effectiveGames.nextGames) {
+      const isAddon = g.offerType === "ADD_ON";
+      list.push({
+        index: index++,
+        id: g.id,
+        title: g.title,
+        type: isAddon ? "upcoming_addon" : "upcoming",
+        platformLabel: isAddon ? "Upcoming Add-on" : "Upcoming PC",
+        emoji: "⏳",
+        isNew: !prevUpcoming.includes(g.id),
+        rawDesktopGame: g,
+      });
+    }
+  }
+
+  return list;
 }
 
 export async function fetchCurrentOffers(
@@ -60,13 +127,15 @@ export async function fetchCurrentOffers(
   }
   const now = new Date();
 
-  const activeMobileGames = (rawMobile || []).filter(
-    (g) => !g.promoEndDate || new Date(g.promoEndDate) > now,
-  );
+  const activeMobileGames = (rawMobile || []).filter((g) => {
+    if (!g.promoEndDate) return true;
+    const time = new Date(g.promoEndDate).getTime();
+    return Number.isFinite(time) ? time > now.getTime() : true;
+  });
 
   const currentPCIds = effectiveGames.currentGames.map((g) => g.id);
   const currentMobileIds = activeMobileGames.map((g) =>
-    getMobileGameKey(convertMobileGameData(g)),
+    getMobileGameKey(toMobileGame(g)),
   );
   const upcomingPCIds = effectiveGames.nextGames.map((g) => g.id);
   const currentOfferIds = [...currentPCIds, ...currentMobileIds];
@@ -92,7 +161,7 @@ export async function fetchCurrentOffers(
   }
 
   for (const g of activeMobileGames) {
-    const key = getMobileGameKey(convertMobileGameData(g));
+    const key = getMobileGameKey(toMobileGame(g));
     const isNew = !previousOfferIds.includes(key);
     const plat =
       g.iosOffer && g.androidOffer
@@ -131,23 +200,53 @@ export async function fetchCurrentOffers(
 export function generateOfferPayloads(
   offers: FetchedOffers,
   settings: BotPersistentSettings,
-  options: { includeUpcoming?: boolean; onlyNew?: boolean } = {},
+  options: {
+    includeUpcoming?: boolean;
+    onlyNew?: boolean;
+    selectedGameIds?: string[];
+  } = {},
 ): {
   desktopPayload?: Record<string, unknown>;
   mobilePayload?: Record<string, unknown>;
   combinedPayload?: Record<string, unknown>;
 } {
-  const parsedMobile = offers.activeMobileGames.map(convertMobileGameData);
+  const parsedMobile = offers.activeMobileGames.map(toMobileGame);
 
   const selectedGames: Record<string, boolean> = {};
-  for (const g of offers.effectiveGames.currentGames) {
-    selectedGames[g.id] = true;
-  }
-  for (const g of offers.effectiveGames.nextGames) {
-    selectedGames[g.id] = !!options.includeUpcoming;
-  }
-  for (const g of parsedMobile) {
-    selectedGames[getMobileGameKey(g)] = true;
+
+  if (options.selectedGameIds && options.selectedGameIds.length > 0) {
+    for (const g of offers.effectiveGames.currentGames) {
+      selectedGames[g.id] = options.selectedGameIds.includes(g.id);
+    }
+    for (const g of offers.effectiveGames.nextGames) {
+      selectedGames[g.id] = options.selectedGameIds.includes(g.id);
+    }
+    for (const g of parsedMobile) {
+      const key = getMobileGameKey(g);
+      selectedGames[key] = options.selectedGameIds.includes(key);
+    }
+  } else if (options.onlyNew) {
+    for (const g of offers.effectiveGames.currentGames) {
+      selectedGames[g.id] = offers.newDesktopIds.includes(g.id);
+    }
+    for (const g of offers.effectiveGames.nextGames) {
+      selectedGames[g.id] =
+        !!options.includeUpcoming && offers.upcomingOfferIds.includes(g.id);
+    }
+    for (const g of parsedMobile) {
+      const key = getMobileGameKey(g);
+      selectedGames[key] = offers.newMobileIds.includes(key);
+    }
+  } else {
+    for (const g of offers.effectiveGames.currentGames) {
+      selectedGames[g.id] = true;
+    }
+    for (const g of offers.effectiveGames.nextGames) {
+      selectedGames[g.id] = !!options.includeUpcoming;
+    }
+    for (const g of parsedMobile) {
+      selectedGames[getMobileGameKey(g)] = true;
+    }
   }
 
   const mobileRole = settings.mobileMentionRoleId || settings.mentionRoleId;

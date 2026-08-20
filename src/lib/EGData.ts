@@ -1,4 +1,3 @@
-// Fetch from egdata.app API, mostly for the mobile games (thank you!)
 const EGDATA_API = "https://api.egdata.app";
 
 function getPlatform(tags: EgDataTag[]): "ios" | "android" | null {
@@ -17,9 +16,6 @@ export async function getMobileGame(
   enteredPlatform: "ios" | "android" | null;
 } | null> {
   try {
-    const logs = false;
-    if (logs) console.log("Fetching mobile game data for offerId:", offerId);
-
     let offer = initialOffer;
     if (!offer) {
       const offerRes = await fetch(`${EGDATA_API}/offers/${offerId}`);
@@ -29,7 +25,6 @@ export async function getMobileGame(
 
     if (!offer) return null;
 
-    if (logs) console.log("Offer title:", offer.title);
     const enteredPlatform = getPlatform(offer.tags || []);
 
     const [priceRes, sandboxRes] = await Promise.all([
@@ -53,7 +48,6 @@ export async function getMobileGame(
       const freeRules = appliedRules.filter(
         (rule) => rule.discountSetting?.discountPercentage === 0,
       );
-      if (logs) console.log("Free rules found:", freeRules.length, freeRules);
 
       const promoRule =
         freeRules.length > 0
@@ -63,19 +57,10 @@ export async function getMobileGame(
               return currentDate > latestDate ? current : latest;
             })
           : null;
-      if (logs) console.log("Selected promo rule:", promoRule);
 
       if (promoRule?.endDate) {
         promoEndDate = promoRule.endDate;
       }
-    }
-
-    if (logs) {
-      console.log(
-        "Final promoEndDate:",
-        promoEndDate,
-        promoEndDate ? new Date(promoEndDate).toISOString() : "empty",
-      );
     }
 
     const getSlug = (o: EgDataOffer): string =>
@@ -162,7 +147,6 @@ export async function getMobileGame(
       iosOffer,
       androidOffer,
     };
-    if (logs) console.log("Final gameData:", gameData);
     return { gameData, enteredPlatform };
   } catch (error) {
     console.error("Error fetching mobile game data:", error);

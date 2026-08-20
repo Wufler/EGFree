@@ -14,7 +14,10 @@ import {
   canManageSettings,
   sendInteractionResponse,
 } from "../services/discordService";
-import { fetchCurrentOffers } from "../services/offerService";
+import {
+  fetchCurrentOffers,
+  getCandidateGames,
+} from "../services/offerService";
 import type { OfferSchedulerService } from "../services/schedulerService";
 import type { BotCredentials, BotPersistentSettings } from "../state";
 import {
@@ -26,7 +29,7 @@ import {
 } from "../state";
 import type { SettingsCategory } from "../types";
 import { renderPickerResponse } from "../ui/pickers";
-import { getSettingsComponentsV2Payload } from "../ui/settingsPanel";
+import { getSettingsPayload } from "../ui/settingsPanel";
 
 export async function handleButtonInteraction(
   interaction: ButtonInteraction,
@@ -46,11 +49,26 @@ export async function handleButtonInteraction(
     await interaction.deferUpdate();
 
     const parts = interaction.customId.split(":");
-    const includeUpcoming = parts[1] === "1";
-    const guildId = parts[2] || interaction.guildId || null;
+    let selParam: string | null = null;
+    let includeUpcoming = false;
+    let guildId: string | null = null;
+    let includeAddOns: boolean | undefined;
+
+    if (parts.length >= 5) {
+      selParam = parts[1];
+      includeUpcoming = parts[2] === "1";
+      guildId = parts[3] || interaction.guildId || null;
+      includeAddOns = parts[4] !== undefined ? parts[4] === "1" : undefined;
+    } else {
+      includeUpcoming = parts[1] === "1";
+      guildId = parts[2] || interaction.guildId || null;
+      includeAddOns = parts[3] !== undefined ? parts[3] === "1" : undefined;
+    }
+
     const s = getGuildSettings(guildId);
-    const includeAddOns =
-      parts[3] !== undefined ? parts[3] === "1" : s.includeAddOns;
+    if (includeAddOns === undefined) {
+      includeAddOns = s.includeAddOns;
+    }
 
     const prevOfferIds = getGuildPostedOfferIds(guildId);
     const prevUpcomingIds = getGuildSeenUpcomingOfferIds(guildId);
@@ -61,20 +79,56 @@ export async function handleButtonInteraction(
       includeAddOns,
     });
 
+    const candidateGames = getCandidateGames(offers, {
+      includeUpcoming,
+      previousOfferIds: prevOfferIds,
+      previousUpcomingOfferIds: prevUpcomingIds,
+    });
+
+    let selectedCandidateGames = candidateGames;
+    if (selParam !== null && selParam.length > 0) {
+      const selectedIndices = selParam
+        .split(",")
+        .map((v) => parseInt(v.trim(), 10))
+        .filter((n) => !Number.isNaN(n));
+      selectedCandidateGames = candidateGames.filter((c) =>
+        selectedIndices.includes(c.index),
+      );
+    }
+
+    const selectedGameIds = selectedCandidateGames.map((c) => c.id);
+
+    if (selectedGameIds.length === 0) {
+      await interaction.followUp({
+        content:
+          "No games were selected to post. Please select at least one game.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
     const result = await scheduler.broadcastOffers(offers, {
       includeUpcoming,
       guildId,
       includeAddOns,
+      selectedGameIds,
     });
     if (result.success) {
-      recordGuildPostedOffers(
-        guildId,
-        offers.currentOfferIds,
-        offers.upcomingOfferIds,
+      const postedCurrentIds = selectedGameIds.filter((id) =>
+        offers.currentOfferIds.includes(id),
+      );
+      const postedUpcomingIds = selectedGameIds.filter((id) =>
+        offers.upcomingOfferIds.includes(id),
       );
 
+      recordGuildPostedOffers(guildId, postedCurrentIds, postedUpcomingIds);
+
       const titleList =
-        offers.titles.length > 0 ? offers.titles.join("\n") : "*None*";
+        selectedCandidateGames.length > 0
+          ? selectedCandidateGames
+              .map((c) => `${c.emoji} **${c.title}** (${c.platformLabel})`)
+              .join("\n")
+          : "*None*";
       const timestamp = Math.floor(Date.now() / 1000);
 
       const channelDetails = [
@@ -96,7 +150,7 @@ export async function handleButtonInteraction(
               components: [
                 {
                   type: COMPONENT_TYPES.TEXT_DISPLAY,
-                  content: `# Offers Approved & Published\nPublished by <@${interaction.user.id}> at <t:${timestamp}:T>.\n\n**Posted Offers:**\n${titleList}\n\n**Posted To:**\n${channelsList}`,
+                  content: `# Offers Approved & Published\nPublished by <@${interaction.user.id}> at <t:${timestamp}:T>.\n\n**Posted Offers (${selectedCandidateGames.length}):**\n${titleList}\n\n**Posted To:**\n${channelsList}`,
                 },
               ],
             },
@@ -123,7 +177,7 @@ export async function handleButtonInteraction(
           description: `Published by <@${interaction.user.id}> at <t:${timestamp}:T>`,
           fields: [
             {
-              name: "Posted Offers",
+              name: `Posted Offers (${selectedCandidateGames.length})`,
               value: titleList,
               inline: false,
             },
@@ -241,35 +295,35 @@ export async function handleButtonInteraction(
       await sendInteractionResponse(
         token,
         interaction,
-        getSettingsComponentsV2Payload("main", interaction.guildId),
+        getSettingsPayload("main", interaction.guildId),
         true,
       );
     } else if (interaction.customId === "nav_channels") {
       await sendInteractionResponse(
         token,
         interaction,
-        getSettingsComponentsV2Payload("channels", interaction.guildId),
+        getSettingsPayload("channels", interaction.guildId),
         true,
       );
     } else if (interaction.customId === "nav_format") {
       await sendInteractionResponse(
         token,
         interaction,
-        getSettingsComponentsV2Payload("format", interaction.guildId),
+        getSettingsPayload("format", interaction.guildId),
         true,
       );
     } else if (interaction.customId === "nav_toggles") {
       await sendInteractionResponse(
         token,
         interaction,
-        getSettingsComponentsV2Payload("toggles", interaction.guildId),
+        getSettingsPayload("toggles", interaction.guildId),
         true,
       );
     } else if (interaction.customId === "nav_scheduler") {
       await sendInteractionResponse(
         token,
         interaction,
-        getSettingsComponentsV2Payload("scheduler", interaction.guildId),
+        getSettingsPayload("scheduler", interaction.guildId),
         true,
       );
     } else if (interaction.customId === "pick_announcement_channel") {
@@ -295,7 +349,7 @@ export async function handleButtonInteraction(
       await sendInteractionResponse(
         token,
         interaction,
-        getSettingsComponentsV2Payload("channels", interaction.guildId),
+        getSettingsPayload("channels", interaction.guildId),
         true,
       );
     } else if (interaction.customId === "pick_mobile_channel") {
@@ -323,7 +377,7 @@ export async function handleButtonInteraction(
       await sendInteractionResponse(
         token,
         interaction,
-        getSettingsComponentsV2Payload("channels", interaction.guildId),
+        getSettingsPayload("channels", interaction.guildId),
         true,
       );
     } else if (interaction.customId === "pick_review_channel") {
@@ -347,7 +401,7 @@ export async function handleButtonInteraction(
       await sendInteractionResponse(
         token,
         interaction,
-        getSettingsComponentsV2Payload("channels", interaction.guildId),
+        getSettingsPayload("channels", interaction.guildId),
         true,
       );
     } else if (interaction.customId === "pick_review_role") {
@@ -367,7 +421,7 @@ export async function handleButtonInteraction(
       await sendInteractionResponse(
         token,
         interaction,
-        getSettingsComponentsV2Payload("channels", interaction.guildId),
+        getSettingsPayload("channels", interaction.guildId),
         true,
       );
     } else if (interaction.customId === "open_format_modal") {
@@ -391,7 +445,7 @@ export async function handleButtonInteraction(
       await sendInteractionResponse(
         token,
         interaction,
-        getSettingsComponentsV2Payload("format", interaction.guildId),
+        getSettingsPayload("format", interaction.guildId),
         true,
       );
     } else if (interaction.customId === "open_mobile_role_modal") {
@@ -411,7 +465,7 @@ export async function handleButtonInteraction(
       await sendInteractionResponse(
         token,
         interaction,
-        getSettingsComponentsV2Payload("format", interaction.guildId),
+        getSettingsPayload("format", interaction.guildId),
         true,
       );
     } else if (interaction.customId === "open_color_modal") {
@@ -437,7 +491,7 @@ export async function handleButtonInteraction(
       await sendInteractionResponse(
         token,
         interaction,
-        getSettingsComponentsV2Payload("scheduler", interaction.guildId),
+        getSettingsPayload("scheduler", interaction.guildId),
         true,
       );
     } else if (interaction.customId.startsWith("toggle_")) {
@@ -477,7 +531,7 @@ export async function handleButtonInteraction(
       await sendInteractionResponse(
         token,
         interaction,
-        getSettingsComponentsV2Payload(returnCat, interaction.guildId),
+        getSettingsPayload(returnCat, interaction.guildId),
         true,
       );
     }
