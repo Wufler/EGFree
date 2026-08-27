@@ -5,6 +5,7 @@ import {
   registerSlashCommands,
 } from "./commands";
 import { handleInteraction } from "./interactions";
+import { logger } from "./logger";
 import { OfferSchedulerService } from "./services/schedulerService";
 import {
   type BotCredentials,
@@ -47,13 +48,13 @@ export class DiscordOfferBot {
 
   private setupEvents(): void {
     this.client.once("clientReady", async () => {
-      console.log(`[EGFree] Logged in as ${this.client.user?.tag}!`);
+      logger.info(`Logged in as ${this.client.user?.tag}!`);
       await registerSlashCommands(this.credentials, this.client);
       this.scheduler.start();
     });
 
     this.client.on("error", (error) => {
-      console.error("[EGFree] Discord client error:", error);
+      logger.error("Discord client error:", error);
     });
 
     this.client.on("interactionCreate", async (interaction: Interaction) => {
@@ -80,18 +81,18 @@ export class DiscordOfferBot {
           "code" in err &&
           (err as { code: number }).code === 10062
         ) {
-          console.warn("[EGFree] Interaction expired or already acknowledged.");
+          logger.warn("Interaction expired or already acknowledged.");
           return;
         }
-        console.error("[EGFree] Uncaught error handling interaction:", err);
+        logger.error("Uncaught error handling interaction:", err);
       }
     });
   }
 
   public async start(): Promise<void> {
     if (!this.credentials.discordToken) {
-      console.error(
-        "[EGFree] Missing DISCORD_BOT_TOKEN in environment (.env or .env.local). Please supply it to start the bot.",
+      logger.error(
+        "Missing DISCORD_BOT_TOKEN in environment (.env or .env.local). Please supply it to start the bot.",
       );
       process.exit(1);
     }
@@ -100,12 +101,12 @@ export class DiscordOfferBot {
 }
 
 async function main() {
-  console.log("Starting EGFree...");
+  logger.info("Starting EGFree...");
   const bot = new DiscordOfferBot();
   await bot.start();
 }
 
 main().catch((err) => {
-  console.error("Fatal error starting Discord bot:", err);
+  logger.error("Fatal error starting Discord bot:", err);
   process.exit(1);
 });

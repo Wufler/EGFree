@@ -23,6 +23,30 @@ export function getSettingsPayload(
       content: `### Settings`,
     });
 
+    const isBotEnabled = s.enabled !== false;
+    containerComponents.push({
+      type: COMPONENT_TYPES.SECTION,
+      components: [
+        {
+          type: COMPONENT_TYPES.TEXT_DISPLAY,
+          content: `**EGFree Bot**\n${isBotEnabled ? "Enabled" : "🔴 Disabled"}`,
+        },
+      ],
+      accessory: {
+        type: COMPONENT_TYPES.BUTTON,
+        style: isBotEnabled ? 2 : 1,
+        label: isBotEnabled ? "Disable" : "Enable",
+        custom_id: "toggle_bot_enabled",
+      },
+    });
+
+    containerComponents.push({
+      type: COMPONENT_TYPES.SEPARATOR,
+      divider: true,
+      spacing: 1,
+    });
+
+    const isMobileEnabled = s.includeMobile !== false;
     const pcChan = s.announcementChannelId
       ? `<#${s.announcementChannelId}>`
       : "*Not set*";
@@ -30,12 +54,16 @@ export function getSettingsPayload(
       ? `<#${s.mobileAnnouncementChannelId}>`
       : "*Same as PC*";
 
+    const channelsSummary = isMobileEnabled
+      ? `PC: ${pcChan} • Mobile: ${mobChan}`
+      : `Channel: ${pcChan}`;
+
     containerComponents.push({
       type: COMPONENT_TYPES.SECTION,
       components: [
         {
           type: COMPONENT_TYPES.TEXT_DISPLAY,
-          content: `**Channels**\nPC: ${pcChan} • Mobile: ${mobChan}`,
+          content: `**Channels**\n${channelsSummary}`,
         },
       ],
       accessory: {
@@ -53,9 +81,10 @@ export function getSettingsPayload(
     const mobRoleLabel = s.mobileMentionRoleId
       ? `<@&${s.mobileMentionRoleId}>`
       : "*Same as PC*";
-    const rolesSummary = s.splitDesktopMobile
-      ? `PC Role: ${pcRoleLabel} • Mobile Role: ${mobRoleLabel}`
-      : `Role: ${pcRoleLabel}`;
+    const rolesSummary =
+      isMobileEnabled && s.splitDesktopMobile
+        ? `PC Role: ${pcRoleLabel} • Mobile Role: ${mobRoleLabel}`
+        : `Role: ${pcRoleLabel}`;
 
     containerComponents.push({
       type: COMPONENT_TYPES.SECTION,
@@ -79,6 +108,7 @@ export function getSettingsPayload(
     if (s.includeClaimGame) activeToggles.push("Claim Button");
     if (s.includeCheckout) activeToggles.push("Quick Checkout");
     if (s.includeFooter) activeToggles.push("Footer");
+    if (isMobileEnabled) activeToggles.push("Mobile");
     if (s.includeAddOns) activeToggles.push("Add-ons");
     const togglesSummary =
       activeToggles.length > 0 ? activeToggles.join(", ") : "None";
@@ -120,17 +150,20 @@ export function getSettingsPayload(
       },
     });
   } else if (currentCategory === "channels") {
+    const isMobileEnabled = s.includeMobile !== false;
     containerComponents.push({
       type: COMPONENT_TYPES.TEXT_DISPLAY,
       content: `### Channels`,
     });
+
+    const pcChanLabel = isMobileEnabled ? "PC Channel" : "Channel";
 
     containerComponents.push({
       type: COMPONENT_TYPES.SECTION,
       components: [
         {
           type: COMPONENT_TYPES.TEXT_DISPLAY,
-          content: `**PC Channel**\n${s.announcementChannelId ? `<#${s.announcementChannelId}>` : "*Not set*"}`,
+          content: `**${pcChanLabel}**\n${s.announcementChannelId ? `<#${s.announcementChannelId}>` : "*Not set*"}`,
         },
       ],
       accessory: {
@@ -141,37 +174,39 @@ export function getSettingsPayload(
       },
     });
 
-    containerComponents.push({
-      type: COMPONENT_TYPES.SECTION,
-      components: [
-        {
-          type: COMPONENT_TYPES.TEXT_DISPLAY,
-          content: `**Mobile Channel**\n${s.mobileAnnouncementChannelId ? `<#${s.mobileAnnouncementChannelId}>` : "*Same as PC channel*"}`,
+    if (isMobileEnabled) {
+      containerComponents.push({
+        type: COMPONENT_TYPES.SECTION,
+        components: [
+          {
+            type: COMPONENT_TYPES.TEXT_DISPLAY,
+            content: `**Mobile Channel**\n${s.mobileAnnouncementChannelId ? `<#${s.mobileAnnouncementChannelId}>` : "*Same as PC channel*"}`,
+          },
+        ],
+        accessory: {
+          type: COMPONENT_TYPES.BUTTON,
+          style: 2,
+          label: "Set Channel",
+          custom_id: "pick_mobile_channel",
         },
-      ],
-      accessory: {
-        type: COMPONENT_TYPES.BUTTON,
-        style: 2,
-        label: "Set Channel",
-        custom_id: "pick_mobile_channel",
-      },
-    });
+      });
 
-    containerComponents.push({
-      type: COMPONENT_TYPES.SECTION,
-      components: [
-        {
-          type: COMPONENT_TYPES.TEXT_DISPLAY,
-          content: `**Separate Posts**\n${s.splitDesktopMobile ? "Sending in separate channels" : "Combined in one channel"}`,
+      containerComponents.push({
+        type: COMPONENT_TYPES.SECTION,
+        components: [
+          {
+            type: COMPONENT_TYPES.TEXT_DISPLAY,
+            content: `**Separate Posts**\n${s.splitDesktopMobile ? "Sending in separate channels" : "Combined in one channel"}`,
+          },
+        ],
+        accessory: {
+          type: COMPONENT_TYPES.BUTTON,
+          style: s.splitDesktopMobile ? 3 : 2,
+          label: s.splitDesktopMobile ? "Disable" : "Enable",
+          custom_id: "toggle_split_desktop_mobile",
         },
-      ],
-      accessory: {
-        type: COMPONENT_TYPES.BUTTON,
-        style: s.splitDesktopMobile ? 3 : 2,
-        label: s.splitDesktopMobile ? "Disable" : "Enable",
-        custom_id: "toggle_split_desktop_mobile",
-      },
-    });
+      });
+    }
 
     containerComponents.push({
       type: COMPONENT_TYPES.SEPARATOR,
@@ -229,6 +264,7 @@ export function getSettingsPayload(
       });
     }
   } else if (currentCategory === "format") {
+    const isMobileEnabled = s.includeMobile !== false;
     containerComponents.push({
       type: COMPONENT_TYPES.TEXT_DISPLAY,
       content: `### Format & Roles`,
@@ -250,9 +286,8 @@ export function getSettingsPayload(
       },
     });
 
-    const mainRoleTitle = s.splitDesktopMobile
-      ? "PC Role"
-      : "Announcement Role";
+    const mainRoleTitle =
+      isMobileEnabled && s.splitDesktopMobile ? "PC Role" : "Announcement Role";
 
     containerComponents.push({
       type: COMPONENT_TYPES.SECTION,
@@ -270,7 +305,7 @@ export function getSettingsPayload(
       },
     });
 
-    if (s.splitDesktopMobile) {
+    if (isMobileEnabled && s.splitDesktopMobile) {
       containerComponents.push({
         type: COMPONENT_TYPES.SECTION,
         components: [
@@ -310,7 +345,6 @@ export function getSettingsPayload(
       type: COMPONENT_TYPES.TEXT_DISPLAY,
       content: `### Content Toggles`,
     });
-
     containerComponents.push({
       type: COMPONENT_TYPES.SECTION,
       components: [
@@ -396,6 +430,22 @@ export function getSettingsPayload(
       components: [
         {
           type: COMPONENT_TYPES.TEXT_DISPLAY,
+          content: `**Mobile Offers**\n${s.includeMobile !== false ? "Enabled" : "Disabled"}`,
+        },
+      ],
+      accessory: {
+        type: COMPONENT_TYPES.BUTTON,
+        style: s.includeMobile !== false ? 3 : 2,
+        label: s.includeMobile !== false ? "Disable" : "Enable",
+        custom_id: "toggle_include_mobile",
+      },
+    });
+
+    containerComponents.push({
+      type: COMPONENT_TYPES.SECTION,
+      components: [
+        {
+          type: COMPONENT_TYPES.TEXT_DISPLAY,
           content: `**Include Add-ons**\n${s.includeAddOns ? "Enabled" : "Disabled"}`,
         },
       ],
@@ -418,7 +468,7 @@ export function getSettingsPayload(
       components: [
         {
           type: COMPONENT_TYPES.TEXT_DISPLAY,
-          content: `**Status:** ${windowInfo.description}\n\n**Primary Offer Check**: Thursday 15:00 UTC\n**Catch-up window**: Thursday 15:00-18:00 UTC (every 15m)\n**Regular Checks**: Every 6 hours`,
+          content: `**Status:** ${windowInfo.description}\n\n**Primary Offer Check**: Thursday 15:00 UTC\n**Active Window**: Thursday 14:58-15:10 UTC (every 1m)\n**Regular Checks**: Every 24 hours`,
         },
       ],
       accessory: {

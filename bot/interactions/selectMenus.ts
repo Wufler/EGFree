@@ -4,6 +4,7 @@ import {
   type RoleSelectMenuInteraction,
   type StringSelectMenuInteraction,
 } from "discord.js";
+import { logger } from "../logger";
 import {
   canManageSettings,
   sendInteractionResponse,
@@ -80,9 +81,7 @@ export async function handleSelectMenuInteraction(
         body: JSON.stringify(payloadData.v2Payload),
       });
       if (!res.ok) {
-        console.error(
-          `[EGFree] Failed to update confirmation prompt: ${res.statusText}`,
-        );
+        logger.error(`Failed to update confirmation prompt: ${res.statusText}`);
       }
     } else if (payloadData.classicPayload) {
       await interaction.update({

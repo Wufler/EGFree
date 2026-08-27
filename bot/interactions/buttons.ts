@@ -282,7 +282,7 @@ export async function handleButtonInteraction(
     if (!canManageSettings(interaction)) {
       await interaction.reply({
         content:
-          "**Access Denied**: You need **Administrator** or **Manage Server** permissions (or Server Owner) to modify bot settings for this server.",
+          "**Access Denied**: You need **Administrator** or **Manage Server** permissions to modify bot settings for this server.",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -292,6 +292,15 @@ export async function handleButtonInteraction(
     const token = credentials.discordToken;
 
     if (interaction.customId === "nav_main") {
+      await sendInteractionResponse(
+        token,
+        interaction,
+        getSettingsPayload("main", interaction.guildId),
+        true,
+      );
+    } else if (interaction.customId === "toggle_bot_enabled") {
+      const current = s.enabled !== false;
+      updateGuildSettings(interaction.guildId, { enabled: !current });
       await sendInteractionResponse(
         token,
         interaction,
@@ -520,6 +529,8 @@ export async function handleButtonInteraction(
         updates.includeCheckout = !currentSettings.includeCheckout;
       } else if (toggleKey === "include_add_ons") {
         updates.includeAddOns = !currentSettings.includeAddOns;
+      } else if (toggleKey === "include_mobile") {
+        updates.includeMobile = !(currentSettings.includeMobile !== false);
       } else if (toggleKey === "include_footer") {
         updates.includeFooter = !currentSettings.includeFooter;
       }

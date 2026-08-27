@@ -15,7 +15,7 @@ import {
   isPermanentlyFree,
   normalizeEpicCheckoutLink,
 } from "@/lib/builder/shared";
-import { getEffectiveGames, getMobileGameKey } from "@/lib/utils";
+import { cn, getEffectiveGames, getMobileGameKey } from "@/lib/utils";
 import Discord from "../ui/discord";
 
 const defaultContent = "<@&847939354978811924>";
@@ -283,9 +283,15 @@ export default function DiscordPreview({
             }
 
             if (settings.componentsV2) {
+              const hasThumbnail = Boolean(settings.includeImage && imageUrl);
               return (
-                <div key={game.id} className="mt-2">
-                  <div className="max-w-150 overflow-hidden rounded-md border border-[#d4d7dc] dark:border-[#4e5058] px-4 pt-4 bg-[#ffffff] dark:bg-[#242429]">
+                <div key={game.id} className="mt-2 w-full">
+                  <div
+                    className={cn(
+                      "w-full overflow-hidden rounded-md border border-[#d4d7dc] dark:border-[#4e5058] px-4 bg-[#ffffff] dark:bg-[#242429]",
+                      hasThumbnail && "pt-4",
+                    )}
+                  >
                     {settings.includeImage && imageUrl && (
                       <Image
                         width={1280}
@@ -297,7 +303,12 @@ export default function DiscordPreview({
                       />
                     )}
                     <div>
-                      <div className="flex items-start justify-between gap-3 mt-3">
+                      <div
+                        className={cn(
+                          "flex items-start justify-between gap-3",
+                          hasThumbnail ? "mt-3" : "mt-4",
+                        )}
+                      >
                         <div className="min-w-0 flex-1">
                           {isValidPageSlug && browserHref ? (
                             <a
@@ -434,10 +445,10 @@ export default function DiscordPreview({
             return (
               <div
                 key={game.id}
-                className="flex mt-1 rounded-sm overflow-hidden"
+                className="flex mt-1 rounded-sm overflow-hidden w-full"
                 style={{ borderLeft: `4px solid ${settings.embedColor}` }}
               >
-                <div className="max-w-md bg-[#ffffff] dark:bg-[#2B2D31] border border-[#d4d7dc] dark:border-[#4e5058] rounded-r-sm p-3.5 pr-4">
+                <div className="w-full bg-[#ffffff] dark:bg-[#2B2D31] border border-[#d4d7dc] dark:border-[#4e5058] rounded-r-sm p-3.5 pr-4">
                   <div className="flex items-center mb-2">
                     <Image
                       width={1280}
@@ -590,9 +601,17 @@ export default function DiscordPreview({
               const priceFormatted = formatMobileGamePrice(game);
 
               if (settings.componentsV2) {
+                const hasThumbnail = Boolean(
+                  settings.includeImage && game.imageUrl,
+                );
                 return (
-                  <div key={getMobileGameKey(game)} className="mt-2">
-                    <div className="max-w-150 overflow-hidden rounded-md border border-[#d4d7dc] dark:border-[#4e5058] px-4 pt-4 bg-[#ffffff] dark:bg-[#242429]">
+                  <div key={getMobileGameKey(game)} className="mt-2 w-full">
+                    <div
+                      className={cn(
+                        "w-full overflow-hidden rounded-md border border-[#d4d7dc] dark:border-[#4e5058] px-4 bg-[#ffffff] dark:bg-[#242429]",
+                        hasThumbnail && "pt-4",
+                      )}
+                    >
                       {settings.includeImage && game.imageUrl && (
                         <Image
                           width={1280}
@@ -604,7 +623,12 @@ export default function DiscordPreview({
                         />
                       )}
                       <div>
-                        <div className="flex items-start justify-between gap-3 mt-3">
+                        <div
+                          className={cn(
+                            "flex items-start justify-between gap-3",
+                            hasThumbnail ? "mt-3" : "mt-4",
+                          )}
+                        >
                           <div className="min-w-0 flex-1">
                             <span className="block text-[19px] font-bold leading-7 text-black dark:text-white">
                               {game.title}
@@ -776,10 +800,10 @@ export default function DiscordPreview({
             selectedCurrentGames.length + selectedMobileGames.length > 1 &&
             settings.includeCheckout && (
               <div
-                className="flex mt-1 rounded-sm overflow-hidden"
+                className="flex mt-1 rounded-sm overflow-hidden w-full"
                 style={{ borderLeft: `4px solid ${settings.embedColor}` }}
               >
-                <div className="max-w-md bg-[#ffffff] dark:bg-[#2B2D31] border border-[#d4d7dc] dark:border-[#4e5058] rounded-r-sm p-3.5 pr-4">
+                <div className="w-full bg-[#ffffff] dark:bg-[#2B2D31] border border-[#d4d7dc] dark:border-[#4e5058] rounded-r-sm p-3.5 pr-4">
                   <div className="flex flex-col text-sm gap-0.5">
                     <h1 className="font-semibold">🛒 Checkout Link</h1>
                     {normalizedCheckoutLink ? (

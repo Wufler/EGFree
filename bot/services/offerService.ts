@@ -107,11 +107,13 @@ export async function fetchCurrentOffers(
     includeUpcoming?: boolean;
     previousUpcomingOfferIds?: string[];
     includeAddOns?: boolean;
+    includeMobile?: boolean;
   } = {},
 ): Promise<FetchedOffers> {
+  const isMobileEnabled = options.includeMobile !== false;
   const [rawGames, rawMobile] = await Promise.all([
     getEpicFreeGames(),
-    getMobileGames(),
+    isMobileEnabled ? getMobileGames() : Promise.resolve([]),
   ]);
 
   let effectiveGames = getEffectiveGames(rawGames);
@@ -127,11 +129,13 @@ export async function fetchCurrentOffers(
   }
   const now = new Date();
 
-  const activeMobileGames = (rawMobile || []).filter((g) => {
-    if (!g.promoEndDate) return true;
-    const time = new Date(g.promoEndDate).getTime();
-    return Number.isFinite(time) ? time > now.getTime() : true;
-  });
+  const activeMobileGames = isMobileEnabled
+    ? (rawMobile || []).filter((g) => {
+        if (!g.promoEndDate) return true;
+        const time = new Date(g.promoEndDate).getTime();
+        return Number.isFinite(time) ? time > now.getTime() : true;
+      })
+    : [];
 
   const currentPCIds = effectiveGames.currentGames.map((g) => g.id);
   const currentMobileIds = activeMobileGames.map((g) =>
@@ -210,7 +214,10 @@ export function generateOfferPayloads(
   mobilePayload?: Record<string, unknown>;
   combinedPayload?: Record<string, unknown>;
 } {
-  const parsedMobile = offers.activeMobileGames.map(toMobileGame);
+  const isMobileEnabled = settings.includeMobile !== false;
+  const parsedMobile = isMobileEnabled
+    ? offers.activeMobileGames.map(toMobileGame)
+    : [];
 
   const selectedGames: Record<string, boolean> = {};
 
@@ -250,13 +257,14 @@ export function generateOfferPayloads(
   }
 
   const mobileRole = settings.mobileMentionRoleId || settings.mentionRoleId;
+  const shouldSplit = isMobileEnabled && settings.splitDesktopMobile;
   const baseSettings: EgFreeSettings = {
     selectedGames,
     embedContent: settings.mentionRoleId ? `<@&${settings.mentionRoleId}>` : "",
     embedContentMobile: mobileRole ? `<@&${mobileRole}>` : "",
-    splitDesktopMobile: settings.splitDesktopMobile,
+    splitDesktopMobile: shouldSplit,
     sendDesktop: true,
-    sendMobile: true,
+    sendMobile: isMobileEnabled,
     useDesktopWebhookForMobile: false,
     embedColor: settings.embedColor,
     includeFooter: settings.includeFooter,
@@ -270,7 +278,7 @@ export function generateOfferPayloads(
     showDiscordPreview: true,
   };
 
-  if (settings.splitDesktopMobile) {
+  if (shouldSplit) {
     const desktopSettings: EgFreeSettings = {
       ...baseSettings,
       sendDesktop: true,

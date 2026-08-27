@@ -1,6 +1,7 @@
 import {
   type ButtonInteraction,
   type ChannelSelectMenuInteraction,
+  ChannelType,
   type ChatInputCommandInteraction,
   type Interaction,
   type ModalSubmitInteraction,
@@ -8,6 +9,7 @@ import {
   type RoleSelectMenuInteraction,
   type TextChannel,
 } from "discord.js";
+import { logger } from "../logger";
 import { getGuildSettings } from "../state";
 import type { DiscordV2Payload } from "../types";
 
@@ -55,9 +57,10 @@ export function canManageSettings(interaction: Interaction): boolean {
 
 export async function dispatchDiscordPayload(
   token: string,
-  channel: TextChannel,
+  channel: TextChannel | { id: string; type?: number | ChannelType },
   rawPayload: Record<string, unknown>,
-): Promise<void> {
+  options: { autoCrosspost?: boolean } = { autoCrosspost: true },
+): Promise<{ id: string } | null> {
   const channelId = channel.id;
 
   const response = await fetch(
@@ -76,6 +79,39 @@ export async function dispatchDiscordPayload(
     const errorText = await response.text();
     throw new Error(`Discord API error (${response.status}): ${errorText}`);
   }
+
+  const messageData = (await response.json()) as { id: string };
+
+  const isAnnouncementChannel =
+    channel.type === ChannelType.GuildAnnouncement || channel.type === 5;
+
+  if (options.autoCrosspost && isAnnouncementChannel && messageData?.id) {
+    try {
+      const crosspostRes = await fetch(
+        `https://discord.com/api/v10/channels/${channelId}/messages/${messageData.id}/crosspost`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bot ${token}`,
+          },
+        },
+      );
+      if (crosspostRes.ok) {
+        logger.info(
+          `Successfully published announcement message ${messageData.id} to followers.`,
+        );
+      } else {
+        const errText = await crosspostRes.text();
+        logger.warn(
+          `Could not publish message in announcement channel (${crosspostRes.status}): ${errText}`,
+        );
+      }
+    } catch (crosspostErr) {
+      logger.warn("Failed to crosspost announcement message:", crosspostErr);
+    }
+  }
+
+  return messageData;
 }
 
 export async function sendInteractionResponse(
@@ -108,6 +144,6 @@ export async function sendInteractionResponse(
 
   if (!res.ok) {
     const err = await res.text();
-    console.error(`[EGFree] Interaction response failed (${res.status}):`, err);
+    logger.error(`Interaction response failed (${res.status}):`, err);
   }
 }

@@ -1,5 +1,6 @@
 import type { Client, TextChannel } from "discord.js";
 import { getMobileGameKey } from "@/lib/utils";
+import { logger } from "../logger";
 import type { BotCredentials } from "../state";
 import {
   getGuildPostedOfferIds,
@@ -28,13 +29,17 @@ export function getDropWindow(now: Date = new Date()): {
   const currentMinute = now.getUTCMinutes();
 
   const isThursday = dayOfWeek === 4;
-  const inWindow = isThursday && currentHour >= 15 && currentHour < 18;
+  // Thursday from 14:58 UTC to 15:10 UTC covers the 15:00 UTC drop plus a 10-minute buffer with 1-minute checks
+  const inWindow =
+    isThursday &&
+    ((currentHour === 14 && currentMinute >= 58) ||
+      (currentHour === 15 && currentMinute <= 10));
 
   const nextDrop = new Date(now);
   let daysUntilThursday = (4 - dayOfWeek + 7) % 7;
   if (
     daysUntilThursday === 0 &&
-    (currentHour > 15 || (currentHour === 15 && currentMinute > 5))
+    (currentHour > 15 || (currentHour === 15 && currentMinute > 10))
   ) {
     daysUntilThursday = 7;
   }
@@ -42,7 +47,7 @@ export function getDropWindow(now: Date = new Date()): {
   nextDrop.setUTCHours(15, 0, 0, 0);
 
   const description = inWindow
-    ? "**Active Offer Window** (Checking frequently for mobile offers)"
+    ? "**Active Offer Window** (Checking every minute for new offers)"
     : `**Idle** (Next offer: <t:${Math.floor(nextDrop.getTime() / 1000)}:F>)`;
 
   return { inWindow, nextDropDate: nextDrop, description };
@@ -61,34 +66,29 @@ export class OfferSchedulerService {
       clearInterval(this.pollIntervalHandle);
     }
 
-    console.log(
-      `[EGFree] Offer scheduler started. Active on Thursdays at 15:00 UTC + catch-up window.`,
+    logger.info(
+      `Offer scheduler started. Active on Thursdays 14:58-15:10 UTC (1m checks) + 24h idle checks.`,
     );
 
     setTimeout(() => this.runOfferCheck(), 5000);
 
-    this.pollIntervalHandle = setInterval(
-      () => {
-        const now = new Date();
-        const { inWindow } = getDropWindow(now);
-        const state = loadBotState();
-        const lastCheckMs = state.lastCheckTimestamp
-          ? new Date(state.lastCheckTimestamp).getTime()
-          : 0;
-        const timeSinceLastCheckMinutes =
-          (Date.now() - lastCheckMs) / (60 * 1000);
+    this.pollIntervalHandle = setInterval(() => {
+      const now = new Date();
+      const { inWindow } = getDropWindow(now);
+      const state = loadBotState();
+      const lastCheckMs = state.lastCheckTimestamp
+        ? new Date(state.lastCheckTimestamp).getTime()
+        : 0;
+      const timeSinceLastCheckMinutes =
+        (Date.now() - lastCheckMs) / (60 * 1000);
 
-        const checkInterval = state.settings.checkIntervalMinutes || 30;
-        const thresholdMinutes = inWindow
-          ? Math.min(15, checkInterval)
-          : checkInterval;
+      const checkInterval = state.settings.checkIntervalMinutes || 1440;
+      const thresholdMinutes = inWindow ? 1 : checkInterval;
 
-        if (timeSinceLastCheckMinutes >= thresholdMinutes) {
-          this.runOfferCheck();
-        }
-      },
-      5 * 60 * 1000,
-    );
+      if (timeSinceLastCheckMinutes >= thresholdMinutes) {
+        this.runOfferCheck();
+      }
+    }, 60 * 1000);
   }
 
   public async broadcastOffers(
@@ -102,6 +102,12 @@ export class OfferSchedulerService {
     } = {},
   ): Promise<{ success: boolean; error?: string }> {
     const s = getGuildSettings(options.guildId);
+    if (s.enabled === false) {
+      return {
+        success: false,
+        error: "Currently disabled in bot settings.",
+      };
+    }
     const mainChannelId =
       s.announcementChannelId || s.mobileAnnouncementChannelId;
     if (!mainChannelId) {
@@ -202,7 +208,7 @@ export class OfferSchedulerService {
 
       return { success: true };
     } catch (error) {
-      console.error("[EGFree] Posting failed:", error);
+      logger.error("Posting failed:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -214,8 +220,8 @@ export class OfferSchedulerService {
     try {
       const now = new Date();
       const { inWindow } = getDropWindow(now);
-      console.log(
-        `[EGFree] Checking for Epic free games... (Window: ${inWindow ? "Thursday Active" : "Idle"})`,
+      logger.info(
+        `Checking for Epic free games... (Window: ${inWindow ? "Thursday Active" : "Idle"})`,
       );
 
       const state = loadBotState();
@@ -229,28 +235,30 @@ export class OfferSchedulerService {
       for (const guildId of guildList) {
         try {
           const s = getGuildSettings(guildId);
+          if (s.enabled === false) {
+            continue;
+          }
+
           const prevOfferIds = getGuildPostedOfferIds(guildId);
           const prevUpcomingIds = getGuildSeenUpcomingOfferIds(guildId);
 
           const offers = await fetchCurrentOffers(prevOfferIds, {
             previousUpcomingOfferIds: prevUpcomingIds,
             includeAddOns: s.includeAddOns,
+            includeMobile: s.includeMobile !== false,
           });
 
           if (!offers.hasNewOffers) {
-            console.log(
-              `[EGFree]${guildId ? ` [Guild ${guildId}]` : ""} No new offers detected.`,
-            );
             continue;
           }
 
-          console.log(
-            `[EGFree]${guildId ? ` [Guild ${guildId}]` : ""} New offers found: ${offers.titles.join(", ")}`,
+          logger.info(
+            `${guildId ? `[Guild ${guildId}] ` : ""}New offers found: ${offers.titles.join(", ")}`,
           );
 
           if (s.requireConfirmation) {
-            console.log(
-              `[EGFree]${guildId ? ` [Guild ${guildId}]` : ""} Requirement confirmation enabled. Sending prompt to review channel...`,
+            logger.info(
+              `${guildId ? `[Guild ${guildId}] ` : ""}Requirement confirmation enabled. Sending prompt to review channel...`,
             );
             await sendConfirmationPrompt(
               this.client,
@@ -261,8 +269,8 @@ export class OfferSchedulerService {
               { guildId },
             );
           } else {
-            console.log(
-              `[EGFree]${guildId ? ` [Guild ${guildId}]` : ""} Requirement confirmation disabled. Posting directly to announcement channel...`,
+            logger.info(
+              `${guildId ? `[Guild ${guildId}] ` : ""}Requirement confirmation disabled. Posting directly to announcement channel...`,
             );
             const res = await this.broadcastOffers(offers, {
               onlyNew: true,
@@ -275,17 +283,21 @@ export class OfferSchedulerService {
                 offers.currentOfferIds,
                 offers.upcomingOfferIds,
               );
+            } else {
+              logger.warn(
+                `${guildId ? `[Guild ${guildId}] ` : ""}Failed to broadcast offers: ${res.error || "Unknown error"}`,
+              );
             }
           }
         } catch (guildBroadcastErr) {
-          console.error(
-            `[EGFree] Error processing guild ${guildId || "default"}:`,
+          logger.error(
+            `Error processing guild ${guildId || "default"}:`,
             guildBroadcastErr,
           );
         }
       }
     } catch (error) {
-      console.error("[EGFree] Error during scheduled offer check:", error);
+      logger.error("Error during scheduled offer check:", error);
     }
   }
 }

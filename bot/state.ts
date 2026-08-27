@@ -19,6 +19,7 @@ export interface BotCredentials {
 }
 
 export interface BotPersistentSettings {
+  enabled: boolean;
   announcementChannelId?: string;
   mobileAnnouncementChannelId?: string;
   reviewChannelId?: string;
@@ -36,16 +37,18 @@ export interface BotPersistentSettings {
   includeCheckout: boolean;
   includeClaimGame: boolean;
   includeAddOns: boolean;
+  includeMobile: boolean;
   lastPostedOfferIds?: string[];
   seenUpcomingOfferIds?: string[];
 }
 
 export const DEFAULT_BOT_SETTINGS: BotPersistentSettings = {
+  enabled: true,
   announcementChannelId: undefined,
   mobileAnnouncementChannelId: undefined,
   reviewChannelId: undefined,
   requireConfirmation: false,
-  checkIntervalMinutes: 30,
+  checkIntervalMinutes: 1440,
   useComponentsV2: true,
   mentionRoleId: "",
   mobileMentionRoleId: undefined,
@@ -58,6 +61,7 @@ export const DEFAULT_BOT_SETTINGS: BotPersistentSettings = {
   includeCheckout: true,
   includeClaimGame: true,
   includeAddOns: false,
+  includeMobile: true,
   lastPostedOfferIds: [],
   seenUpcomingOfferIds: [],
 };

@@ -727,7 +727,7 @@ export default function List({
     "shrink-0 relative rounded-none py-3 px-3 sm:px-4 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-active:bg-transparent data-active:shadow-none data-active:after:bg-epic-blue text-sm font-medium data-active:text-epic-blue text-muted-foreground inline-flex items-center justify-center gap-2";
 
   const desktopSidebarTriggerClass =
-    "w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground data-active:bg-accent data-active:text-foreground data-active:font-semibold h-auto";
+    "w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground data-active:bg-accent dark:data-active:bg-accent data-active:text-epic-blue! dark:data-active:text-epic-blue! data-active:font-semibold h-auto";
 
   const tabGridClass = "grid grid-cols-1 md:grid-cols-2 gap-4";
 
@@ -1060,7 +1060,7 @@ export default function List({
       >
         <SheetContent
           side="left"
-          className="w-full sm:max-w-md overflow-y-auto h-full flex flex-col gap-0 p-0 bg-background/95 backdrop-blur-md border-l"
+          className="w-full max-w-none overflow-y-auto h-full flex flex-col gap-0 p-0 bg-background"
         >
           <SheetTitle className="sr-only">
             {selectedGame?.title || "Game Details"}

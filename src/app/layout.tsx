@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
-import { Inter } from "next/font/google";
+import { Geist_Mono, Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import Snow from "@/components/ui/Snow";
 import { Toaster } from "@/components/ui/sonner";
 import { getMobileGames } from "@/lib/EGData";
 import { getEpicFreeGames } from "@/lib/getGames";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+});
 
 export async function generateMetadata(): Promise<Metadata> {
   const [games, mobileGames] = await Promise.all([
@@ -70,7 +74,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${inter.className} ${geistMono.variable} font-sans`}>
         <ThemeProvider
           defaultTheme="system"
           attribute="class"

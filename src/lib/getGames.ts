@@ -2,7 +2,13 @@ export async function getEpicFreeGames(): Promise<Game> {
   try {
     const logs = false;
     const response = await fetch(
-      "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions",
+      `https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=en-US&country=US&allowCountries=US&_=${Date.now()}`,
+      {
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+        },
+      },
     );
     const api = await response.json();
 

@@ -7,6 +7,7 @@ import {
   Routes,
   SlashCommandBuilder,
 } from "discord.js";
+import { logger } from "../logger";
 import {
   fetchCurrentOffers,
   getCandidateGames,
@@ -92,8 +93,8 @@ export async function registerCommandsForGuild(
       `[EGFree] Registered slash commands for guild: ${guildName || guildId}`,
     );
   } catch (guildErr) {
-    console.warn(
-      `[EGFree] Failed to register slash commands for guild ${guildName || guildId}:`,
+    logger.warn(
+      `Failed to register slash commands for guild ${guildName || guildId}:`,
       guildErr,
     );
   }
@@ -104,8 +105,8 @@ export async function registerSlashCommands(
   client: Client,
 ): Promise<void> {
   if (!credentials.clientId) {
-    console.warn(
-      "[EGFree] DISCORD_CLIENT_ID not set. Skipping automatic slash command registration.",
+    logger.warn(
+      "DISCORD_CLIENT_ID not set. Skipping automatic slash command registration.",
     );
     return;
   }
@@ -114,11 +115,11 @@ export async function registerSlashCommands(
   const rest = new REST({ version: "10" }).setToken(credentials.discordToken);
 
   try {
-    console.log("[EGFree] Registering global slash commands...");
+    logger.info("Registering global slash commands...");
     await rest.put(Routes.applicationCommands(credentials.clientId), {
       body: commands,
     });
-    console.log("[EGFree] Registered global application commands.");
+    logger.info("Registered global application commands.");
 
     const guilds = await client.guilds.fetch();
     for (const [guildId] of guilds) {
@@ -128,11 +129,11 @@ export async function registerSlashCommands(
           { body: [] },
         );
       } catch (error) {
-        console.warn("[EGFree] Failed to unregister guild commands:", error);
+        logger.warn("Failed to unregister guild commands:", error);
       }
     }
   } catch (error) {
-    console.error("[EGFree] Failed to register slash commands:", error);
+    logger.error("Failed to register slash commands:", error);
   }
 }
 

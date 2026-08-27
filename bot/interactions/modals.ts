@@ -16,7 +16,7 @@ export async function handleModalSubmitInteraction(
   if (!canManageSettings(interaction)) {
     await interaction.reply({
       content:
-        "**Access Denied**: You need **Administrator** or **Manage Server** permissions (or Server Owner) to modify bot settings for this server.",
+        "**Access Denied**: You need **Administrator** or **Manage Server** permissions to modify bot settings for this server.",
       flags: MessageFlags.Ephemeral,
     });
     return;

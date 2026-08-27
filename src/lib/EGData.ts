@@ -156,7 +156,12 @@ export async function getMobileGame(
 
 export async function getMobileGames(): Promise<MobileGameData[]> {
   try {
-    const res = await fetch(`${EGDATA_API}/free-games/mobile`);
+    const res = await fetch(`${EGDATA_API}/free-games/mobile?_=${Date.now()}`, {
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+      },
+    });
     if (!res.ok) return [];
     const offers: EgDataOffer[] = await res.json();
     if (!Array.isArray(offers)) return [];

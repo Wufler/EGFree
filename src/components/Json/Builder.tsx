@@ -1,11 +1,18 @@
 "use client";
-import { AlertTriangle, FileJson2, X } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  ClipboardCopy,
+  FileJson2,
+  Save,
+  X,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import JsonFormContent from "@/components/Json/FormContent";
-import JsonPreviewContent, {
-  JsonPreviewButtons,
-} from "@/components/Json/PreviewContent";
+import JsonFormContent, {
+  JsonFormActions,
+} from "@/components/Json/FormContent";
+import JsonPreviewContent from "@/components/Json/PreviewContent";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,10 +28,10 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import Discord from "@/components/ui/discord";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { buildDiscordMessagePayload } from "@/lib/builder/payload";
@@ -37,7 +44,7 @@ const defaultMobileContent = "<@&1494404105471266936>";
 
 const isValidDiscordWebhook = (url: string) => {
   const webhookPattern =
-    /^https:\/\/(?:discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+(?:\?[^\s#]*)?\/?$/;
+    /^https:\/\/(?:(?:canary\.|ptb\.)?discord\.com|discordapp\.com)\/api(?:\/v\d+)?\/webhooks\/\d+\/[a-zA-Z0-9_-]+(?:\?[^\s#]*)?\/?$/;
   return webhookPattern.test(url.trim());
 };
 
@@ -58,6 +65,13 @@ export default function Json({
   const [isCopied, setIsCopied] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [checkoutLink, setCheckoutLink] = useState("");
+  const [isWebhookValid, setIsWebhookValid] = useState(false);
+  const [isWebhookLoading, setIsWebhookLoading] = useState(false);
+  const [isMobileWebhookValid, setIsMobileWebhookValid] = useState(false);
+  const [isMobileWebhookLoading, setIsMobileWebhookLoading] = useState(false);
+  const [saveWebhookTarget, setSaveWebhookTarget] = useState<
+    "desktop" | "mobile" | null
+  >(null);
 
   const effectiveGames = useMemo(() => getEffectiveGames(games), [games]);
 
@@ -120,13 +134,37 @@ export default function Json({
 
   const fetchWebhookInfo = useCallback(
     async (url: string, target: "desktop" | "mobile" = "desktop") => {
+      const trimmedUrl = url.trim();
+      if (!trimmedUrl || !isValidDiscordWebhook(trimmedUrl)) {
+        if (target === "mobile") {
+          setIsMobileWebhookValid(false);
+          setIsMobileWebhookLoading(false);
+          updateSetting("webhookNameMobile", undefined);
+          updateSetting("webhookAvatarMobile", undefined);
+          updateSetting("webhookChannelNameMobile", undefined);
+        } else {
+          setIsWebhookValid(false);
+          setIsWebhookLoading(false);
+          updateSetting("webhookName", undefined);
+          updateSetting("webhookAvatar", undefined);
+          updateSetting("webhookChannelName", undefined);
+        }
+        return false;
+      }
+
+      if (target === "mobile") {
+        setIsMobileWebhookLoading(true);
+      } else {
+        setIsWebhookLoading(true);
+      }
+
       try {
         const response = await fetch("/api/webhook-info", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ webhookUrl: url }),
+          body: JSON.stringify({ webhookUrl: trimmedUrl }),
         });
 
         if (response.ok) {
@@ -135,11 +173,14 @@ export default function Json({
             updateSetting("webhookNameMobile", webhookInfo.name);
             updateSetting("webhookAvatarMobile", webhookInfo.avatar);
             updateSetting("webhookChannelNameMobile", webhookInfo.channelName);
+            setIsMobileWebhookValid(true);
           } else {
             updateSetting("webhookName", webhookInfo.name);
             updateSetting("webhookAvatar", webhookInfo.avatar);
             updateSetting("webhookChannelName", webhookInfo.channelName);
+            setIsWebhookValid(true);
           }
+          return true;
         } else {
           const errorText = await response.text();
           console.error("Failed to fetch webhook info:", errorText);
@@ -147,14 +188,35 @@ export default function Json({
             updateSetting("webhookNameMobile", undefined);
             updateSetting("webhookAvatarMobile", undefined);
             updateSetting("webhookChannelNameMobile", undefined);
+            setIsMobileWebhookValid(false);
           } else {
             updateSetting("webhookName", undefined);
             updateSetting("webhookAvatar", undefined);
             updateSetting("webhookChannelName", undefined);
+            setIsWebhookValid(false);
           }
+          return false;
         }
       } catch (error) {
         console.error("Failed to fetch webhook info:", error);
+        if (target === "mobile") {
+          updateSetting("webhookNameMobile", undefined);
+          updateSetting("webhookAvatarMobile", undefined);
+          updateSetting("webhookChannelNameMobile", undefined);
+          setIsMobileWebhookValid(false);
+        } else {
+          updateSetting("webhookName", undefined);
+          updateSetting("webhookAvatar", undefined);
+          updateSetting("webhookChannelName", undefined);
+          setIsWebhookValid(false);
+        }
+        return false;
+      } finally {
+        if (target === "mobile") {
+          setIsMobileWebhookLoading(false);
+        } else {
+          setIsWebhookLoading(false);
+        }
       }
     },
     [updateSetting],
@@ -328,12 +390,13 @@ export default function Json({
 
   const canSendWebhook =
     settings.splitDesktopMobile && canSplitDesktopMobile
-      ? (!settings.sendDesktop || isValidDiscordWebhook(webhookUrl)) &&
+      ? (!settings.sendDesktop ||
+          (isValidDiscordWebhook(webhookUrl) && isWebhookValid)) &&
         (!settings.sendMobile ||
-          isValidDiscordWebhook(
-            settings.useDesktopWebhookForMobile ? webhookUrl : webhookUrlMobile,
-          ))
-      : isValidDiscordWebhook(webhookUrl);
+          (settings.useDesktopWebhookForMobile
+            ? isValidDiscordWebhook(webhookUrl) && isWebhookValid
+            : isValidDiscordWebhook(webhookUrlMobile) && isMobileWebhookValid))
+      : isValidDiscordWebhook(webhookUrl) && isWebhookValid;
 
   const [noOffers, setNoOffers] = useState(false);
 
@@ -500,13 +563,19 @@ export default function Json({
         toast.error("Select at least desktop or mobile to send.");
         return;
       }
-      if (settings.sendDesktop && !isValidDiscordWebhook(desktopWebhookUrl)) {
+      if (
+        settings.sendDesktop &&
+        (!isValidDiscordWebhook(desktopWebhookUrl) || !isWebhookValid)
+      ) {
         toast.error("Insert a valid desktop webhook URL.");
         return;
       }
       if (
         settings.sendMobile &&
-        !isValidDiscordWebhook(mobileWebhookTargetUrl)
+        (!isValidDiscordWebhook(mobileWebhookTargetUrl) ||
+          (settings.useDesktopWebhookForMobile
+            ? !isWebhookValid
+            : !isMobileWebhookValid))
       ) {
         toast.error("Insert a valid mobile webhook URL.");
         return;
@@ -516,8 +585,8 @@ export default function Json({
         toast.error("Insert a webhook.");
         return;
       }
-      if (!isValidDiscordWebhook(desktopWebhookUrl)) {
-        toast.error("Invalid Discord webhook URL format.");
+      if (!isValidDiscordWebhook(desktopWebhookUrl) || !isWebhookValid) {
+        toast.error("Invalid Discord webhook URL.");
         return;
       }
     }
@@ -537,35 +606,90 @@ export default function Json({
     await executeSendWebhook();
   };
 
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const debouncedFetchWebhookInfo = (url: string) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      fetchWebhookInfo(url);
-    }, 500);
-  };
+  const desktopTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const mobileTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const debouncedFetchWebhookInfo = useCallback(
+    (url: string, target: "desktop" | "mobile" = "desktop") => {
+      const timeoutRef =
+        target === "mobile" ? mobileTimeoutRef : desktopTimeoutRef;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      const trimmed = url.trim();
+      if (!trimmed || !isValidDiscordWebhook(trimmed)) {
+        if (target === "mobile") {
+          setIsMobileWebhookValid(false);
+          setIsMobileWebhookLoading(false);
+          updateSetting("webhookNameMobile", undefined);
+          updateSetting("webhookAvatarMobile", undefined);
+          updateSetting("webhookChannelNameMobile", undefined);
+        } else {
+          setIsWebhookValid(false);
+          setIsWebhookLoading(false);
+          updateSetting("webhookName", undefined);
+          updateSetting("webhookAvatar", undefined);
+          updateSetting("webhookChannelName", undefined);
+        }
+        return;
+      }
+
+      if (target === "mobile") {
+        setIsMobileWebhookLoading(true);
+      } else {
+        setIsWebhookLoading(true);
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        fetchWebhookInfo(trimmed, target);
+      }, 500);
+    },
+    [fetchWebhookInfo, updateSetting],
+  );
 
   const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      setWebhookUrl(text);
-      debouncedFetchWebhookInfo(text);
-    } catch {
-      console.error("Failed to paste text");
+      const trimmed = text.trim();
+      setWebhookUrl(trimmed);
+      if (trimmed) {
+        await fetchWebhookInfo(trimmed, "desktop");
+      }
+    } catch (err) {
+      console.error("Failed to paste text:", err);
+      toast.error("Clipboard permission denied", {
+        description:
+          "Please allow clipboard permissions in your browser or paste directly using Ctrl+V.",
+      });
     }
   };
   const handlePasteMobile = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      setWebhookUrlMobile(text);
-      if (isValidDiscordWebhook(text)) {
-        await fetchWebhookInfo(text, "mobile");
+      const trimmed = text.trim();
+      setWebhookUrlMobile(trimmed);
+      if (trimmed) {
+        await fetchWebhookInfo(trimmed, "mobile");
       }
-    } catch {
-      console.error("Failed to paste mobile webhook text");
+    } catch (err) {
+      console.error("Failed to paste mobile webhook text:", err);
+      toast.error("Clipboard permission denied", {
+        description:
+          "Please allow clipboard permissions in your browser or paste directly using Ctrl+V.",
+      });
     }
+  };
+
+  const handleConfirmSaveWebhook = () => {
+    if (saveWebhookTarget === "mobile") {
+      updateSetting("webhookUrlMobile", webhookUrlMobile);
+      fetchWebhookInfo(webhookUrlMobile, "mobile");
+      toast.success("Mobile webhook saved locally");
+    } else {
+      updateSetting("webhookUrl", webhookUrl);
+      fetchWebhookInfo(webhookUrl, "desktop");
+      toast.success("Webhook saved locally");
+    }
+    setSaveWebhookTarget(null);
   };
 
   const formProps = {
@@ -587,6 +711,12 @@ export default function Json({
     setIsVisible,
     isMobileWebhookVisible,
     setIsMobileWebhookVisible,
+    isWebhookValid,
+    isWebhookLoading,
+    isMobileWebhookValid,
+    isMobileWebhookLoading,
+    onSaveDesktop: () => setSaveWebhookTarget("desktop"),
+    onSaveMobile: () => setSaveWebhookTarget("mobile"),
     isLoading,
     showWarning,
     updateSetting,
@@ -595,9 +725,7 @@ export default function Json({
     handlePaste,
     handlePasteMobile,
     canSendWebhook,
-    isValidDiscordWebhook,
     debouncedFetchWebhookInfo,
-    fetchWebhookInfo,
     defaultContent,
     defaultMobileContent,
   };
@@ -626,90 +754,170 @@ export default function Json({
         />
         <DialogContent
           showCloseButton={false}
-          className="max-w-7xl! w-full max-h-[90vh] h-[90vh] overflow-hidden p-0 z-70 flex flex-col rounded-xl border border-border bg-background"
+          className="top-0! left-0! translate-x-0! translate-y-0! sm:top-1/2! sm:left-1/2! sm:-translate-x-1/2! sm:-translate-y-1/2! w-full max-w-none sm:max-w-5xl lg:max-w-6xl xl:max-w-7xl sm:w-[calc(100%-2rem)] h-dvh sm:h-[90vh] sm:max-h-[900px] p-0 gap-0 overflow-hidden bg-background border-0 sm:border sm:border-border rounded-none sm:rounded-xl shadow-2xl flex flex-col"
         >
-          <div className="flex flex-col lg:flex-row flex-1 min-h-0">
-            <div className="w-full lg:w-2/5 lg:min-w-0 lg:max-w-130 border-b lg:border-b-0 lg:border-r border-border flex flex-col flex-1 lg:flex-none lg:shrink-0 min-h-0">
-              <div className="px-6 py-4 border-b border-border shrink-0 bg-background flex flex-col gap-1 items-start justify-center relative z-10">
-                <div className="flex w-full items-center justify-between">
-                  <DialogTitle className="flex items-center gap-3 text-lg font-bold tracking-tight">
-                    <div className="flex items-center justify-center p-1.5 rounded-lg bg-primary/10 text-primary">
-                      <FileJson2 className="size-5" />
-                    </div>
-                    JSON Builder
-                  </DialogTitle>
-                  <DialogClose className="rounded-full bg-muted/40 p-2 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-                    <X className="size-4" />
-                    <span className="sr-only">Close</span>
-                  </DialogClose>
-                </div>
-                <DialogDescription className="text-xs font-medium text-muted-foreground">
-                  Configure settings to customize your Discord embeds.
-                </DialogDescription>
+          <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border shrink-0 bg-background relative z-10">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center justify-center p-1.5 rounded-lg bg-primary/10 text-primary shrink-0">
+                <FileJson2 className="size-5" />
               </div>
-
-              <div className="block lg:hidden flex-1 min-h-0">
-                <Tabs
-                  defaultValue="settings"
-                  className="flex h-full flex-col min-h-0 gap-0"
-                >
-                  <TabsList className="w-full h-auto rounded-none border-b border-border bg-transparent p-0 shrink-0">
-                    <TabsTrigger
-                      value="settings"
-                      className="flex-1 relative rounded-none py-2.5 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-active:bg-transparent data-active:shadow-none data-active:after:bg-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
-                    >
-                      Settings
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="preview"
-                      className="flex-1 relative rounded-none py-2.5 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-active:bg-transparent data-active:shadow-none data-active:after:bg-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
-                    >
-                      Preview
-                    </TabsTrigger>
-                  </TabsList>
-                  <TabsContent
-                    value="settings"
-                    className="overflow-hidden mt-0 pb-0 border-0 flex-1 min-h-0"
-                  >
-                    <ScrollArea className="h-full">
-                      <JsonFormContent idSuffix="-mobile" {...formProps} />
-                    </ScrollArea>
-                  </TabsContent>
-                  <TabsContent
-                    value="preview"
-                    className="overflow-hidden mt-0 pb-0 border-0 flex-1 min-h-0"
-                  >
-                    <ScrollArea className="h-full">
-                      <JsonPreviewContent
-                        idSuffix="-mobile"
-                        inlineButtons
-                        {...previewProps}
-                      />
-                    </ScrollArea>
-                  </TabsContent>
-                </Tabs>
-              </div>
-
-              <div className="hidden lg:block overflow-hidden flex-1 min-h-0">
-                <ScrollArea className="h-full">
-                  <JsonFormContent {...formProps} />
-                </ScrollArea>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg font-bold tracking-tight truncate">
+                  JSON Builder
+                </DialogTitle>
               </div>
             </div>
-
-            <div className="hidden lg:flex flex-col flex-1 min-w-0 min-h-0 bg-background">
-              <div className="flex justify-end gap-3 p-3 shrink-0 border-b border-border bg-background z-10 w-full items-center">
-                <JsonPreviewButtons {...previewProps} />
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="hidden lg:flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={copyToClipboard}
+                  className="gap-1.5 text-xs font-semibold"
+                >
+                  {isCopied ? (
+                    <Check className="size-3.5 text-primary" />
+                  ) : (
+                    <ClipboardCopy className="size-3.5" />
+                  )}
+                  {isCopied ? "Copied!" : "Copy JSON"}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    updateSetting(
+                      "showDiscordPreview",
+                      !settings.showDiscordPreview,
+                    )
+                  }
+                  className={`gap-1.5 text-xs font-semibold transition-all ${
+                    settings.showDiscordPreview
+                      ? "bg-[#5865F2] hover:bg-[#4752C4] text-white border-transparent shadow-sm"
+                      : "border border-border dark:border-input dark:bg-input/30 bg-background text-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  <Discord
+                    className={`size-3.5 ${
+                      settings.showDiscordPreview
+                        ? "text-white"
+                        : "text-[#5865F2]"
+                    }`}
+                  />
+                  Discord Preview
+                </Button>
               </div>
-              <div className="overflow-hidden grow min-h-0">
+              <DialogClose
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="rounded-full text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="size-4" />
+                  </Button>
+                }
+              />
+            </div>
+          </div>
+
+          <div className="flex-1 min-h-0 overflow-hidden relative">
+            <div className="lg:hidden h-full">
+              <Tabs
+                defaultValue="form"
+                className="h-full flex flex-col min-h-0 gap-0"
+              >
+                <TabsList className="w-full h-auto rounded-none border-b border-border bg-transparent p-0 shrink-0">
+                  <TabsTrigger
+                    value="form"
+                    className="flex-1 relative rounded-none py-2.5 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-active:bg-transparent data-active:shadow-none data-active:after:bg-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary font-medium text-sm"
+                  >
+                    Configure
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="preview"
+                    className="flex-1 relative rounded-none py-2.5 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-active:bg-transparent data-active:shadow-none data-active:after:bg-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary font-medium text-sm"
+                  >
+                    Preview
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent
+                  value="form"
+                  className="flex-1 min-h-0 m-0 outline-none flex flex-col overflow-hidden"
+                >
+                  <ScrollArea className="flex-1 min-h-0">
+                    <JsonFormContent idSuffix="-mobile" {...formProps} />
+                  </ScrollArea>
+                  <div className="p-4 border-t border-border bg-background shrink-0">
+                    <JsonFormActions {...formProps} />
+                  </div>
+                </TabsContent>
+                <TabsContent
+                  value="preview"
+                  className="flex-1 min-h-0 m-0 p-4 outline-none overflow-y-auto"
+                >
+                  <JsonPreviewContent inlineButtons={true} {...previewProps} />
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            <div className="hidden lg:grid h-full lg:grid-cols-[1fr_auto_1fr] xl:grid-cols-[1fr_auto_1.2fr] divide-x divide-border">
+              <div className="flex flex-col h-full min-h-0 overflow-hidden bg-background">
+                <ScrollArea className="flex-1 min-h-0">
+                  <JsonFormContent {...formProps} />
+                </ScrollArea>
+                <div className="p-4 border-t border-border bg-background shrink-0">
+                  <JsonFormActions {...formProps} />
+                </div>
+              </div>
+
+              <div className="w-px bg-border h-full shrink-0" />
+
+              <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted/10">
                 <ScrollArea className="h-full bg-background">
-                  <JsonPreviewContent inlineButtons={false} {...previewProps} />
+                  <div className="w-full">
+                    <JsonPreviewContent
+                      inlineButtons={false}
+                      {...previewProps}
+                    />
+                  </div>
                 </ScrollArea>
               </div>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={saveWebhookTarget !== null}
+        onOpenChange={(open) => !open && setSaveWebhookTarget(null)}
+      >
+        <AlertDialogContent className="border-primary/20 shadow-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-primary">
+              <Save className="size-5" /> Warning
+            </AlertDialogTitle>
+            <AlertDialogDescription
+              render={<div />}
+              className="space-y-2 text-base"
+            >
+              <p>
+                {saveWebhookTarget === "mobile"
+                  ? "This will encrypt and save your mobile webhook in your browser's local storage."
+                  : "This will encrypt and save your webhook in your browser's local storage and will automatically populate the URL input."}
+              </p>
+              <p className="font-semibold text-foreground text-sm mt-1">
+                Consider manually pasting the webhook as a safer alternative.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmSaveWebhook}>
+              Save Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={noOffers} onOpenChange={setNoOffers}>
         <AlertDialogContent>

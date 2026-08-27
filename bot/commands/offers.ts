@@ -1,5 +1,6 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { COMPONENT_TYPES, IS_COMPONENTS_V2 } from "@/lib/builder/shared";
+import { logger } from "../logger";
 import { canManageSettings } from "../services/discordService";
 import {
   fetchCurrentOffers,
@@ -22,11 +23,11 @@ export async function handleOffersCommand(
   credentials: BotCredentials,
 ): Promise<void> {
   const subcommand = interaction.options.getSubcommand();
+  const guildId = interaction.guildId;
 
   if (subcommand === "check") {
     await interaction.deferReply();
     try {
-      const guildId = interaction.guildId;
       const prevOfferIds = getGuildPostedOfferIds(guildId);
       const prevUpcomingIds = getGuildSeenUpcomingOfferIds(guildId);
 
@@ -35,6 +36,7 @@ export async function handleOffersCommand(
         includeUpcoming: true,
         previousUpcomingOfferIds: prevUpcomingIds,
         includeAddOns: s.includeAddOns,
+        includeMobile: s.includeMobile !== false,
       });
 
       if (offers.upcomingOfferIds.length > 0) {
@@ -85,8 +87,8 @@ export async function handleOffersCommand(
         });
       } else {
         const embedColorHex =
-          parseInt(s.embedColor.replace("#", ""), 16) || 0x5865f2;
-        const checkEmbed: DiscordEmbed = {
+          Number.parseInt(s.embedColor.replace("#", ""), 16) || 0x5865f2;
+        const checkEmbed = {
           color: embedColorHex,
           title: `Current Offers (${count})`,
           description: "Offers currently detected on Epic Games Store.",
@@ -106,7 +108,7 @@ export async function handleOffersCommand(
         await interaction.editReply({ embeds: [checkEmbed] });
       }
     } catch (error) {
-      console.error("[EGFree] Error in /offers check:", error);
+      logger.error("Error in /offers check:", error);
       await interaction.editReply(
         "Failed to fetch offers. Please check server logs.",
       );
@@ -147,6 +149,7 @@ export async function handleOffersCommand(
         includeUpcoming,
         previousUpcomingOfferIds: prevUpcomingIds,
         includeAddOns,
+        includeMobile: guildSettings.includeMobile !== false,
       });
 
       if (!offers.hasNewOffers && !force && !specificGame) {
@@ -220,7 +223,7 @@ export async function handleOffersCommand(
         }
       }
     } catch (error) {
-      console.error("[EGFree] Error in /offers post:", error);
+      logger.error("Error in /offers post:", error);
       await interaction.editReply(
         `Failed to process post request: ${error instanceof Error ? error.message : String(error)}`,
       );

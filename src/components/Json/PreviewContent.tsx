@@ -29,30 +29,38 @@ export function JsonPreviewButtons({
     <div className={`flex flex-col sm:flex-row gap-2 w-full ${className}`}>
       <Button
         onClick={copyToClipboard}
-        className="w-full sm:flex-1 sm:min-w-0"
+        className="w-full sm:flex-1 sm:min-w-0 inline-flex items-center justify-center gap-1.5 leading-none"
         variant="outline"
         size="default"
       >
         {isCopied ? (
-          <Check className="size-4" />
+          <Check className="size-4 shrink-0 text-primary" />
         ) : (
-          <ClipboardCopy className="size-4" />
+          <ClipboardCopy className="size-4 shrink-0" />
         )}
-        Copy JSON
+        <span>Copy JSON</span>
       </Button>
       <Label
         htmlFor={`discord${idSuffix}`}
-        className="relative w-full sm:flex-1 sm:min-w-0 flex h-8 border border-border dark:border-input dark:bg-input/30 bg-background text-foreground shadow-none hover:bg-muted hover:text-foreground transition-all items-center justify-center gap-2 rounded-lg cursor-pointer text-sm font-medium select-none"
+        className={`relative w-full sm:flex-1 sm:min-w-0 flex h-8 border transition-all items-center justify-center gap-2 rounded-lg cursor-pointer text-sm font-medium select-none leading-none ${
+          settings.showDiscordPreview
+            ? "bg-[#5865F2] hover:bg-[#4752C4] text-white border-transparent"
+            : "border-border dark:border-input dark:bg-input/30 bg-background text-foreground hover:bg-muted hover:text-foreground"
+        }`}
       >
-        <Discord className="size-4" />
-        Discord Preview
+        <Discord
+          className={`size-4 shrink-0 ${
+            settings.showDiscordPreview ? "text-white" : "text-[#5865F2]"
+          }`}
+        />
+        <span>Discord Preview</span>
         <Checkbox
           id={`discord${idSuffix}`}
           checked={settings.showDiscordPreview}
           onCheckedChange={(checked) => {
             updateSetting("showDiscordPreview", checked as boolean);
           }}
-          className="pointer-events-none shadow-none"
+          className="pointer-events-none shadow-none hidden"
         />
       </Label>
     </div>
@@ -97,7 +105,7 @@ export default function JsonPreviewContent({
     .replace(/=+$/, "")}`;
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-full w-full">
       {inlineButtons && (
         <JsonPreviewButtons
           idSuffix={idSuffix}
@@ -105,12 +113,12 @@ export default function JsonPreviewContent({
           updateSetting={updateSetting}
           copyToClipboard={copyToClipboard}
           isCopied={isCopied}
-          className="p-3 border-b border-border bg-background"
+          className="p-3 pt-0 border-b border-border bg-background"
         />
       )}
-      <div className="flex-1 p-3">
+      <div className="flex-1 p-3 w-full">
         {settings.showDiscordPreview ? (
-          <div className="rounded-lg overflow-hidden border border-[#d4d7dc] dark:border-[#202225] shadow-xs">
+          <div className="w-full rounded-lg overflow-hidden border border-[#d4d7dc] dark:border-[#202225] shadow-xs">
             <DiscordPreview
               games={games}
               settings={settings}
@@ -119,7 +127,7 @@ export default function JsonPreviewContent({
             />
           </div>
         ) : (
-          <pre className="rounded-lg border border-border bg-muted/40 p-4 text-muted-foreground overflow-auto text-xs whitespace-pre-wrap break-all font-mono">
+          <pre className="w-full rounded-lg border border-border bg-muted/40 p-4 overflow-auto text-xs whitespace-pre-wrap break-all font-mono">
             {JSON.stringify(jsonData, null, 2)}
           </pre>
         )}

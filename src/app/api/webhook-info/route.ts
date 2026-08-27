@@ -12,7 +12,7 @@ export async function POST(request: Request) {
 
   try {
     const webhookUrlMatch = webhookUrl.match(
-      /(?:discord\.com|discordapp\.com)\/api\/webhooks\/(\d+)\/([a-zA-Z0-9_-]+)/,
+      /(?:(?:canary\.|ptb\.)?discord\.com|discordapp\.com)\/api(?:\/v\d+)?\/webhooks\/(\d+)\/([a-zA-Z0-9_-]+)/,
     );
     if (!webhookUrlMatch) {
       return NextResponse.json(

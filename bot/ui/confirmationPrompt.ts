@@ -330,6 +330,7 @@ export async function sendConfirmationPrompt(
           discordToken,
           channel as TextChannel,
           payload as unknown as Record<string, unknown>,
+          { autoCrosspost: false },
         );
       }
     } else if (interaction) {
@@ -340,6 +341,7 @@ export async function sendConfirmationPrompt(
             discordToken,
             reviewChannel as TextChannel,
             payload as unknown as Record<string, unknown>,
+            { autoCrosspost: false },
           );
           await interaction.editReply(
             `Approval prompt sent to <#${s.reviewChannelId}>.`,
@@ -357,6 +359,7 @@ export async function sendConfirmationPrompt(
             discordToken,
             interaction.channel as TextChannel,
             payload as unknown as Record<string, unknown>,
+            { autoCrosspost: false },
           );
           await interaction.deleteReply();
           return;
