@@ -676,8 +676,8 @@ export default function JsonFormContent({
                     <Monitor className="size-3.5 text-primary" />
                   )}
                   {settings.splitDesktopMobile
-                    ? "Desktop message content"
-                    : "Message content"}
+                    ? "Desktop Message Content"
+                    : "Message Content"}
                 </Label>
                 <Button
                   variant="ghost"
@@ -704,23 +704,6 @@ export default function JsonFormContent({
               />
             </div>
 
-            <MessageIdField
-              id={`message-id${idSuffix}`}
-              label={
-                <>
-                  {settings.splitDesktopMobile && (
-                    <Monitor className="size-3.5 text-primary" />
-                  )}
-                  {settings.splitDesktopMobile
-                    ? "Desktop message ID"
-                    : "Message ID"}
-                </>
-              }
-              value={messageId}
-              onChange={setMessageId}
-              disabled={isDesktopMessageIdDisabled}
-            />
-
             {settings.splitDesktopMobile && (
               <>
                 <div className="space-y-1.5">
@@ -730,7 +713,7 @@ export default function JsonFormContent({
                       className="text-sm font-semibold flex items-center gap-1.5"
                     >
                       <Smartphone className="size-3.5 text-primary" />
-                      Mobile message content
+                      Mobile Message Content
                     </Label>
                     <Button
                       variant="ghost"
@@ -760,11 +743,28 @@ export default function JsonFormContent({
                 </div>
 
                 <MessageIdField
+                  id={`message-id${idSuffix}`}
+                  label={
+                    <>
+                      {settings.splitDesktopMobile && (
+                        <Monitor className="size-3.5 text-primary" />
+                      )}
+                      {settings.splitDesktopMobile
+                        ? "Desktop Message ID"
+                        : "Message ID"}
+                    </>
+                  }
+                  value={messageId}
+                  onChange={setMessageId}
+                  disabled={isDesktopMessageIdDisabled}
+                />
+
+                <MessageIdField
                   id={`message-id-mobile${idSuffix}`}
                   label={
                     <>
                       <Smartphone className="size-3.5 text-primary" /> Mobile
-                      message ID
+                      Message ID
                     </>
                   }
                   value={mobileMessageId}
