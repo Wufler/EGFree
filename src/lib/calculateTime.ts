@@ -1,24 +1,24 @@
-import { differenceInSeconds } from 'date-fns'
+import { differenceInSeconds } from "date-fns";
 
 export const calculateTimeLeft = (
-	endDate: Date,
-	alwaysShowSeconds = false,
+  endDate: Date,
+  alwaysShowSeconds = false,
 ): string => {
-	if (!endDate || Number.isNaN(endDate.getTime())) return 'Expired'
-	const secondsLeft = differenceInSeconds(endDate, new Date())
-	if (!Number.isFinite(secondsLeft) || secondsLeft <= 0) return 'Expired'
-	const days = Math.floor(secondsLeft / 86400)
-	const hours = Math.floor((secondsLeft % 86400) / 3600)
-	const minutes = Math.floor((secondsLeft % 3600) / 60)
-	const seconds = secondsLeft % 60
+  if (!endDate || Number.isNaN(endDate.getTime())) return "Expired";
+  const secondsLeft = differenceInSeconds(endDate, new Date());
+  if (!Number.isFinite(secondsLeft) || secondsLeft <= 0) return "Expired";
+  const days = Math.floor(secondsLeft / 86400);
+  const hours = Math.floor((secondsLeft % 86400) / 3600);
+  const minutes = Math.floor((secondsLeft % 3600) / 60);
+  const seconds = secondsLeft % 60;
 
-	const parts = []
-	if (days > 0) parts.push(`${days}d`)
-	if (hours > 0) parts.push(`${hours}h`)
-	if (minutes > 0) parts.push(`${minutes}m`)
-	if (alwaysShowSeconds || parts.length === 0) {
-		parts.push(`${seconds}s`)
-	}
+  const parts = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (alwaysShowSeconds || parts.length === 0) {
+    parts.push(`${seconds}s`);
+  }
 
-	return parts.join(' ')
-}
+  return parts.join(" ");
+};

@@ -1,81 +1,81 @@
-'use client'
+"use client";
 
 import {
-	useState,
-	useEffect,
-	useRef,
-	useCallback,
-	useMemo,
-	type ReactNode,
-} from 'react'
-import Link from 'next/link'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { calculateTimeLeft } from '@/lib/calculateTime'
-import { getEffectiveGames } from '@/lib/utils'
+  AlertTriangle,
+  Calendar,
+  CalendarOff,
+  Check,
+  Clock,
+  Copy,
+  ExternalLink,
+  Gift,
+  Home as HomeIcon,
+  Minimize2,
+  Monitor,
+  ShoppingCart,
+  Smartphone,
+  XCircle,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
-	isMysteryGame,
-	getCheckoutUrl,
-	getMobileCheckoutUrl,
-	getMobileCheckoutUrlForPlatform,
-	formatMobileGamePrice,
-	getGameLinkMeta,
-	getPreferredGameImageUrl,
-	buildBulkCheckoutUrl,
-} from '@/lib/builder/shared'
-import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { toast } from "sonner";
+import Json from "@/components/Json/Builder";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
-	Calendar,
-	CalendarOff,
-	Clock,
-	Gift,
-	Monitor,
-	Smartphone,
-	ShoppingCart,
-	XCircle,
-	Home as HomeIcon,
-	Check,
-	Copy,
-	ExternalLink,
-	AlertTriangle,
-	Minimize2,
-} from 'lucide-react'
-import Image from 'next/image'
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
-	Sheet,
-	SheetContent,
-	SheetTitle,
-	SheetDescription,
-} from '@/components/ui/sheet'
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from '@/components/ui/popover'
-import { Button } from '@/components/ui/button'
-import Theme from './ui/Theme'
-import Github from './ui/github'
-import Json from '@/components/Json/Builder'
+  buildBulkCheckoutUrl,
+  formatMobileGamePrice,
+  getCheckoutUrl,
+  getGameLinkMeta,
+  getMobileCheckoutUrl,
+  getMobileCheckoutUrlForPlatform,
+  getPreferredGameImageUrl,
+  isMysteryGame,
+} from "@/lib/builder/shared";
+import { calculateTimeLeft } from "@/lib/calculateTime";
+import { cn, getEffectiveGames } from "@/lib/utils";
+import Github from "./ui/github";
+import Theme from "./ui/Theme";
 
 function NoOffers() {
-	return (
-		<div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-muted rounded-xl bg-muted/30">
-			<div className="rounded-full bg-muted p-4 mb-4">
-				<Gift className="size-8 text-muted-foreground" />
-			</div>
-			<h3 className="text-lg font-semibold">No offers available</h3>
-			<p className="text-sm text-muted-foreground mt-2 max-w-xs mx-auto">
-				Check back later or visit the{' '}
-				<Link
-					href="https://store.epicgames.com/en-US/free-games"
-					className="text-epic-blue hover:underline"
-					target="_blank"
-				>
-					Epic Games Store
-				</Link>
-			</p>
-		</div>
-	)
+  return (
+    <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-muted rounded-xl bg-muted/30">
+      <div className="rounded-full bg-muted p-4 mb-4">
+        <Gift className="size-8 text-muted-foreground" />
+      </div>
+      <h3 className="text-lg font-semibold">No offers available</h3>
+      <p className="text-sm text-muted-foreground mt-2 max-w-xs mx-auto">
+        Check back later or visit the{" "}
+        <Link
+          href="https://store.epicgames.com/en-US/free-games"
+          className="text-epic-blue hover:underline"
+          target="_blank"
+        >
+          Epic Games Store
+        </Link>
+      </p>
+    </div>
+  );
 }
 
 /* 
@@ -102,1534 +102,1605 @@ function MobilePlaceholder() {
 */
 
 function TimeDisplay({
-	date,
-	type,
-	onExpired,
-	alwaysShowSeconds = false,
+  date,
+  type,
+  onExpired,
+  alwaysShowSeconds = false,
 }: {
-	date: Date
-	type: 'end' | 'start'
-	onExpired?: () => void
-	alwaysShowSeconds?: boolean
+  date: Date;
+  type: "end" | "start";
+  onExpired?: () => void;
+  alwaysShowSeconds?: boolean;
 }) {
-	const [timeLeft, setTimeLeft] = useState<string>('')
+  const [timeLeft, setTimeLeft] = useState<string>("");
 
-	useEffect(() => {
-		const updateTime = () => {
-			const time = calculateTimeLeft(date, alwaysShowSeconds)
-			setTimeLeft(time)
+  useEffect(() => {
+    const updateTime = () => {
+      const time = calculateTimeLeft(date, alwaysShowSeconds);
+      setTimeLeft(time);
 
-			if (time === 'Expired' && onExpired) {
-				onExpired()
-			}
-		}
+      if (time === "Expired" && onExpired) {
+        onExpired();
+      }
+    };
 
-		updateTime()
-		const timer = setInterval(updateTime, 1000)
-		return () => clearInterval(timer)
-	}, [date, onExpired, alwaysShowSeconds])
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, [date, onExpired, alwaysShowSeconds]);
 
-	if (!timeLeft) return null
+  if (!timeLeft) return null;
 
-	return (
-		<div
-			className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-bold text-white ${
-				type === 'end' ? 'bg-epic-blue dark:text-black' : 'bg-black'
-			}`}
-		>
-			<Clock className="size-3.5" />
-			<span>{timeLeft === 'Expired' ? 'Loading...' : timeLeft}</span>
-		</div>
-	)
+  return (
+    <div
+      className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-bold text-white ${
+        type === "end" ? "bg-epic-blue dark:text-black" : "bg-black"
+      }`}
+    >
+      <Clock className="size-3.5" />
+      <span>{timeLeft === "Expired" ? "Loading..." : timeLeft}</span>
+    </div>
+  );
 }
 
 function SectionHeader({
-	icon: Icon,
-	title,
-	titleSuffix,
-	primary = false,
+  icon: Icon,
+  title,
+  titleSuffix,
+  primary = false,
 }: {
-	icon: typeof Monitor
-	title: string
-	titleSuffix?: ReactNode
-	primary?: boolean
+  icon: typeof Monitor;
+  title: string;
+  titleSuffix?: ReactNode;
+  primary?: boolean;
 }) {
-	return (
-		<div className="mb-5 flex items-center gap-3">
-			<div
-				className={`rounded-xl p-2.5 shadow-sm ${
-					primary ? 'bg-epic-blue text-white dark:text-black' : 'bg-secondary text-foreground'
-				}`}
-			>
-				<Icon className="size-5" />
-			</div>
-			<div>
-				<div className="flex items-center gap-2">
-					<h2 className="text-2xl font-bold tracking-tight">{title}</h2>
-					{titleSuffix}
-				</div>
-			</div>
-		</div>
-	)
+  return (
+    <div className="mb-5 flex items-center gap-3">
+      <div
+        className={`rounded-xl p-2.5 shadow-sm ${
+          primary
+            ? "bg-epic-blue text-white dark:text-black"
+            : "bg-secondary text-foreground"
+        }`}
+      >
+        <Icon className="size-5" />
+      </div>
+      <div>
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
+          {titleSuffix}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function DesktopHome({
-	games,
-	activeMobileGames,
-	expiredMobileGames,
-	gridClassName,
-	renderGameCard,
-	renderMobileGameCard,
-	copiedUrl,
-	copyToClipboard,
-	isClaimAllMinimized,
-	onMinimize,
-	bulkCheckoutUrl,
-	totalClaimable,
-	isMounted,
+  games,
+  activeMobileGames,
+  expiredMobileGames,
+  gridClassName,
+  renderGameCard,
+  renderMobileGameCard,
+  copiedUrl,
+  copyToClipboard,
+  isClaimAllMinimized,
+  onMinimize,
+  bulkCheckoutUrl,
+  totalClaimable,
+  isMounted,
 }: {
-	games: Game
-	activeMobileGames: MobileGame[]
-	expiredMobileGames: MobileGame[]
-	gridClassName: string
-	renderGameCard: (game: GameItem, isCurrentGame: boolean) => ReactNode
-	renderMobileGameCard: (game: MobileGame, isExpired?: boolean) => ReactNode
-	copiedUrl: string
-	copyToClipboard: (url: string) => void
-	isClaimAllMinimized: boolean
-	onMinimize: (val: boolean) => void
-	bulkCheckoutUrl: string | null
-	totalClaimable: number
-	isMounted: boolean
+  games: Game;
+  activeMobileGames: MobileGame[];
+  expiredMobileGames: MobileGame[];
+  gridClassName: string;
+  renderGameCard: (game: GameItem, isCurrentGame: boolean) => ReactNode;
+  renderMobileGameCard: (game: MobileGame, isExpired?: boolean) => ReactNode;
+  copiedUrl: string;
+  copyToClipboard: (url: string) => void;
+  isClaimAllMinimized: boolean;
+  onMinimize: (val: boolean) => void;
+  bulkCheckoutUrl: string | null;
+  totalClaimable: number;
+  isMounted: boolean;
 }) {
-	return (
-		<>
-			{bulkCheckoutUrl &&
-				totalClaimable > 0 &&
-				isMounted &&
-				!isClaimAllMinimized &&
-				games.currentGames.length + activeMobileGames.length > 1 && (
-					<div className="bg-epic-blue/10 flex flex-col sm:flex-row gap-4 mb-6 sm:items-center justify-between p-5 border border-epic-blue/20 rounded-xl">
-						<div className="flex items-start gap-3 min-w-0">
-							<div className="shrink-0 size-10 rounded-lg bg-epic-blue/15 flex items-center justify-center">
-								<ShoppingCart className="size-5 text-epic-blue" />
-							</div>
-							<div className="min-w-0">
-								<h4 className="font-extrabold text-epic-blue text-sm">
-									Claim All Free Games ({totalClaimable} available)
-								</h4>
-								<p className="text-xs text-muted-foreground mt-0.5">
-									You are required to be signed in on the{' '}
-									<a
-										href="https://store.epicgames.com/"
-										target="_blank"
-										rel="noopener noreferrer"
-										className="text-epic-blue hover:underline"
-									>
-										Epic Games Store
-									</a>{' '}
-									before claiming the offers.
-								</p>
-							</div>
-						</div>
-						<div className="flex items-center gap-2 w-full sm:w-auto">
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => copyToClipboard(bulkCheckoutUrl)}
-								className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 py-4 px-4 transition-all duration-200 ${
-									copiedUrl === bulkCheckoutUrl
-										? 'border-green-500 text-green-500 bg-green-500/10'
-										: ''
-								}`}
-							>
-								{copiedUrl === bulkCheckoutUrl ? (
-									<>
-										<Check className="size-4 animate-in zoom-in duration-150" />
-										<span>Copied!</span>
-									</>
-								) : (
-									<>
-										<Copy className="size-4" />
-										<span>Checkout Link</span>
-									</>
-								)}
-							</Button>
-							<Button
-								size="sm"
-								className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black font-bold py-4 px-4 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-								asChild
-							>
-								<a href={bulkCheckoutUrl} target="_blank" rel="noopener noreferrer">
-									<ExternalLink className="size-4" />
-									<span>Claim All</span>
-								</a>
-							</Button>
-							<Button
-								variant="ghost"
-								size="icon"
-								className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground rounded-full"
-								onClick={() => onMinimize(true)}
-								title="Minimize to Cart"
-							>
-								<Minimize2 className="size-4" />
-							</Button>
-						</div>
-					</div>
-				)}
-			<div className="space-y-10">
-				{games.currentGames.length > 0 && (
-					<div>
-						<SectionHeader icon={Monitor} title="Desktop" />
-						<div className={gridClassName}>
-							{games.currentGames.map(game => renderGameCard(game, true))}
-						</div>
-					</div>
-				)}
-				{activeMobileGames.length > 0 && (
-					<div>
-						<SectionHeader
-							icon={Smartphone}
-							title="Mobile"
-							titleSuffix={
-								<Link
-									href="https://egdata.app"
-									target="_blank"
-									rel="noopener noreferrer"
-									className="text-xs font-medium text-muted-foreground transition-colors hover:text-epic-blue"
-								>
-									via egdata.app
-								</Link>
-							}
-						/>
-						<div className={gridClassName}>
-							{activeMobileGames.map(game => renderMobileGameCard(game, false))}
-						</div>
-					</div>
-				)}
-				{games.nextGames.length > 0 && (
-					<div>
-						<SectionHeader icon={Calendar} title="Upcoming" />
-						<div className={gridClassName}>
-							{games.nextGames.map(game => renderGameCard(game, false))}
-						</div>
-					</div>
-				)}
-				{expiredMobileGames.length > 0 && (
-					<div>
-						<SectionHeader icon={XCircle} title="Expired" />
-						<div className={gridClassName}>
-							{expiredMobileGames.map(game => renderMobileGameCard(game, true))}
-						</div>
-					</div>
-				)}
-			</div>
-		</>
-	)
+  return (
+    <>
+      {bulkCheckoutUrl &&
+        totalClaimable > 0 &&
+        isMounted &&
+        !isClaimAllMinimized &&
+        games.currentGames.length + activeMobileGames.length > 1 && (
+          <div className="bg-epic-blue/10 flex flex-col sm:flex-row gap-4 mb-6 sm:items-center justify-between p-5 border border-epic-blue/20 rounded-xl">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="shrink-0 size-10 rounded-lg bg-epic-blue/15 flex items-center justify-center">
+                <ShoppingCart className="size-5 text-epic-blue" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="font-extrabold text-epic-blue text-sm">
+                  Claim All Free Games ({totalClaimable} available)
+                </h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  You are required to be signed in on the{" "}
+                  <a
+                    href="https://store.epicgames.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-epic-blue hover:underline"
+                  >
+                    Epic Games Store
+                  </a>{" "}
+                  before claiming the offers.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => copyToClipboard(bulkCheckoutUrl)}
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 py-4 px-4 transition-all duration-200 ${
+                  copiedUrl === bulkCheckoutUrl
+                    ? "border-green-500 text-green-500 bg-green-500/10"
+                    : ""
+                }`}
+              >
+                {copiedUrl === bulkCheckoutUrl ? (
+                  <>
+                    <Check className="size-4 animate-in zoom-in duration-150" />
+                    <span>Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="size-4" />
+                    <span>Checkout Link</span>
+                  </>
+                )}
+              </Button>
+              <a
+                href={bulkCheckoutUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  buttonVariants({ size: "sm" }),
+                  "flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black font-bold py-4 px-4 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
+                )}
+              >
+                <ExternalLink className="size-4" />
+                <span>Claim All</span>
+              </a>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground rounded-full"
+                onClick={() => onMinimize(true)}
+                title="Minimize to Cart"
+              >
+                <Minimize2 className="size-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+      <div className="space-y-10">
+        {games.currentGames.length > 0 && (
+          <div>
+            <SectionHeader icon={Monitor} title="Desktop" />
+            <div className={gridClassName}>
+              {games.currentGames.map((game) => renderGameCard(game, true))}
+            </div>
+          </div>
+        )}
+        {activeMobileGames.length > 0 && (
+          <div>
+            <SectionHeader
+              icon={Smartphone}
+              title="Mobile"
+              titleSuffix={
+                <Link
+                  href="https://egdata.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-medium text-muted-foreground transition-colors hover:text-epic-blue"
+                >
+                  via egdata.app
+                </Link>
+              }
+            />
+            <div className={gridClassName}>
+              {activeMobileGames.map((game) =>
+                renderMobileGameCard(game, false),
+              )}
+            </div>
+          </div>
+        )}
+        {games.nextGames.length > 0 && (
+          <div>
+            <SectionHeader icon={Calendar} title="Upcoming" />
+            <div className={gridClassName}>
+              {games.nextGames.map((game) => renderGameCard(game, false))}
+            </div>
+          </div>
+        )}
+        {expiredMobileGames.length > 0 && (
+          <div>
+            <SectionHeader icon={XCircle} title="Expired" />
+            <div className={gridClassName}>
+              {expiredMobileGames.map((game) =>
+                renderMobileGameCard(game, true),
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
 }
 
 const isMobileGame = (game: GameItem | MobileGame): game is MobileGame => {
-	return 'iosOffer' in game || 'androidOffer' in game
-}
+  return "iosOffer" in game || "androidOffer" in game;
+};
 
 export default function List({
-	games,
-	mobile,
-	initialGameId,
+  games,
+  mobile,
+  initialGameId,
 }: {
-	games: Game
-	mobile: MobileGameData[]
-	initialGameId?: string
+  games: Game;
+  mobile: MobileGameData[];
+  initialGameId?: string;
 }) {
-	const router = useRouter()
-	const hasToastShown = useRef(false)
-	const [activeTab, setActiveTab] = useState('home')
-
-	const mobileGames = mobile
-	const effectiveGames = useMemo(() => getEffectiveGames(games), [games])
-
-	const now = new Date()
-	const activeMobileGames = mobileGames.filter(
-		g => !g.promoEndDate || new Date(g.promoEndDate) > now,
-	)
-	const expiredMobileGames = mobileGames.filter(
-		g => g.promoEndDate && new Date(g.promoEndDate) <= now,
-	)
-
-	const [selectedGame, setSelectedGame] = useState<GameItem | MobileGame | null>(
-		() => {
-			if (!initialGameId) return null
-			const allGames = [
-				...games.currentGames,
-				...games.nextGames,
-				...mobileGames,
-			] as (GameItem | MobileGame)[]
-			const foundGame = allGames.find(g => g.id === initialGameId)
-			return foundGame || null
-		},
-	)
-	const [copiedUrl, setCopiedUrl] = useState<string>('')
-	const [isClaimAllMinimized, setIsClaimAllMinimized] = useState<boolean>(false)
-	const [isMounted, setIsMounted] = useState<boolean>(false)
-
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			setIsMounted(true)
-			if (typeof window !== 'undefined') {
-				const saved = localStorage.getItem('claimAllMinimized')
-				if (saved === 'true') {
-					setIsClaimAllMinimized(true)
-				}
-			}
-		}, 0)
-		return () => clearTimeout(timer)
-	}, [])
-
-	useEffect(() => {
-		if (typeof window === 'undefined') return
-		const params = new URLSearchParams(window.location.search)
-		const current = params.get('offer')
-		const next = selectedGame?.id || null
-
-		if (current !== next) {
-			if (next) params.set('offer', next)
-			else params.delete('offer')
-			const newUrl = `${window.location.pathname}?${params.toString()}`
-			window.history.pushState(null, '', newUrl.replace(/\?$/, ''))
-		}
-	}, [selectedGame])
-
-	useEffect(() => {
-		const handleState = () => {
-			const id = new URLSearchParams(window.location.search).get('offer')
-			const all = [...games.currentGames, ...games.nextGames, ...mobileGames] as (
-				| GameItem
-				| MobileGame
-			)[]
-			setSelectedGame(all.find(g => g.id === id) || null)
-		}
-		window.addEventListener('popstate', handleState)
-		return () => window.removeEventListener('popstate', handleState)
-	}, [games, mobileGames])
-
-	const handleMinimize = (minimized: boolean) => {
-		setIsClaimAllMinimized(minimized)
-		if (typeof window !== 'undefined') {
-			localStorage.setItem('claimAllMinimized', String(minimized))
-		}
-	}
-
-	const bulkCheckoutUrl = useMemo(() => {
-		return buildBulkCheckoutUrl(effectiveGames.currentGames, activeMobileGames)
-	}, [effectiveGames.currentGames, activeMobileGames])
-
-	const totalClaimable = useMemo(() => {
-		return (
-			effectiveGames.currentGames.filter(
-				g => !isMysteryGame(g) && g.namespace && g.id,
-			).length +
-			activeMobileGames.reduce(
-				(acc, mg) => acc + (mg.iosOffer || mg.androidOffer ? 1 : 0),
-				0,
-			)
-		)
-	}, [effectiveGames.currentGames, activeMobileGames])
-
-	const copyToClipboard = async (url: string) => {
-		try {
-			await navigator.clipboard.writeText(url)
-			setCopiedUrl(url)
-			setTimeout(() => setCopiedUrl(''), 2000)
-		} catch (err) {
-			console.error(err)
-			toast.error('Failed to copy URL')
-		}
-	}
-
-	useEffect(() => {
-		if (typeof window === 'undefined') return
-		const checkDesktop = () => {
-			const isLg = window.innerWidth >= 1024
-			if (isLg && !localStorage.getItem('tabState')) {
-				setActiveTab('home')
-			}
-		}
-
-		checkDesktop()
-
-		const handleResize = () => checkDesktop()
-
-		window.addEventListener('resize', handleResize)
-		return () => {
-			window.removeEventListener('resize', handleResize)
-		}
-	}, [])
-
-	const handleExpired = useCallback(() => {
-		if (!hasToastShown.current) {
-			hasToastShown.current = true
-			toast.promise(
-				new Promise(resolve => {
-					setTimeout(() => {
-						router.refresh()
-						resolve(true)
-					}, 5000)
-				}),
-				{
-					loading: 'Offers updating...',
-					success: 'Offers updated!',
-					error: 'Failed to update. Please refresh.',
-				},
-			)
-		}
-	}, [router])
-
-	const renderGameCard = (game: GameItem, isCurrentGame: boolean) => {
-		const isAddOn = game.offerType === 'ADD_ON'
-		const gameImageUrl = getPreferredGameImageUrl(game)
-
-		const getGameDate = (game: GameItem) => {
-			if (isCurrentGame) {
-				return new Date(
-					game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0]?.endDate ??
-						'',
-				)
-			}
-			return new Date(
-				game.promotions?.upcomingPromotionalOffers?.[0]?.promotionalOffers?.[0]
-					?.startDate ?? '',
-			)
-		}
-
-		const gameDate = getGameDate(game)
-
-		const cardContent = (
-			<div className="h-full border-0 bg-transparent shadow-none group overflow-hidden">
-				<div className="relative aspect-video overflow-hidden rounded-xl bg-muted shadow-sm hover:shadow-md transition-all duration-300 ring-1 ring-black/5 dark:ring-white/10">
-					{isAddOn && (
-						<div className="absolute right-2 top-2 z-10 flex items-center rounded-md bg-black/60 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md">
-							ADD-ON
-						</div>
-					)}
-					{gameImageUrl ? (
-						<Image
-							src={gameImageUrl}
-							width={1280}
-							height={720}
-							priority
-							alt={game.title}
-							className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-						/>
-					) : (
-						<div className="flex h-full w-full items-center justify-center bg-epic-dark-blue">
-							<Gift className="size-20 text-epic-blue/50" />
-						</div>
-					)}
-
-					<div className="absolute inset-0 bg-linear-to-t dark:from-black/95 from-black/70 via-black/20 dark:via-black/30 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
-
-					<div className="absolute top-4 left-4 z-10">
-						<TimeDisplay
-							date={gameDate}
-							type={isCurrentGame ? 'end' : 'start'}
-							onExpired={handleExpired}
-						/>
-					</div>
-
-					<div className="absolute bottom-0 left-0 right-0 p-4 z-10">
-						<div className="flex items-end justify-between gap-4">
-							<div className="flex-1 min-w-0">
-								<h3 className="truncate text-lg font-bold text-white group-hover:text-epic-blue transition-colors">
-									{game.title}
-								</h3>
-								{game.seller?.name !== 'Epic Dev Test Account' && (
-									<p className="truncate text-sm text-gray-300">{game.seller?.name}</p>
-								)}
-							</div>
-							<div className="flex flex-col items-end shrink-0">
-								{isCurrentGame && (
-									<span className="rounded-md bg-epic-blue px-2 py-0.5 text-xs font-bold text-white dark:text-black shadow-sm">
-										FREE
-									</span>
-								)}
-								{game.price.totalPrice.originalPrice !== 0 && (
-									<div className="mt-1 flex items-center gap-1.5">
-										{!isCurrentGame &&
-											game.price.totalPrice.discountPrice !==
-												game.price.totalPrice.originalPrice && (
-												<span className="text-sm font-bold text-white">
-													{game.price.totalPrice.fmtPrice.discountPrice}
-												</span>
-											)}
-										<span
-											className={`text-xs font-medium text-gray-400 ${
-												isCurrentGame ||
-												game.price.totalPrice.discountPrice !==
-													game.price.totalPrice.originalPrice
-													? 'line-through'
-													: ''
-											}`}
-										>
-											{game.price.totalPrice.fmtPrice.originalPrice}
-										</span>
-									</div>
-								)}
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		)
-
-		return (
-			<button
-				type="button"
-				key={game.id}
-				className="w-full text-left h-full animate-in fade-in zoom-in-95 duration-300 block focus-visible:outline-hidden"
-				onClick={() => setSelectedGame(game)}
-			>
-				{cardContent}
-			</button>
-		)
-	}
-
-	const renderMobileGameCard = (game: MobileGame, isExpired = false) => {
-		const endDate = game.promoEndDate ? new Date(game.promoEndDate) : null
-
-		const mobileTag =
-			game.iosOffer && game.androidOffer
-				? 'iOS & Android'
-				: game.iosOffer
-					? 'iOS'
-					: game.androidOffer
-						? 'Android'
-						: null
-		const cardContent = (
-			<div className="h-full border-0 bg-transparent shadow-none group overflow-hidden">
-				<div className="relative aspect-video overflow-hidden rounded-xl bg-muted shadow-sm hover:shadow-md transition-all duration-300 ring-1 ring-black/5 dark:ring-white/10">
-					{mobileTag && (
-						<div className="absolute right-4 top-4 z-10 flex items-center rounded-md bg-black px-2 py-0.5 text-[10px] font-bold text-white">
-							{mobileTag}
-						</div>
-					)}
-					{game.imageUrl ? (
-						<Image
-							src={game.imageUrl}
-							width={1280}
-							height={720}
-							priority
-							alt={game.title}
-							className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
-								isExpired ? 'grayscale' : ''
-							}`}
-						/>
-					) : (
-						<div className="flex h-full w-full items-center justify-center bg-epic-dark-blue">
-							<Gift className="size-20 text-epic-blue/50" />
-						</div>
-					)}
-
-					<div className="absolute inset-0 bg-linear-to-t dark:from-black/95 from-black/70 dark:via-black/30 via-black/20 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
-
-					{isExpired ? (
-						<div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-bold bg-black text-white">
-							<CalendarOff className="size-3.5" />
-							<span>Ended</span>
-						</div>
-					) : (
-						endDate && (
-							<div className="absolute top-4 left-4 z-10">
-								<TimeDisplay date={endDate} type="end" onExpired={handleExpired} />
-							</div>
-						)
-					)}
-
-					<div className="absolute bottom-0 left-0 right-0 p-4 z-10">
-						<div className="flex items-end justify-between gap-4">
-							<div className="flex-1 min-w-0">
-								<h3 className="truncate text-lg font-bold text-white group-hover:text-epic-blue transition-colors">
-									{game.title}
-								</h3>
-								{game.seller?.name && game.seller.name !== 'Epic Dev Test Account' && (
-									<p className="truncate text-sm text-gray-300">{game.seller.name}</p>
-								)}
-							</div>
-							<div className="flex flex-col items-end shrink-0">
-								{!isExpired && (
-									<span className="rounded-md bg-epic-blue px-2 py-0.5 text-xs font-bold text-white dark:text-black shadow-sm">
-										FREE
-									</span>
-								)}
-								{game.originalPrice !== 0 && (
-									<div className="mt-1 flex items-center gap-1.5">
-										<span
-											className={`text-xs font-medium text-gray-400 ${
-												!isExpired ? 'line-through' : ''
-											}`}
-										>
-											{formatMobileGamePrice(game)}
-										</span>
-									</div>
-								)}
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		)
-
-		return (
-			<button
-				type="button"
-				key={game.id}
-				className="w-full text-left h-full animate-in fade-in zoom-in-95 duration-300 block focus-visible:outline-hidden"
-				onClick={() => setSelectedGame(game)}
-			>
-				{cardContent}
-			</button>
-		)
-	}
-
-	const totalFreeNow = effectiveGames.currentGames.length
-	const isSingleGame =
-		totalFreeNow === 1 && effectiveGames.nextGames.length === 1
-	const isTwoCurrentGames = totalFreeNow <= 2
-	const isTwoUpcomingGames = effectiveGames.nextGames.length <= 2
-
-	const gridClassName = `grid gap-4 ${
-		isSingleGame
-			? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2'
-			: isTwoCurrentGames && isTwoUpcomingGames
-				? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2'
-				: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-	}`
-
-	const mobileTabTriggerClass =
-		'shrink-0 relative rounded-none py-3 px-3 sm:px-4 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-epic-blue text-sm font-medium data-[state=active]:text-epic-blue text-muted-foreground inline-flex items-center justify-center gap-2'
-
-	const desktopSidebarTriggerClass =
-		'w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground data-[state=active]:bg-accent data-[state=active]:text-foreground data-[state=active]:font-semibold'
-
-	const tabGridClass = 'grid grid-cols-1 md:grid-cols-2 gap-4'
-
-	const isEmpty =
-		effectiveGames.currentGames.length === 0 &&
-		effectiveGames.nextGames.length === 0 &&
-		mobileGames.length === 0
-
-	if (isEmpty) {
-		return (
-			<div className="flex justify-center items-center min-h-[50vh]">
-				<NoOffers />
-			</div>
-		)
-	}
-
-	const renderContent = (section: string) => {
-		switch (section) {
-			case 'current':
-				return effectiveGames.currentGames.length > 0 ? (
-					<div className={tabGridClass}>
-						{effectiveGames.currentGames.map(game => renderGameCard(game, true))}
-					</div>
-				) : (
-					<NoOffers />
-				)
-			case 'mobile':
-				return (
-					<div className={tabGridClass}>
-						{activeMobileGames.length > 0 &&
-							activeMobileGames.map(game => renderMobileGameCard(game, false))}
-					</div>
-				)
-			case 'upcoming':
-				return effectiveGames.nextGames.length > 0 ? (
-					<div className={tabGridClass}>
-						{effectiveGames.nextGames.map(game => renderGameCard(game, false))}
-					</div>
-				) : (
-					<NoOffers />
-				)
-			case 'expired':
-				return expiredMobileGames.length > 0 ? (
-					<div className={tabGridClass}>
-						{expiredMobileGames.map(game => renderMobileGameCard(game, true))}
-					</div>
-				) : (
-					<NoOffers />
-				)
-			default:
-				return null
-		}
-	}
-
-	return (
-		<div className="w-full min-w-0 flex-1 flex flex-col">
-			<header className="border-b border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black sm:px-8 px-4 shrink-0">
-				<div className="mx-auto flex h-12 sm:h-18 items-center justify-between py-4 sm:py-0 gap-4 md:gap-0">
-					<Link
-						href="https://store.epicgames.com/free-games"
-						target="_blank"
-						className="group flex items-center text-center"
-					>
-						<h1 className="hidden sm:block text-xl sm:text-2xl font-bold text-epic-blue transition-colors duration-200 group-hover:text-foreground dark:group-hover:text-white">
-							Epic Games
-						</h1>
-						<div className="hidden sm:block ml-0 sm:ml-4 h-6 w-px bg-gray-200 dark:bg-white/10" />
-						<span className="ml-0 sm:ml-4 text-base sm:text-lg font-medium dark:text-white text-epic-gray">
-							Free Games
-						</span>
-					</Link>
-					<div className="flex items-center gap-1 sm:gap-2">
-						<Json games={games} mobile={mobile} />
-						{/* Minimized Cart Button */}
-						{isClaimAllMinimized && bulkCheckoutUrl && totalClaimable > 0 && (
-							<div className="animate-in fade-in zoom-in duration-300">
-								<Popover>
-									<PopoverTrigger asChild>
-										<Button
-											size="icon"
-											className="relative size-8 sm:size-10 rounded-full bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black shadow-sm flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
-										>
-											<ShoppingCart className="size-4 sm:size-5" />
-										</Button>
-									</PopoverTrigger>
-									<PopoverContent
-										align="end"
-										side="bottom"
-										className="w-64 p-3 bg-background/95 backdrop-blur-md border border-epic-blue/20 rounded-xl shadow-xl z-50"
-									>
-										<div className="space-y-3">
-											<div>
-												<h4 className="font-extrabold text-sm text-epic-blue flex items-center gap-1.5">
-													<ShoppingCart className="size-4" /> Claim All Free Games
-												</h4>
-												<p className="text-xs text-muted-foreground mt-0.5">
-													{totalClaimable} game{totalClaimable > 1 ? 's' : ''} available to
-													claim.
-												</p>
-											</div>
-											<div className="flex flex-col gap-2 pt-2 border-t border-muted/50">
-												<Button
-													size="sm"
-													className="w-full flex items-center justify-center gap-2 bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black font-bold py-2 transition-all duration-200"
-													asChild
-												>
-													<a
-														href={bulkCheckoutUrl}
-														target="_blank"
-														rel="noopener noreferrer"
-													>
-														<ExternalLink className="size-4" />
-														<span>Claim All</span>
-													</a>
-												</Button>
-												<Button
-													variant="outline"
-													size="sm"
-													onClick={() => copyToClipboard(bulkCheckoutUrl)}
-													className={`w-full flex items-center justify-center gap-2 py-2 transition-all duration-200 ${
-														copiedUrl === bulkCheckoutUrl
-															? 'border-green-500 text-green-500 bg-green-500/10'
-															: ''
-													}`}
-												>
-													{copiedUrl === bulkCheckoutUrl ? (
-														<>
-															<Check className="size-4 animate-in zoom-in duration-150" />
-															<span>Copied!</span>
-														</>
-													) : (
-														<>
-															<Copy className="size-4" />
-															<span>Checkout Link</span>
-														</>
-													)}
-												</Button>
-												<Button
-													variant="ghost"
-													size="sm"
-													onClick={() => handleMinimize(false)}
-													className="w-full flex items-center justify-center gap-2 text-xs py-1 text-muted-foreground hover:text-foreground"
-												>
-													<span>Expand to Banner</span>
-												</Button>
-											</div>
-										</div>
-									</PopoverContent>
-								</Popover>
-							</div>
-						)}
-					</div>
-				</div>
-			</header>
-			<Tabs
-				defaultValue="home"
-				value={activeTab}
-				onValueChange={value => {
-					setActiveTab(value)
-					if (typeof window !== 'undefined') {
-						localStorage.setItem('tabState', value)
-					}
-				}}
-				className="w-full min-h-0 flex flex-col gap-0 flex-1 lg:grid lg:grid-cols-[16rem_1fr]"
-			>
-				{/* Mobile Tabs */}
-				<div className="lg:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b">
-					<TabsList className="w-full h-auto rounded-none bg-transparent p-0 flex flex-nowrap justify-center overflow-x-auto [&::-webkit-scrollbar]:h-0">
-						<TabsTrigger value="home" className={mobileTabTriggerClass}>
-							<HomeIcon className="size-4" />
-							{activeTab === 'home' && <span>Home</span>}
-						</TabsTrigger>
-						<TabsTrigger value="current" className={mobileTabTriggerClass}>
-							<Monitor className="size-4" />
-							{activeTab === 'current' && <span>Desktop</span>}
-						</TabsTrigger>
-						{mobileGames.length > 0 && (
-							<TabsTrigger value="mobile" className={mobileTabTriggerClass}>
-								<Smartphone className="size-4" />
-								{activeTab === 'mobile' && <span>Mobile</span>}
-							</TabsTrigger>
-						)}
-						<TabsTrigger value="upcoming" className={mobileTabTriggerClass}>
-							<Calendar className="size-4" />
-							{activeTab === 'upcoming' && <span>Upcoming</span>}
-						</TabsTrigger>
-						{expiredMobileGames.length > 0 && (
-							<TabsTrigger value="expired" className={mobileTabTriggerClass}>
-								<XCircle className="size-4" />
-								{activeTab === 'expired' && <span>Expired</span>}
-							</TabsTrigger>
-						)}
-					</TabsList>
-				</div>
-
-				{/* Desktop Sidebar */}
-				<aside className="hidden lg:flex lg:flex-col lg:self-stretch w-64 border-r bg-background/50">
-					<div className="p-6 lg:sticky lg:top-0 lg:max-h-[calc(100dvh-5rem)] lg:overflow-y-auto">
-						<div className="space-y-1">
-							<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
-								<TabsTrigger value="home" className={desktopSidebarTriggerClass}>
-									<HomeIcon className="size-4 text-epic-blue" />{' '}
-									<span className="text-epic-blue">Home</span>
-								</TabsTrigger>
-							</TabsList>
-							<TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
-								<TabsTrigger value="current" className={desktopSidebarTriggerClass}>
-									<Monitor className="size-4" /> Desktop
-								</TabsTrigger>
-								{mobileGames.length > 0 && (
-									<TabsTrigger value="mobile" className={desktopSidebarTriggerClass}>
-										<Smartphone className="size-4" /> Mobile
-									</TabsTrigger>
-								)}
-								{expiredMobileGames.length > 0 && (
-									<TabsTrigger value="expired" className={desktopSidebarTriggerClass}>
-										<XCircle className="size-4" /> Expired
-									</TabsTrigger>
-								)}
-								<TabsTrigger value="upcoming" className={desktopSidebarTriggerClass}>
-									<Calendar className="size-4" /> Upcoming
-								</TabsTrigger>
-							</TabsList>
-						</div>
-					</div>
-				</aside>
-
-				{/* Content Area */}
-				<main className="min-w-0 flex-1 p-4 lg:p-8 overflow-x-hidden">
-					<div className="max-w-6xl mx-auto">
-						<TabsContent
-							value="home"
-							className="mt-0 outline-none animate-in fade-in duration-300"
-						>
-							<DesktopHome
-								games={effectiveGames}
-								activeMobileGames={activeMobileGames}
-								expiredMobileGames={expiredMobileGames}
-								gridClassName={gridClassName}
-								renderGameCard={renderGameCard}
-								renderMobileGameCard={renderMobileGameCard}
-								copiedUrl={copiedUrl}
-								copyToClipboard={copyToClipboard}
-								isClaimAllMinimized={isClaimAllMinimized}
-								onMinimize={handleMinimize}
-								bulkCheckoutUrl={bulkCheckoutUrl}
-								totalClaimable={totalClaimable}
-								isMounted={isMounted}
-							/>
-						</TabsContent>
-						<TabsContent
-							value="current"
-							className="mt-0 outline-none animate-in fade-in duration-300"
-						>
-							<div className="lg:hidden">{renderContent('current')}</div>
-							<div className="hidden lg:block">
-								<SectionHeader icon={Monitor} title="Desktop" />
-								{renderContent('current')}
-							</div>
-						</TabsContent>
-						<TabsContent
-							value="mobile"
-							className="mt-0 outline-none animate-in fade-in duration-300"
-						>
-							<div className="lg:hidden">{renderContent('mobile')}</div>
-							<div className="hidden lg:block">
-								<SectionHeader
-									icon={Smartphone}
-									title="Mobile"
-									titleSuffix={
-										<Link
-											href="https://egdata.app"
-											target="_blank"
-											rel="noopener noreferrer"
-											className="text-xs font-medium text-muted-foreground transition-colors hover:text-epic-blue"
-										>
-											via egdata.app
-										</Link>
-									}
-								/>
-								{renderContent('mobile')}
-							</div>
-						</TabsContent>
-						<TabsContent
-							value="upcoming"
-							className="mt-0 outline-none animate-in fade-in duration-300"
-						>
-							<div className="lg:hidden">{renderContent('upcoming')}</div>
-							<div className="hidden lg:block">
-								<SectionHeader icon={Calendar} title="Upcoming" />
-								{renderContent('upcoming')}
-							</div>
-						</TabsContent>
-						<TabsContent
-							value="expired"
-							className="mt-0 outline-none animate-in fade-in duration-300"
-						>
-							<div className="lg:hidden">{renderContent('expired')}</div>
-							<div className="hidden lg:block">
-								<SectionHeader icon={XCircle} title="Expired Offers" />
-								{renderContent('expired')}
-							</div>
-						</TabsContent>
-					</div>
-				</main>
-			</Tabs>
-
-			{/* Game Details Sheet */}
-			<Sheet
-				open={selectedGame !== null}
-				onOpenChange={open => {
-					if (!open) {
-						setSelectedGame(null)
-					}
-				}}
-			>
-				<SheetContent
-					side="left"
-					className="w-full sm:max-w-md overflow-y-auto h-full flex flex-col gap-0 p-0 bg-background/95 backdrop-blur-md border-l"
-				>
-					<SheetTitle className="sr-only">
-						{selectedGame?.title || 'Game Details'}
-					</SheetTitle>
-					<SheetDescription className="sr-only">
-						{selectedGame
-							? `Details for ${selectedGame.title}`
-							: 'Details of the selected game'}
-					</SheetDescription>
-					{selectedGame &&
-						(() => {
-							const isMobile = isMobileGame(selectedGame)
-							const title = selectedGame.title
-							let sellerName = selectedGame.seller?.name
-							if (sellerName === 'Epic Dev Test Account') sellerName = undefined
-
-							let imageUrl = ''
-							let originalPriceFormatted = ''
-							let isMystery = false
-							let showDate = false
-							let dateLabel = ''
-							let dateValue: Date | null = null
-							let isCurrent = false
-							let isUpcoming = false
-							let isExpired = false
-							let storeUrl = ''
-							let pageSlug: string | null = null
-							let isValidPageSlug = false
-
-							if (isMobile) {
-								const mg = selectedGame as MobileGame
-								imageUrl = mg.imageUrl
-								isExpired = Boolean(mg.promoEndDate) && new Date(mg.promoEndDate) <= now
-								if (mg.originalPrice > 0) {
-									originalPriceFormatted = formatMobileGamePrice(mg)
-								}
-								if (mg.promoEndDate) {
-									showDate = true
-									dateValue = new Date(mg.promoEndDate)
-									dateLabel = isExpired ? 'Ended' : 'Ends'
-								}
-							} else {
-								const game = selectedGame as GameItem
-								isMystery = isMysteryGame(game)
-								imageUrl = getPreferredGameImageUrl(game) || ''
-
-								const linkMeta = getGameLinkMeta(game)
-								storeUrl = linkMeta.browserUrl || ''
-								pageSlug = linkMeta.pageSlug ?? null
-								isValidPageSlug = linkMeta.isValidPageSlug
-
-								isCurrent = effectiveGames.currentGames.some(g => g.id === game.id)
-								isUpcoming = effectiveGames.nextGames.some(g => g.id === game.id)
-
-								if (game.price?.totalPrice?.originalPrice > 0) {
-									originalPriceFormatted = game.price.totalPrice.fmtPrice.originalPrice
-								}
-
-								if (isCurrent) {
-									const promo =
-										game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0]
-									if (promo) {
-										showDate = true
-										dateValue = new Date(promo.endDate)
-										dateLabel = 'Ends'
-									}
-								} else if (isUpcoming) {
-									const promo =
-										game.promotions?.upcomingPromotionalOffers?.[0]
-											?.promotionalOffers?.[0]
-									if (promo) {
-										showDate = true
-										dateValue = new Date(promo.startDate)
-										dateLabel = 'Starts'
-									}
-								}
-							}
-
-							const formattedDate = dateValue
-								? dateValue.toLocaleDateString('en-US', {
-										weekday: 'short',
-										month: 'short',
-										day: 'numeric',
-										hour: 'numeric',
-										minute: '2-digit',
-									})
-								: ''
-
-							return (
-								<div className="flex flex-col min-h-full">
-									{/* Image Header */}
-									<div className="relative w-full aspect-video bg-muted overflow-hidden shrink-0">
-										{imageUrl ? (
-											<Image
-												src={imageUrl}
-												width={1280}
-												height={720}
-												alt={title}
-												className="w-full h-full object-cover"
-												priority
-											/>
-										) : (
-											<div className="flex h-full w-full items-center justify-center bg-epic-dark-blue">
-												<Gift className="size-16 text-epic-blue/50" />
-											</div>
-										)}
-										<div className="absolute inset-0 bg-linear-to-t from-background via-background/10 to-transparent" />
-
-										{/* Top Badge */}
-										<div className="absolute top-4 left-4 z-10 flex gap-2">
-											{!isMobile && isUpcoming && (
-												<span className="rounded-md bg-black/60 backdrop-blur-md px-2 py-0.5 text-xs font-bold text-white">
-													UPCOMING
-												</span>
-											)}
-											{isMobile && (
-												<span className="rounded-md bg-black/60 backdrop-blur-md px-2 py-0.5 text-xs font-bold text-white">
-													MOBILE
-												</span>
-											)}
-											{isExpired && (
-												<span className="rounded-md bg-red-600/90 backdrop-blur-md px-2 py-0.5 text-xs font-bold text-white">
-													EXPIRED
-												</span>
-											)}
-										</div>
-									</div>
-
-									{/* Content Body */}
-									<div className="flex-1 p-6 space-y-6">
-										<div className="space-y-1">
-											{sellerName && (
-												<p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-													{sellerName}
-												</p>
-											)}
-											<h2 className="text-2xl font-extrabold tracking-tight leading-tight">
-												{title}
-											</h2>
-										</div>
-
-										{/* Price Section */}
-										<div className="flex flex-col items-start gap-2">
-											{isUpcoming ? (
-												<span className="text-lg font-bold">Upcoming Free Offer</span>
-											) : isExpired ? (
-												<span className="text-lg font-bold text-red-500">
-													Offer Expired
-												</span>
-											) : (
-												<span className="rounded-md bg-epic-blue px-2.5 py-1 text-xs font-extrabold text-white dark:text-black">
-													FREE
-												</span>
-											)}
-											<div className="flex items-center gap-1.5">
-												{!isMobile &&
-													!isCurrent &&
-													(selectedGame as GameItem).price.totalPrice.discountPrice !==
-														(selectedGame as GameItem).price.totalPrice.originalPrice && (
-														<span className="text-sm font-bold text-foreground">
-															{
-																(selectedGame as GameItem).price.totalPrice.fmtPrice
-																	.discountPrice
-															}
-														</span>
-													)}
-												{originalPriceFormatted && (
-													<span
-														className={`text-sm font-medium text-muted-foreground ${
-															isCurrent ||
-															(isMobile && !isExpired) ||
-															(!isMobile &&
-																(selectedGame as GameItem).price.totalPrice.discountPrice !==
-																	(selectedGame as GameItem).price.totalPrice.originalPrice)
-																? 'line-through'
-																: ''
-														}`}
-													>
-														{originalPriceFormatted}
-													</span>
-												)}
-											</div>
-										</div>
-
-										{/* Date with countdown */}
-										{showDate && dateValue && (
-											<div
-												className={`p-4 rounded-xl border flex flex-col gap-2 ${
-													dateLabel === 'Ends'
-														? 'bg-epic-blue/5 border-epic-blue/15'
-														: 'bg-black/5 dark:bg-white/5 border-muted'
-												}`}
-											>
-												<div className="flex items-center gap-2 text-sm font-semibold">
-													<Calendar className="size-4 text-epic-blue" />
-													<span className="text-foreground">
-														{dateLabel === 'Ends' ? 'Free until' : 'Available starting'}:{' '}
-														{formattedDate}
-													</span>
-												</div>
-												{!isExpired && (
-													<div className="flex items-center justify-between mt-1 pt-2 border-t border-muted/50">
-														<span className="text-xs text-muted-foreground">
-															Time remaining:
-														</span>
-														<TimeDisplay
-															date={dateValue}
-															type={dateLabel === 'Ends' ? 'end' : 'start'}
-															onExpired={handleExpired}
-															alwaysShowSeconds
-														/>
-													</div>
-												)}
-											</div>
-										)}
-
-										{/* Actions Section */}
-										<div className="space-y-4 pt-4 border-t">
-											{isMystery && !isUpcoming ? (
-												<div className="space-y-4">
-													{/* Mystery Banner */}
-													<div className="p-4 rounded-xl border-amber-500/20 border-3 bg-amber-500/5 text-xs leading-relaxed space-y-1.5 shadow-sm">
-														<div className="font-bold flex items-center gap-2 text-sm dark:text-amber-400 text-amber-800 dark:text-amber-250">
-															<AlertTriangle className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
-															<span>Unable to generate checkout link</span>
-														</div>
-														<p className="text-amber-700 dark:text-amber-300/90 pl-6 leading-normal">
-															This was a mystery game and cannot automatically make a checkout
-															link. Checkout links will become active when the mystery game
-															period is over.
-														</p>
-													</div>
-
-													{/* Disabled buttons */}
-													<Button
-														disabled
-														className="w-full flex items-center gap-2 py-6 font-bold"
-													>
-														<ShoppingCart className="size-5" /> Claim Game
-													</Button>
-													<Button
-														disabled
-														variant="outline"
-														className="w-full flex items-center gap-2 py-6"
-													>
-														<Copy className="size-4" /> Checkout Link
-													</Button>
-
-													{/* Store Page / Launcher buttons */}
-													{(isValidPageSlug && pageSlug) || storeUrl ? (
-														<div className="flex gap-3 w-full">
-															{isValidPageSlug && pageSlug && (
-																<Button
-																	asChild
-																	variant="secondary"
-																	className="flex-1 flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] bg-epic-blue/5 hover:bg-epic-blue/10 text-epic-blue dark:text-epic-blue dark:hover:bg-epic-blue/20 border border-epic-blue/20"
-																>
-																	<a
-																		href={`com.epicgames.launcher://store/p/${pageSlug}`}
-																		rel="noopener noreferrer"
-																	>
-																		<ExternalLink className="size-4 fill-current" /> Open in
-																		Launcher
-																	</a>
-																</Button>
-															)}
-
-															<Button
-																asChild
-																variant="secondary"
-																className="flex-1 flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-															>
-																<a
-																	href={
-																		storeUrl || 'https://store.epicgames.com/en-US/free-games'
-																	}
-																	target="_blank"
-																	rel="noopener noreferrer"
-																>
-																	<ExternalLink className="size-4" /> Store Page
-																</a>
-															</Button>
-														</div>
-													) : (
-														<Button
-															asChild
-															variant="secondary"
-															className="w-full flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-														>
-															<a
-																href="https://store.epicgames.com/en-US/free-games"
-																target="_blank"
-																rel="noopener noreferrer"
-															>
-																<ExternalLink className="size-4" /> Store Page
-															</a>
-														</Button>
-													)}
-												</div>
-											) : isMobile ? (
-												// Mobile offers
-												(() => {
-													const mg = selectedGame as MobileGame
-													const iosCheckoutUrl = getMobileCheckoutUrlForPlatform(mg, 'ios')
-													const androidCheckoutUrl = getMobileCheckoutUrlForPlatform(
-														mg,
-														'android',
-													)
-													const combinedCheckoutUrl = getMobileCheckoutUrl(mg)
-													const hasBoth = Boolean(mg.iosOffer && mg.androidOffer)
-
-													if (isExpired) {
-														return (
-															<div className="text-center p-4 text-sm text-muted-foreground">
-																This mobile promotion has ended and cannot be claimed.
-															</div>
-														)
-													}
-
-													return (
-														<div className="space-y-4">
-															{hasBoth && combinedCheckoutUrl && (
-																<div className="p-4 rounded-xl border bg-epic-blue/5 border-epic-blue/15 space-y-3">
-																	<div>
-																		<h4 className="font-extrabold text-sm text-epic-blue flex items-center gap-1.5">
-																			<ShoppingCart className="size-4" /> iOS & Android Bundle
-																		</h4>
-																		<p className="text-xs text-muted-foreground mt-0.5">
-																			Claim both platforms in a single transaction.
-																		</p>
-																	</div>
-																	<div className="flex gap-2">
-																		<Button
-																			asChild
-																			className="flex-1 bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black font-bold py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-																		>
-																			<a
-																				href={combinedCheckoutUrl}
-																				target="_blank"
-																				rel="noopener noreferrer"
-																			>
-																				<ExternalLink className="size-4" /> Claim Game
-																			</a>
-																		</Button>
-																		<Button
-																			variant="outline"
-																			className={`flex-1 py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
-																				copiedUrl === combinedCheckoutUrl
-																					? 'border-green-500 text-green-500 bg-green-500/10'
-																					: ''
-																			}`}
-																			onClick={() => copyToClipboard(combinedCheckoutUrl)}
-																		>
-																			{copiedUrl === combinedCheckoutUrl ? (
-																				<>
-																					<Check className="size-4 animate-in zoom-in duration-150" />
-																					<span>Copied!</span>
-																				</>
-																			) : (
-																				<>
-																					<Copy className="size-4" />
-																					<span>Checkout Link</span>
-																				</>
-																			)}
-																		</Button>
-																	</div>
-																</div>
-															)}
-
-															{mg.iosOffer && (
-																<div className="p-4 rounded-xl border bg-secondary/30 space-y-3">
-																	<div className="flex justify-between items-center">
-																		<h4 className="font-extrabold text-sm flex items-center gap-1.5">
-																			<Smartphone className="size-4 text-muted-foreground" /> iOS
-																			Version
-																		</h4>
-																		{mg.iosOffer.pageSlug && (
-																			<a
-																				href={`https://store.epicgames.com/p/${mg.iosOffer.pageSlug}`}
-																				target="_blank"
-																				rel="noopener noreferrer"
-																				className="text-xs text-epic-blue hover:underline flex items-center gap-1"
-																			>
-																				Store Page <ExternalLink className="size-3" />
-																			</a>
-																		)}
-																	</div>
-																	<div className="flex gap-2">
-																		<Button
-																			asChild
-																			className="flex-1 bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black font-bold py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-																		>
-																			<a
-																				href={iosCheckoutUrl ?? '#'}
-																				target="_blank"
-																				rel="noopener noreferrer"
-																			>
-																				<ExternalLink className="size-4" /> Claim Game
-																			</a>
-																		</Button>
-																		<Button
-																			variant="outline"
-																			className={`flex-1 py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
-																				copiedUrl === iosCheckoutUrl
-																					? 'border-green-500 text-green-500 bg-green-500/10'
-																					: ''
-																			}`}
-																			onClick={() =>
-																				iosCheckoutUrl && copyToClipboard(iosCheckoutUrl)
-																			}
-																		>
-																			{copiedUrl === iosCheckoutUrl ? (
-																				<>
-																					<Check className="size-4 animate-in zoom-in duration-150" />
-																					<span>Copied!</span>
-																				</>
-																			) : (
-																				<>
-																					<Copy className="size-4" />
-																					<span>Checkout Link</span>
-																				</>
-																			)}
-																		</Button>
-																	</div>
-																</div>
-															)}
-
-															{mg.androidOffer && (
-																<div className="p-4 rounded-xl border bg-secondary/30 space-y-3">
-																	<div className="flex justify-between items-center">
-																		<h4 className="font-extrabold text-sm flex items-center gap-1.5">
-																			<Smartphone className="size-4 text-muted-foreground" />{' '}
-																			Android Version
-																		</h4>
-																		{mg.androidOffer.pageSlug && (
-																			<a
-																				href={`https://store.epicgames.com/p/${mg.androidOffer.pageSlug}`}
-																				target="_blank"
-																				rel="noopener noreferrer"
-																				className="text-xs text-epic-blue hover:underline flex items-center gap-1"
-																			>
-																				Store Page <ExternalLink className="size-3" />
-																			</a>
-																		)}
-																	</div>
-																	<div className="flex gap-2">
-																		<Button
-																			asChild
-																			className="flex-1 bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black font-bold py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-																		>
-																			<a
-																				href={androidCheckoutUrl ?? '#'}
-																				target="_blank"
-																				rel="noopener noreferrer"
-																			>
-																				<ExternalLink className="size-4" /> Claim Game
-																			</a>
-																		</Button>
-																		<Button
-																			variant="outline"
-																			className={`flex-1 py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
-																				copiedUrl === androidCheckoutUrl
-																					? 'border-green-500 text-green-500 bg-green-500/10'
-																					: ''
-																			}`}
-																			onClick={() =>
-																				androidCheckoutUrl && copyToClipboard(androidCheckoutUrl)
-																			}
-																		>
-																			{copiedUrl === androidCheckoutUrl ? (
-																				<>
-																					<Check className="size-4 animate-in zoom-in duration-150" />
-																					<span>Copied!</span>
-																				</>
-																			) : (
-																				<>
-																					<Copy className="size-4" />
-																					<span>Checkout Link</span>
-																				</>
-																			)}
-																		</Button>
-																	</div>
-																</div>
-															)}
-														</div>
-													)
-												})()
-											) : (
-												// PC offers
-												(() => {
-													const game = selectedGame as GameItem
-													const checkoutUrl = getCheckoutUrl(game)
-													const {
-														browserUrl: storeUrl,
-														pageSlug,
-														isValidPageSlug,
-													} = getGameLinkMeta(game)
-
-													return (
-														<div className="space-y-3">
-															{isCurrent && checkoutUrl && (
-																<>
-																	<Button
-																		asChild
-																		className="w-full flex items-center justify-center gap-2 py-6 font-bold bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg"
-																	>
-																		<a
-																			href={checkoutUrl}
-																			target="_blank"
-																			rel="noopener noreferrer"
-																		>
-																			<ShoppingCart className="size-5" /> Claim Game
-																		</a>
-																	</Button>
-																	<Button
-																		variant="outline"
-																		className={`w-full flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
-																			copiedUrl === checkoutUrl
-																				? 'border-green-500 text-green-500 bg-green-500/10'
-																				: ''
-																		}`}
-																		onClick={() =>
-																			copyToClipboard(copiedUrl === checkoutUrl ? '' : checkoutUrl)
-																		}
-																	>
-																		{copiedUrl === checkoutUrl ? (
-																			<>
-																				<Check className="size-4 animate-in zoom-in duration-150" />
-																				<span>Copied!</span>
-																			</>
-																		) : (
-																			<>
-																				<Copy className="size-4" />
-																				<span>Checkout Link</span>
-																			</>
-																		)}
-																	</Button>
-																</>
-															)}
-
-															{((isValidPageSlug && pageSlug) || storeUrl) && (
-																<div className="flex gap-3 w-full">
-																	{isValidPageSlug && pageSlug && (
-																		<Button
-																			asChild
-																			variant="secondary"
-																			className="flex-1 flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] bg-epic-blue/5 hover:bg-epic-blue/10 text-epic-blue dark:text-epic-blue dark:hover:bg-epic-blue/20 border border-epic-blue/20"
-																		>
-																			<a
-																				href={`com.epicgames.launcher://store/p/${pageSlug}`}
-																				rel="noopener noreferrer"
-																			>
-																				<ExternalLink className="size-4 fill-current" /> Open in
-																				Launcher
-																			</a>
-																		</Button>
-																	)}
-
-																	{storeUrl && (
-																		<Button
-																			asChild
-																			variant="secondary"
-																			className="flex-1 flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-																		>
-																			<a href={storeUrl} target="_blank" rel="noopener noreferrer">
-																				<ExternalLink className="size-4" /> Store Page
-																			</a>
-																		</Button>
-																	)}
-																</div>
-															)}
-														</div>
-													)
-												})()
-											)}
-										</div>
-									</div>
-								</div>
-							)
-						})()}
-				</SheetContent>
-			</Sheet>
-
-			<footer className="w-full px-4 border-t border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black text-center py-4 mt-auto shrink-0">
-				<div className="text-sm text-epic-gray dark:text-muted-foreground">
-					2026,{' '}
-					<Link href="https://wolfey.me" target="_blank">
-						wolfey.me
-					</Link>
-				</div>
-				<div className="mt-1 text-[11px] text-epic-gray dark:text-muted-foreground">
-					This is not affiliated by any means with Epic Games, Inc.
-				</div>
-				<div className="mt-2 flex items-center justify-center gap-1 text-epic-gray dark:text-muted-foreground">
-					<Theme />
-					<Button variant="ghost" size="icon" className="rounded-full" asChild>
-						<Link href="https://github.com/Wufler/EGFree" target="_blank">
-							<Github className="size-5 dark:invert-35 invert" />
-						</Link>
-					</Button>
-				</div>
-			</footer>
-		</div>
-	)
+  const router = useRouter();
+  const hasToastShown = useRef(false);
+  const [activeTab, setActiveTab] = useState("home");
+
+  const mobileGames = mobile;
+  const effectiveGames = useMemo(() => getEffectiveGames(games), [games]);
+
+  const now = new Date();
+  const activeMobileGames = mobileGames.filter(
+    (g) => !g.promoEndDate || new Date(g.promoEndDate) > now,
+  );
+  const expiredMobileGames = mobileGames.filter(
+    (g) => g.promoEndDate && new Date(g.promoEndDate) <= now,
+  );
+
+  const [selectedGame, setSelectedGame] = useState<
+    GameItem | MobileGame | null
+  >(() => {
+    if (!initialGameId) return null;
+    const allGames = [
+      ...games.currentGames,
+      ...games.nextGames,
+      ...mobileGames,
+    ] as (GameItem | MobileGame)[];
+    const foundGame = allGames.find((g) => g.id === initialGameId);
+    return foundGame || null;
+  });
+  const [copiedUrl, setCopiedUrl] = useState<string>("");
+  const [isClaimAllMinimized, setIsClaimAllMinimized] =
+    useState<boolean>(false);
+  const [isMounted, setIsMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsMounted(true);
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("claimAllMinimized");
+        if (saved === "true") {
+          setIsClaimAllMinimized(true);
+        }
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const current = params.get("offer");
+    const next = selectedGame?.id || null;
+
+    if (current !== next) {
+      if (next) params.set("offer", next);
+      else params.delete("offer");
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.pushState(null, "", newUrl.replace(/\?$/, ""));
+    }
+  }, [selectedGame]);
+
+  useEffect(() => {
+    const handleState = () => {
+      const id = new URLSearchParams(window.location.search).get("offer");
+      const all = [
+        ...games.currentGames,
+        ...games.nextGames,
+        ...mobileGames,
+      ] as (GameItem | MobileGame)[];
+      setSelectedGame(all.find((g) => g.id === id) || null);
+    };
+    window.addEventListener("popstate", handleState);
+    return () => window.removeEventListener("popstate", handleState);
+  }, [games, mobileGames]);
+
+  const handleMinimize = (minimized: boolean) => {
+    setIsClaimAllMinimized(minimized);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("claimAllMinimized", String(minimized));
+    }
+  };
+
+  const bulkCheckoutUrl = useMemo(() => {
+    return buildBulkCheckoutUrl(effectiveGames.currentGames, activeMobileGames);
+  }, [effectiveGames.currentGames, activeMobileGames]);
+
+  const totalClaimable = useMemo(() => {
+    return (
+      effectiveGames.currentGames.filter(
+        (g) => !isMysteryGame(g) && g.namespace && g.id,
+      ).length +
+      activeMobileGames.reduce(
+        (acc, mg) => acc + (mg.iosOffer || mg.androidOffer ? 1 : 0),
+        0,
+      )
+    );
+  }, [effectiveGames.currentGames, activeMobileGames]);
+
+  const copyToClipboard = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedUrl(url);
+      setTimeout(() => setCopiedUrl(""), 2000);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to copy URL");
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const checkDesktop = () => {
+      const isLg = window.innerWidth >= 1024;
+      if (isLg && !localStorage.getItem("tabState")) {
+        setActiveTab("home");
+      }
+    };
+
+    checkDesktop();
+
+    const handleResize = () => checkDesktop();
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  const handleExpired = useCallback(() => {
+    if (!hasToastShown.current) {
+      hasToastShown.current = true;
+      toast.promise(
+        new Promise((resolve) => {
+          setTimeout(() => {
+            router.refresh();
+            resolve(true);
+          }, 5000);
+        }),
+        {
+          loading: "Offers updating...",
+          success: "Offers updated!",
+          error: "Failed to update. Please refresh.",
+        },
+      );
+    }
+  }, [router]);
+
+  const renderGameCard = (game: GameItem, isCurrentGame: boolean) => {
+    const isAddOn = game.offerType === "ADD_ON";
+    const gameImageUrl = getPreferredGameImageUrl(game);
+
+    const getGameDate = (game: GameItem) => {
+      if (isCurrentGame) {
+        return new Date(
+          game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0]
+            ?.endDate ?? "",
+        );
+      }
+      return new Date(
+        game.promotions?.upcomingPromotionalOffers?.[0]?.promotionalOffers?.[0]
+          ?.startDate ?? "",
+      );
+    };
+
+    const gameDate = getGameDate(game);
+
+    const cardContent = (
+      <div className="h-full border-0 bg-transparent shadow-none group overflow-hidden">
+        <div className="relative aspect-video overflow-hidden rounded-xl bg-muted shadow-sm hover:shadow-md transition-all duration-300 ring-1 ring-black/5 dark:ring-white/10">
+          {isAddOn && (
+            <div className="absolute right-2 top-2 z-10 flex items-center rounded-md bg-black/60 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md">
+              ADD-ON
+            </div>
+          )}
+          {gameImageUrl ? (
+            <Image
+              src={gameImageUrl}
+              width={1280}
+              height={720}
+              priority
+              alt={game.title}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-epic-dark-blue">
+              <Gift className="size-20 text-epic-blue/50" />
+            </div>
+          )}
+
+          <div className="absolute inset-0 bg-linear-to-t dark:from-black/95 from-black/70 via-black/20 dark:via-black/30 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
+
+          <div className="absolute top-4 left-4 z-10">
+            <TimeDisplay
+              date={gameDate}
+              type={isCurrentGame ? "end" : "start"}
+              onExpired={handleExpired}
+            />
+          </div>
+
+          <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+            <div className="flex items-end justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <h3 className="truncate text-lg font-bold text-white group-hover:text-epic-blue transition-colors">
+                  {game.title}
+                </h3>
+                {game.seller?.name !== "Epic Dev Test Account" && (
+                  <p className="truncate text-sm text-gray-300">
+                    {game.seller?.name}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col items-end shrink-0">
+                {isCurrentGame && (
+                  <span className="rounded-md bg-epic-blue px-2 py-0.5 text-xs font-bold text-white dark:text-black shadow-sm">
+                    FREE
+                  </span>
+                )}
+                {game.price.totalPrice.originalPrice !== 0 && (
+                  <div className="mt-1 flex items-center gap-1.5">
+                    {!isCurrentGame &&
+                      game.price.totalPrice.discountPrice !==
+                        game.price.totalPrice.originalPrice && (
+                        <span className="text-sm font-bold text-white">
+                          {game.price.totalPrice.fmtPrice.discountPrice}
+                        </span>
+                      )}
+                    <span
+                      className={`text-xs font-medium text-gray-400 ${
+                        isCurrentGame ||
+                        game.price.totalPrice.discountPrice !==
+                          game.price.totalPrice.originalPrice
+                          ? "line-through"
+                          : ""
+                      }`}
+                    >
+                      {game.price.totalPrice.fmtPrice.originalPrice}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    return (
+      <button
+        type="button"
+        key={game.id}
+        className="w-full text-left h-full animate-in fade-in zoom-in-95 duration-300 block focus-visible:outline-hidden"
+        onClick={() => setSelectedGame(game)}
+      >
+        {cardContent}
+      </button>
+    );
+  };
+
+  const renderMobileGameCard = (game: MobileGame, isExpired = false) => {
+    const endDate = game.promoEndDate ? new Date(game.promoEndDate) : null;
+
+    const mobileTag =
+      game.iosOffer && game.androidOffer
+        ? "iOS & Android"
+        : game.iosOffer
+          ? "iOS"
+          : game.androidOffer
+            ? "Android"
+            : null;
+    const cardContent = (
+      <div className="h-full border-0 bg-transparent shadow-none group overflow-hidden">
+        <div className="relative aspect-video overflow-hidden rounded-xl bg-muted shadow-sm hover:shadow-md transition-all duration-300 ring-1 ring-black/5 dark:ring-white/10">
+          {mobileTag && (
+            <div className="absolute right-4 top-4 z-10 flex items-center rounded-md bg-black px-2 py-0.5 text-[10px] font-bold text-white">
+              {mobileTag}
+            </div>
+          )}
+          {game.imageUrl ? (
+            <Image
+              src={game.imageUrl}
+              width={1280}
+              height={720}
+              priority
+              alt={game.title}
+              className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+                isExpired ? "grayscale" : ""
+              }`}
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-epic-dark-blue">
+              <Gift className="size-20 text-epic-blue/50" />
+            </div>
+          )}
+
+          <div className="absolute inset-0 bg-linear-to-t dark:from-black/95 from-black/70 dark:via-black/30 via-black/20 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
+
+          {isExpired ? (
+            <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-bold bg-black text-white">
+              <CalendarOff className="size-3.5" />
+              <span>Ended</span>
+            </div>
+          ) : (
+            endDate && (
+              <div className="absolute top-4 left-4 z-10">
+                <TimeDisplay
+                  date={endDate}
+                  type="end"
+                  onExpired={handleExpired}
+                />
+              </div>
+            )
+          )}
+
+          <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+            <div className="flex items-end justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <h3 className="truncate text-lg font-bold text-white group-hover:text-epic-blue transition-colors">
+                  {game.title}
+                </h3>
+                {game.seller?.name &&
+                  game.seller.name !== "Epic Dev Test Account" && (
+                    <p className="truncate text-sm text-gray-300">
+                      {game.seller.name}
+                    </p>
+                  )}
+              </div>
+              <div className="flex flex-col items-end shrink-0">
+                {!isExpired && (
+                  <span className="rounded-md bg-epic-blue px-2 py-0.5 text-xs font-bold text-white dark:text-black shadow-sm">
+                    FREE
+                  </span>
+                )}
+                {game.originalPrice !== 0 && (
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <span
+                      className={`text-xs font-medium text-gray-400 ${
+                        !isExpired ? "line-through" : ""
+                      }`}
+                    >
+                      {formatMobileGamePrice(game)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    return (
+      <button
+        type="button"
+        key={game.id}
+        className="w-full text-left h-full animate-in fade-in zoom-in-95 duration-300 block focus-visible:outline-hidden"
+        onClick={() => setSelectedGame(game)}
+      >
+        {cardContent}
+      </button>
+    );
+  };
+
+  const totalFreeNow = effectiveGames.currentGames.length;
+  const isSingleGame =
+    totalFreeNow === 1 && effectiveGames.nextGames.length === 1;
+  const isTwoCurrentGames = totalFreeNow <= 2;
+  const isTwoUpcomingGames = effectiveGames.nextGames.length <= 2;
+
+  const gridClassName = `grid gap-4 ${
+    isSingleGame
+      ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2"
+      : isTwoCurrentGames && isTwoUpcomingGames
+        ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2"
+        : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+  }`;
+
+  const mobileTabTriggerClass =
+    "shrink-0 relative rounded-none py-3 px-3 sm:px-4 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-active:bg-transparent data-active:shadow-none data-active:after:bg-epic-blue text-sm font-medium data-active:text-epic-blue text-muted-foreground inline-flex items-center justify-center gap-2";
+
+  const desktopSidebarTriggerClass =
+    "w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground data-active:bg-accent dark:data-active:bg-accent data-active:text-epic-blue! dark:data-active:text-epic-blue! data-active:font-semibold h-auto";
+
+  const tabGridClass = "grid grid-cols-1 md:grid-cols-2 gap-4";
+
+  const isEmpty =
+    effectiveGames.currentGames.length === 0 &&
+    effectiveGames.nextGames.length === 0 &&
+    mobileGames.length === 0;
+
+  if (isEmpty) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <NoOffers />
+      </div>
+    );
+  }
+
+  const renderContent = (section: string) => {
+    switch (section) {
+      case "current":
+        return effectiveGames.currentGames.length > 0 ? (
+          <div className={tabGridClass}>
+            {effectiveGames.currentGames.map((game) =>
+              renderGameCard(game, true),
+            )}
+          </div>
+        ) : (
+          <NoOffers />
+        );
+      case "mobile":
+        return (
+          <div className={tabGridClass}>
+            {activeMobileGames.length > 0 &&
+              activeMobileGames.map((game) =>
+                renderMobileGameCard(game, false),
+              )}
+          </div>
+        );
+      case "upcoming":
+        return effectiveGames.nextGames.length > 0 ? (
+          <div className={tabGridClass}>
+            {effectiveGames.nextGames.map((game) =>
+              renderGameCard(game, false),
+            )}
+          </div>
+        ) : (
+          <NoOffers />
+        );
+      case "expired":
+        return expiredMobileGames.length > 0 ? (
+          <div className={tabGridClass}>
+            {expiredMobileGames.map((game) => renderMobileGameCard(game, true))}
+          </div>
+        ) : (
+          <NoOffers />
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="w-full min-w-0 flex-1 flex flex-col">
+      <header className="border-b border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black sm:px-8 px-4 shrink-0">
+        <div className="mx-auto flex h-12 sm:h-18 items-center justify-between py-4 sm:py-0 gap-4 md:gap-0">
+          <Link
+            href="https://store.epicgames.com/free-games"
+            target="_blank"
+            className="group flex items-center text-center"
+          >
+            <h1 className="hidden sm:block text-xl sm:text-2xl font-bold text-epic-blue transition-colors duration-200 group-hover:text-foreground dark:group-hover:text-white">
+              Epic Games
+            </h1>
+            <div className="hidden sm:block ml-0 sm:ml-4 h-6 w-px bg-gray-200 dark:bg-white/10" />
+            <span className="ml-0 sm:ml-4 text-base sm:text-lg font-medium dark:text-white text-epic-gray">
+              Free Games
+            </span>
+          </Link>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Json games={games} mobile={mobile} />
+            {/* Minimized Cart Button */}
+            {isClaimAllMinimized && bulkCheckoutUrl && totalClaimable > 0 && (
+              <div className="animate-in fade-in zoom-in duration-300">
+                <Popover>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        size="icon"
+                        className="relative size-8 sm:size-10 rounded-full bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black shadow-sm flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+                      >
+                        <ShoppingCart className="size-4 sm:size-5" />
+                      </Button>
+                    }
+                  />
+                  <PopoverContent
+                    align="end"
+                    side="bottom"
+                    className="w-64 p-3 bg-background/95 backdrop-blur-md border border-epic-blue/20 rounded-xl shadow-xl z-50"
+                  >
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="font-extrabold text-sm text-epic-blue flex items-center gap-1.5">
+                          <ShoppingCart className="size-4" /> Claim All Free
+                          Games
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {totalClaimable} game{totalClaimable > 1 ? "s" : ""}{" "}
+                          available to claim.
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-2 pt-2 border-t border-muted/50">
+                        <a
+                          href={bulkCheckoutUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cn(
+                            buttonVariants({ size: "sm" }),
+                            "w-full flex items-center justify-center gap-2 bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black font-bold py-2 transition-all duration-200",
+                          )}
+                        >
+                          <ExternalLink className="size-4" />
+                          <span>Claim All</span>
+                        </a>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyToClipboard(bulkCheckoutUrl)}
+                          className={`w-full flex items-center justify-center gap-2 py-2 transition-all duration-200 ${
+                            copiedUrl === bulkCheckoutUrl
+                              ? "border-green-500 text-green-500 bg-green-500/10"
+                              : ""
+                          }`}
+                        >
+                          {copiedUrl === bulkCheckoutUrl ? (
+                            <>
+                              <Check className="size-4 animate-in zoom-in duration-150" />
+                              <span>Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="size-4" />
+                              <span>Checkout Link</span>
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleMinimize(false)}
+                          className="w-full flex items-center justify-center gap-2 text-xs py-1 text-muted-foreground hover:text-foreground"
+                        >
+                          <span>Expand to Banner</span>
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+      <Tabs
+        defaultValue="home"
+        value={activeTab}
+        onValueChange={(value) => {
+          setActiveTab(value);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("tabState", value);
+          }
+        }}
+        className="w-full min-h-0 flex flex-col gap-0 flex-1 lg:grid lg:grid-cols-[16rem_1fr]"
+      >
+        {/* Mobile Tabs */}
+        <div className="lg:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b">
+          <TabsList className="w-full h-auto rounded-none bg-transparent p-0 flex flex-nowrap justify-center overflow-x-auto [&::-webkit-scrollbar]:h-0">
+            <TabsTrigger value="home" className={mobileTabTriggerClass}>
+              <HomeIcon className="size-4" />
+              {activeTab === "home" && <span>Home</span>}
+            </TabsTrigger>
+            <TabsTrigger value="current" className={mobileTabTriggerClass}>
+              <Monitor className="size-4" />
+              {activeTab === "current" && <span>Desktop</span>}
+            </TabsTrigger>
+            {mobileGames.length > 0 && (
+              <TabsTrigger value="mobile" className={mobileTabTriggerClass}>
+                <Smartphone className="size-4" />
+                {activeTab === "mobile" && <span>Mobile</span>}
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="upcoming" className={mobileTabTriggerClass}>
+              <Calendar className="size-4" />
+              {activeTab === "upcoming" && <span>Upcoming</span>}
+            </TabsTrigger>
+            {expiredMobileGames.length > 0 && (
+              <TabsTrigger value="expired" className={mobileTabTriggerClass}>
+                <XCircle className="size-4" />
+                {activeTab === "expired" && <span>Expired</span>}
+              </TabsTrigger>
+            )}
+          </TabsList>
+        </div>
+
+        {/* Desktop Sidebar */}
+        <aside className="hidden lg:flex lg:flex-col lg:self-stretch w-64 border-r bg-background/50">
+          <div className="p-6 lg:sticky lg:top-0 lg:max-h-[calc(100dvh-5rem)] lg:overflow-y-auto">
+            <TabsList className="flex flex-col h-auto w-full bg-transparent p-0 space-y-1">
+              <TabsTrigger value="home" className={desktopSidebarTriggerClass}>
+                <HomeIcon className="size-4" /> Home
+              </TabsTrigger>
+              <TabsTrigger
+                value="current"
+                className={desktopSidebarTriggerClass}
+              >
+                <Monitor className="size-4" /> Desktop
+              </TabsTrigger>
+              {mobileGames.length > 0 && (
+                <TabsTrigger
+                  value="mobile"
+                  className={desktopSidebarTriggerClass}
+                >
+                  <Smartphone className="size-4" /> Mobile
+                </TabsTrigger>
+              )}
+              {expiredMobileGames.length > 0 && (
+                <TabsTrigger
+                  value="expired"
+                  className={desktopSidebarTriggerClass}
+                >
+                  <XCircle className="size-4" /> Expired
+                </TabsTrigger>
+              )}
+              <TabsTrigger
+                value="upcoming"
+                className={desktopSidebarTriggerClass}
+              >
+                <Calendar className="size-4" /> Upcoming
+              </TabsTrigger>
+            </TabsList>
+          </div>
+        </aside>
+
+        {/* Content Area */}
+        <main className="min-w-0 flex-1 p-4 lg:p-8 overflow-x-hidden">
+          <div className="max-w-6xl mx-auto">
+            <TabsContent
+              value="home"
+              className="mt-0 outline-none animate-in fade-in duration-300"
+            >
+              <DesktopHome
+                games={effectiveGames}
+                activeMobileGames={activeMobileGames}
+                expiredMobileGames={expiredMobileGames}
+                gridClassName={gridClassName}
+                renderGameCard={renderGameCard}
+                renderMobileGameCard={renderMobileGameCard}
+                copiedUrl={copiedUrl}
+                copyToClipboard={copyToClipboard}
+                isClaimAllMinimized={isClaimAllMinimized}
+                onMinimize={handleMinimize}
+                bulkCheckoutUrl={bulkCheckoutUrl}
+                totalClaimable={totalClaimable}
+                isMounted={isMounted}
+              />
+            </TabsContent>
+            <TabsContent
+              value="current"
+              className="mt-0 outline-none animate-in fade-in duration-300"
+            >
+              <div className="lg:hidden">{renderContent("current")}</div>
+              <div className="hidden lg:block">
+                <SectionHeader icon={Monitor} title="Desktop" />
+                {renderContent("current")}
+              </div>
+            </TabsContent>
+            <TabsContent
+              value="mobile"
+              className="mt-0 outline-none animate-in fade-in duration-300"
+            >
+              <div className="lg:hidden">{renderContent("mobile")}</div>
+              <div className="hidden lg:block">
+                <SectionHeader
+                  icon={Smartphone}
+                  title="Mobile"
+                  titleSuffix={
+                    <Link
+                      href="https://egdata.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-medium text-muted-foreground transition-colors hover:text-epic-blue"
+                    >
+                      via egdata.app
+                    </Link>
+                  }
+                />
+                {renderContent("mobile")}
+              </div>
+            </TabsContent>
+            <TabsContent
+              value="upcoming"
+              className="mt-0 outline-none animate-in fade-in duration-300"
+            >
+              <div className="lg:hidden">{renderContent("upcoming")}</div>
+              <div className="hidden lg:block">
+                <SectionHeader icon={Calendar} title="Upcoming" />
+                {renderContent("upcoming")}
+              </div>
+            </TabsContent>
+            <TabsContent
+              value="expired"
+              className="mt-0 outline-none animate-in fade-in duration-300"
+            >
+              <div className="lg:hidden">{renderContent("expired")}</div>
+              <div className="hidden lg:block">
+                <SectionHeader icon={XCircle} title="Expired Offers" />
+                {renderContent("expired")}
+              </div>
+            </TabsContent>
+          </div>
+        </main>
+      </Tabs>
+
+      {/* Game Details Sheet */}
+      <Sheet
+        open={selectedGame !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedGame(null);
+          }
+        }}
+      >
+        <SheetContent
+          side="left"
+          className="w-full max-w-none overflow-y-auto h-full flex flex-col gap-0 p-0 bg-background"
+        >
+          <SheetTitle className="sr-only">
+            {selectedGame?.title || "Game Details"}
+          </SheetTitle>
+          <SheetDescription className="sr-only">
+            {selectedGame
+              ? `Details for ${selectedGame.title}`
+              : "Details of the selected game"}
+          </SheetDescription>
+          {selectedGame &&
+            (() => {
+              const isMobile = isMobileGame(selectedGame);
+              const title = selectedGame.title;
+              let sellerName = selectedGame.seller?.name;
+              if (sellerName === "Epic Dev Test Account")
+                sellerName = undefined;
+
+              let imageUrl = "";
+              let originalPriceFormatted = "";
+              let isMystery = false;
+              let showDate = false;
+              let dateLabel = "";
+              let dateValue: Date | null = null;
+              let isCurrent = false;
+              let isUpcoming = false;
+              let isExpired = false;
+              let storeUrl = "";
+              let pageSlug: string | null = null;
+              let isValidPageSlug = false;
+
+              if (isMobile) {
+                const mg = selectedGame as MobileGame;
+                imageUrl = mg.imageUrl;
+                isExpired =
+                  Boolean(mg.promoEndDate) && new Date(mg.promoEndDate) <= now;
+                if (mg.originalPrice > 0) {
+                  originalPriceFormatted = formatMobileGamePrice(mg);
+                }
+                if (mg.promoEndDate) {
+                  showDate = true;
+                  dateValue = new Date(mg.promoEndDate);
+                  dateLabel = isExpired ? "Ended" : "Ends";
+                }
+              } else {
+                const game = selectedGame as GameItem;
+                isMystery = isMysteryGame(game);
+                imageUrl = getPreferredGameImageUrl(game) || "";
+
+                const linkMeta = getGameLinkMeta(game);
+                storeUrl = linkMeta.browserUrl || "";
+                pageSlug = linkMeta.pageSlug ?? null;
+                isValidPageSlug = linkMeta.isValidPageSlug;
+
+                isCurrent = effectiveGames.currentGames.some(
+                  (g) => g.id === game.id,
+                );
+                isUpcoming = effectiveGames.nextGames.some(
+                  (g) => g.id === game.id,
+                );
+
+                if (game.price?.totalPrice?.originalPrice > 0) {
+                  originalPriceFormatted =
+                    game.price.totalPrice.fmtPrice.originalPrice;
+                }
+
+                if (isCurrent) {
+                  const promo =
+                    game.promotions?.promotionalOffers?.[0]
+                      ?.promotionalOffers?.[0];
+                  if (promo) {
+                    showDate = true;
+                    dateValue = new Date(promo.endDate);
+                    dateLabel = "Ends";
+                  }
+                } else if (isUpcoming) {
+                  const promo =
+                    game.promotions?.upcomingPromotionalOffers?.[0]
+                      ?.promotionalOffers?.[0];
+                  if (promo) {
+                    showDate = true;
+                    dateValue = new Date(promo.startDate);
+                    dateLabel = "Starts";
+                  }
+                }
+              }
+
+              const formattedDate = dateValue
+                ? dateValue.toLocaleDateString("en-US", {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })
+                : "";
+
+              return (
+                <div className="flex flex-col min-h-full">
+                  {/* Image Header */}
+                  <div className="relative w-full aspect-video bg-muted overflow-hidden shrink-0">
+                    {imageUrl ? (
+                      <Image
+                        src={imageUrl}
+                        width={1280}
+                        height={720}
+                        alt={title}
+                        className="w-full h-full object-cover"
+                        priority
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-epic-dark-blue">
+                        <Gift className="size-16 text-epic-blue/50" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-linear-to-t from-background via-background/10 to-transparent" />
+
+                    {/* Top Badge */}
+                    <div className="absolute top-4 left-4 z-10 flex gap-2">
+                      {!isMobile && isUpcoming && (
+                        <span className="rounded-md bg-black/60 backdrop-blur-md px-2 py-0.5 text-xs font-bold text-white">
+                          UPCOMING
+                        </span>
+                      )}
+                      {isMobile && (
+                        <span className="rounded-md bg-black/60 backdrop-blur-md px-2 py-0.5 text-xs font-bold text-white">
+                          MOBILE
+                        </span>
+                      )}
+                      {isExpired && (
+                        <span className="rounded-md bg-red-600/90 backdrop-blur-md px-2 py-0.5 text-xs font-bold text-white">
+                          EXPIRED
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Content Body */}
+                  <div className="flex-1 p-6 space-y-6">
+                    <div className="space-y-1">
+                      {sellerName && (
+                        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                          {sellerName}
+                        </p>
+                      )}
+                      <h2 className="text-2xl font-extrabold tracking-tight leading-tight">
+                        {title}
+                      </h2>
+                    </div>
+
+                    {/* Price Section */}
+                    <div className="flex flex-col items-start gap-2">
+                      {isUpcoming ? (
+                        <span className="text-lg font-bold">
+                          Upcoming Free Offer
+                        </span>
+                      ) : isExpired ? (
+                        <span className="text-lg font-bold text-red-500">
+                          Offer Expired
+                        </span>
+                      ) : (
+                        <span className="rounded-md bg-epic-blue px-2.5 py-1 text-xs font-extrabold text-white dark:text-black">
+                          FREE
+                        </span>
+                      )}
+                      <div className="flex items-center gap-1.5">
+                        {!isMobile &&
+                          !isCurrent &&
+                          (selectedGame as GameItem).price.totalPrice
+                            .discountPrice !==
+                            (selectedGame as GameItem).price.totalPrice
+                              .originalPrice && (
+                            <span className="text-sm font-bold text-foreground">
+                              {
+                                (selectedGame as GameItem).price.totalPrice
+                                  .fmtPrice.discountPrice
+                              }
+                            </span>
+                          )}
+                        {originalPriceFormatted && (
+                          <span
+                            className={`text-sm font-medium text-muted-foreground ${
+                              isCurrent ||
+                              (isMobile && !isExpired) ||
+                              (
+                                !isMobile &&
+                                  (selectedGame as GameItem).price.totalPrice
+                                    .discountPrice !==
+                                    (selectedGame as GameItem).price.totalPrice
+                                      .originalPrice
+                              )
+                                ? "line-through"
+                                : ""
+                            }`}
+                          >
+                            {originalPriceFormatted}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Date with countdown */}
+                    {showDate && dateValue && (
+                      <div
+                        className={`p-4 rounded-xl border flex flex-col gap-2 ${
+                          dateLabel === "Ends"
+                            ? "bg-epic-blue/5 border-epic-blue/15"
+                            : "bg-black/5 dark:bg-white/5 border-muted"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 text-sm font-semibold">
+                          <Calendar className="size-4 text-epic-blue" />
+                          <span className="text-foreground">
+                            {dateLabel === "Ends"
+                              ? "Free until"
+                              : "Available starting"}
+                            : {formattedDate}
+                          </span>
+                        </div>
+                        {!isExpired && (
+                          <div className="flex items-center justify-between mt-1 pt-2 border-t border-muted/50">
+                            <span className="text-xs text-muted-foreground">
+                              Time remaining:
+                            </span>
+                            <TimeDisplay
+                              date={dateValue}
+                              type={dateLabel === "Ends" ? "end" : "start"}
+                              onExpired={handleExpired}
+                              alwaysShowSeconds
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Actions Section */}
+                    <div className="space-y-4 pt-4 border-t">
+                      {isMystery && !isUpcoming ? (
+                        <div className="space-y-4">
+                          {/* Mystery Banner */}
+                          <div className="p-4 rounded-xl border-amber-500/20 border-3 bg-amber-500/5 text-xs leading-relaxed space-y-1.5 shadow-sm">
+                            <div className="font-bold flex items-center gap-2 text-sm dark:text-amber-400 text-amber-800 dark:text-amber-250">
+                              <AlertTriangle className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                              <span>Unable to generate checkout link</span>
+                            </div>
+                            <p className="text-amber-700 dark:text-amber-300/90 pl-6 leading-normal">
+                              This was a mystery game and cannot automatically
+                              make a checkout link. Checkout links will become
+                              active when the mystery game period is over.
+                            </p>
+                          </div>
+
+                          {/* Disabled buttons */}
+                          <Button
+                            disabled
+                            className="w-full flex items-center gap-2 py-6 font-bold"
+                          >
+                            <ShoppingCart className="size-5" /> Claim Game
+                          </Button>
+                          <Button
+                            disabled
+                            variant="outline"
+                            className="w-full flex items-center gap-2 py-6"
+                          >
+                            <Copy className="size-4" /> Checkout Link
+                          </Button>
+
+                          {/* Store Page / Launcher buttons */}
+                          {(isValidPageSlug && pageSlug) || storeUrl ? (
+                            <div className="flex gap-3 w-full">
+                              {isValidPageSlug && pageSlug && (
+                                <a
+                                  href={`com.epicgames.launcher://store/p/${pageSlug}`}
+                                  rel="noopener noreferrer"
+                                  className={cn(
+                                    buttonVariants({ variant: "secondary" }),
+                                    "flex-1 flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] bg-epic-blue/5 hover:bg-epic-blue/10 text-epic-blue dark:text-epic-blue dark:hover:bg-epic-blue/20 border border-epic-blue/20",
+                                  )}
+                                >
+                                  <ExternalLink className="size-4 fill-current" />{" "}
+                                  Open in Launcher
+                                </a>
+                              )}
+
+                              <a
+                                href={
+                                  storeUrl ||
+                                  "https://store.epicgames.com/en-US/free-games"
+                                }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={cn(
+                                  buttonVariants({ variant: "secondary" }),
+                                  "flex-1 flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
+                                )}
+                              >
+                                <ExternalLink className="size-4" /> Store Page
+                              </a>
+                            </div>
+                          ) : (
+                            <a
+                              href="https://store.epicgames.com/en-US/free-games"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={cn(
+                                buttonVariants({ variant: "secondary" }),
+                                "w-full flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
+                              )}
+                            >
+                              <ExternalLink className="size-4" /> Store Page
+                            </a>
+                          )}
+                        </div>
+                      ) : isMobile ? (
+                        // Mobile offers
+                        (() => {
+                          const mg = selectedGame as MobileGame;
+                          const iosCheckoutUrl =
+                            getMobileCheckoutUrlForPlatform(mg, "ios");
+                          const androidCheckoutUrl =
+                            getMobileCheckoutUrlForPlatform(mg, "android");
+                          const combinedCheckoutUrl = getMobileCheckoutUrl(mg);
+                          const hasBoth = Boolean(
+                            mg.iosOffer && mg.androidOffer,
+                          );
+
+                          if (isExpired) {
+                            return (
+                              <div className="text-center p-4 text-sm text-muted-foreground">
+                                This mobile promotion has ended and cannot be
+                                claimed.
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div className="space-y-4">
+                              {hasBoth && combinedCheckoutUrl && (
+                                <div className="p-4 rounded-xl border bg-epic-blue/5 border-epic-blue/15 space-y-3">
+                                  <div>
+                                    <h4 className="font-extrabold text-sm text-epic-blue flex items-center gap-1.5">
+                                      <ShoppingCart className="size-4" /> iOS &
+                                      Android Bundle
+                                    </h4>
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                      Claim both platforms in a single
+                                      transaction.
+                                    </p>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <a
+                                      href={combinedCheckoutUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className={cn(
+                                        buttonVariants(),
+                                        "flex-1 bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black font-bold py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
+                                      )}
+                                    >
+                                      <ExternalLink className="size-4" /> Claim
+                                      Game
+                                    </a>
+                                    <Button
+                                      variant="outline"
+                                      className={`flex-1 py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+                                        copiedUrl === combinedCheckoutUrl
+                                          ? "border-green-500 text-green-500 bg-green-500/10"
+                                          : ""
+                                      }`}
+                                      onClick={() =>
+                                        combinedCheckoutUrl &&
+                                        copyToClipboard(combinedCheckoutUrl)
+                                      }
+                                    >
+                                      {copiedUrl === combinedCheckoutUrl ? (
+                                        <>
+                                          <Check className="size-4 animate-in zoom-in duration-150" />
+                                          <span>Copied!</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Copy className="size-4" />
+                                          <span>Checkout Link</span>
+                                        </>
+                                      )}
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {mg.iosOffer && (
+                                <div className="p-4 rounded-xl border bg-secondary/30 space-y-3">
+                                  <div className="flex justify-between items-center">
+                                    <h4 className="font-extrabold text-sm flex items-center gap-1.5">
+                                      <Smartphone className="size-4 text-muted-foreground" />{" "}
+                                      iOS Version
+                                    </h4>
+                                    {mg.iosOffer.pageSlug && (
+                                      <a
+                                        href={`https://store.epicgames.com/p/${mg.iosOffer.pageSlug}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-epic-blue hover:underline flex items-center gap-1"
+                                      >
+                                        Store Page{" "}
+                                        <ExternalLink className="size-3" />
+                                      </a>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <a
+                                      href={iosCheckoutUrl ?? "#"}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className={cn(
+                                        buttonVariants(),
+                                        "flex-1 bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black font-bold py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
+                                      )}
+                                    >
+                                      <ExternalLink className="size-4" /> Claim
+                                      Game
+                                    </a>
+                                    <Button
+                                      variant="outline"
+                                      className={`flex-1 py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+                                        copiedUrl === iosCheckoutUrl
+                                          ? "border-green-500 text-green-500 bg-green-500/10"
+                                          : ""
+                                      }`}
+                                      onClick={() =>
+                                        iosCheckoutUrl &&
+                                        copyToClipboard(iosCheckoutUrl)
+                                      }
+                                    >
+                                      {copiedUrl === iosCheckoutUrl ? (
+                                        <>
+                                          <Check className="size-4 animate-in zoom-in duration-150" />
+                                          <span>Copied!</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Copy className="size-4" />
+                                          <span>Checkout Link</span>
+                                        </>
+                                      )}
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {mg.androidOffer && (
+                                <div className="p-4 rounded-xl border bg-secondary/30 space-y-3">
+                                  <div className="flex justify-between items-center">
+                                    <h4 className="font-extrabold text-sm flex items-center gap-1.5">
+                                      <Smartphone className="size-4 text-muted-foreground" />{" "}
+                                      Android Version
+                                    </h4>
+                                    {mg.androidOffer.pageSlug && (
+                                      <a
+                                        href={`https://store.epicgames.com/p/${mg.androidOffer.pageSlug}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-epic-blue hover:underline flex items-center gap-1"
+                                      >
+                                        Store Page{" "}
+                                        <ExternalLink className="size-3" />
+                                      </a>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <a
+                                      href={androidCheckoutUrl ?? "#"}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className={cn(
+                                        buttonVariants(),
+                                        "flex-1 bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black font-bold py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
+                                      )}
+                                    >
+                                      <ExternalLink className="size-4" /> Claim
+                                      Game
+                                    </a>
+                                    <Button
+                                      variant="outline"
+                                      className={`flex-1 py-5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+                                        copiedUrl === androidCheckoutUrl
+                                          ? "border-green-500 text-green-500 bg-green-500/10"
+                                          : ""
+                                      }`}
+                                      onClick={() =>
+                                        androidCheckoutUrl &&
+                                        copyToClipboard(androidCheckoutUrl)
+                                      }
+                                    >
+                                      {copiedUrl === androidCheckoutUrl ? (
+                                        <>
+                                          <Check className="size-4 animate-in zoom-in duration-150" />
+                                          <span>Copied!</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Copy className="size-4" />
+                                          <span>Checkout Link</span>
+                                        </>
+                                      )}
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()
+                      ) : (
+                        // PC offers
+                        (() => {
+                          const game = selectedGame as GameItem;
+                          const checkoutUrl = getCheckoutUrl(game);
+                          const {
+                            browserUrl: storeUrl,
+                            pageSlug,
+                            isValidPageSlug,
+                          } = getGameLinkMeta(game);
+
+                          return (
+                            <div className="space-y-3">
+                              {isCurrent && checkoutUrl && (
+                                <>
+                                  <a
+                                    href={checkoutUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={cn(
+                                      buttonVariants(),
+                                      "w-full flex items-center justify-center gap-2 py-6 font-bold bg-epic-blue hover:bg-epic-blue/90 text-white dark:text-black transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg",
+                                    )}
+                                  >
+                                    <ShoppingCart className="size-5" /> Claim
+                                    Game
+                                  </a>
+                                  <Button
+                                    variant="outline"
+                                    className={`w-full flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+                                      copiedUrl === checkoutUrl
+                                        ? "border-green-500 text-green-500 bg-green-500/10"
+                                        : ""
+                                    }`}
+                                    onClick={() =>
+                                      copyToClipboard(
+                                        copiedUrl === checkoutUrl
+                                          ? ""
+                                          : checkoutUrl,
+                                      )
+                                    }
+                                  >
+                                    {copiedUrl === checkoutUrl ? (
+                                      <>
+                                        <Check className="size-4 animate-in zoom-in duration-150" />
+                                        <span>Copied!</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Copy className="size-4" />
+                                        <span>Checkout Link</span>
+                                      </>
+                                    )}
+                                  </Button>
+                                </>
+                              )}
+
+                              {((isValidPageSlug && pageSlug) || storeUrl) && (
+                                <div className="flex gap-3 w-full">
+                                  {isValidPageSlug && pageSlug && (
+                                    <a
+                                      href={`com.epicgames.launcher://store/p/${pageSlug}`}
+                                      rel="noopener noreferrer"
+                                      className={cn(
+                                        buttonVariants({
+                                          variant: "secondary",
+                                        }),
+                                        "flex-1 flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] bg-epic-blue/5 hover:bg-epic-blue/10 text-epic-blue dark:text-epic-blue dark:hover:bg-epic-blue/20 border border-epic-blue/20",
+                                      )}
+                                    >
+                                      <ExternalLink className="size-4 fill-current" />{" "}
+                                      Open in Launcher
+                                    </a>
+                                  )}
+
+                                  {storeUrl && (
+                                    <a
+                                      href={storeUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className={cn(
+                                        buttonVariants({
+                                          variant: "secondary",
+                                        }),
+                                        "flex-1 flex items-center justify-center gap-2 py-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
+                                      )}
+                                    >
+                                      <ExternalLink className="size-4" /> Store
+                                      Page
+                                    </a>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+        </SheetContent>
+      </Sheet>
+
+      <footer className="w-full px-4 border-t border-gray-200/80 dark:border-white/10 bg-white dark:bg-epic-black text-center py-4 mt-auto shrink-0">
+        <div className="text-sm text-epic-gray dark:text-muted-foreground">
+          2026,{" "}
+          <Link href="https://wolfey.me" target="_blank">
+            wolfey.me
+          </Link>
+        </div>
+        <div className="mt-1 text-[11px] text-epic-gray dark:text-muted-foreground">
+          This is not affiliated by any means with Epic Games, Inc.
+        </div>
+        <div className="mt-2 flex items-center justify-center gap-1 text-epic-gray dark:text-muted-foreground">
+          <Theme />
+          <Link
+            href="https://github.com/Wufler/EGFree"
+            target="_blank"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "icon" }),
+              "rounded-full",
+            )}
+          >
+            <Github className="size-5 dark:invert-35 invert" />
+          </Link>
+        </div>
+      </footer>
+    </div>
+  );
 }

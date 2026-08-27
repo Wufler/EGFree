@@ -1,359 +1,358 @@
 import {
-	COMPONENT_TYPES,
-	EPIC_ICON,
-	IS_COMPONENTS_V2,
-	buildPayloadContext,
-	epicMobileProductPageUrl,
-	escapeDiscordMarkdownLinkLabel,
-	getDiscordTimestamp,
-	getGameLinkMeta,
-	getPreferredGameImageUrl,
-	isCurrentlyFree,
-	isDiscountedGame,
-	isPermanentlyFree,
-	parseAllowedMentions,
-	isMysteryGame,
-	getCheckoutUrl,
-	getMobileCheckoutUrl,
-	formatMobileGamePrice,
-} from '@/lib/builder/shared'
+  buildPayloadContext,
+  COMPONENT_TYPES,
+  EPIC_ICON,
+  epicMobileProductPageUrl,
+  escapeDiscordMarkdownLinkLabel,
+  formatMobileGamePrice,
+  getCheckoutUrl,
+  getDiscordTimestamp,
+  getGameLinkMeta,
+  getMobileCheckoutUrl,
+  getPreferredGameImageUrl,
+  IS_COMPONENTS_V2,
+  isCurrentlyFree,
+  isDiscountedGame,
+  isMysteryGame,
+  isPermanentlyFree,
+  parseAllowedMentions,
+} from "@/lib/builder/shared";
 
 function buildDesktopComponentsV2Card(
-	game: GameItem,
-	settings: EgFreeSettings,
-	normalizedCheckoutLink: string,
-	selectedCurrentGames: GameItem[],
+  game: GameItem,
+  settings: EgFreeSettings,
+  normalizedCheckoutLink: string,
+  selectedCurrentGames: GameItem[],
 ): Record<string, unknown> {
-	const isCurrent = game.promotions.promotionalOffers.length > 0
-	const dateInfo = isCurrent
-		? game.promotions.promotionalOffers[0].promotionalOffers[0].endDate
-		: game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0].startDate
-	const endDate = new Date(dateInfo)
-	const { browserUrl, isValidPageSlug, isBundleGame, linkPrefix, pageSlug } =
-		getGameLinkMeta(game)
-	const imageUrl = getPreferredGameImageUrl(game)
+  const isCurrent = game.promotions.promotionalOffers.length > 0;
+  const dateInfo = isCurrent
+    ? game.promotions.promotionalOffers[0].promotionalOffers[0].endDate
+    : game.promotions.upcomingPromotionalOffers[0].promotionalOffers[0]
+        .startDate;
+  const endDate = new Date(dateInfo);
+  const { browserUrl, isValidPageSlug, isBundleGame, linkPrefix, pageSlug } =
+    getGameLinkMeta(game);
+  const imageUrl = getPreferredGameImageUrl(game);
 
-	const getClaimText = () =>
-		game.offerType === 'ADD_ON'
-			? 'Claim Add-on'
-			: isBundleGame
-				? 'Claim Bundle'
-				: 'Claim Game'
+  const getClaimText = () =>
+    game.offerType === "ADD_ON"
+      ? "Claim Add-on"
+      : isBundleGame
+        ? "Claim Bundle"
+        : "Claim Game";
 
-	const resolveClaimHref = (): string | null => {
-		if (!settings.includeClaimGame) return null
-		if (isMysteryGame(game)) return null
-		if (isCurrent) {
-			if (isCurrentlyFree(game)) {
-				const checkoutUrl = getCheckoutUrl(game)
-				if (isPermanentlyFree(game)) {
-					if (!isValidPageSlug || !pageSlug) return null
-					return `https://store.epicgames.com/${linkPrefix}${pageSlug}`
-				}
-				if (
-					settings.includeCheckout &&
-					normalizedCheckoutLink &&
-					selectedCurrentGames.length === 1 &&
-					selectedCurrentGames[0].id === game.id
-				) {
-					return normalizedCheckoutLink
-				}
-				return checkoutUrl
-			}
-			if (!isValidPageSlug || !pageSlug) return null
-			return `https://store.epicgames.com/${linkPrefix}${pageSlug}`
-		}
-		return null
-	}
+  const resolveClaimHref = (): string | null => {
+    if (!settings.includeClaimGame) return null;
+    if (isMysteryGame(game)) return null;
+    if (isCurrent) {
+      if (isCurrentlyFree(game)) {
+        const checkoutUrl = getCheckoutUrl(game);
+        if (isPermanentlyFree(game)) {
+          if (!isValidPageSlug || !pageSlug) return null;
+          return `https://store.epicgames.com/${linkPrefix}${pageSlug}`;
+        }
+        if (
+          settings.includeCheckout &&
+          normalizedCheckoutLink &&
+          selectedCurrentGames.length === 1 &&
+          selectedCurrentGames[0].id === game.id
+        ) {
+          return normalizedCheckoutLink;
+        }
+        return checkoutUrl;
+      }
+      if (!isValidPageSlug || !pageSlug) return null;
+      return `https://store.epicgames.com/${linkPrefix}${pageSlug}`;
+    }
+    return null;
+  };
 
-	const resolveClaimLabel = () =>
-		isCurrent &&
-		!isCurrentlyFree(game) &&
-		isDiscountedGame(game) &&
-		isValidPageSlug
-			? 'Store Page'
-			: getClaimText()
+  const resolveClaimLabel = () =>
+    isCurrent &&
+    !isCurrentlyFree(game) &&
+    isDiscountedGame(game) &&
+    isValidPageSlug
+      ? "Store Page"
+      : getClaimText();
 
-	const priceText = getDesktopPriceText(game, settings, isCurrent)
-	const titleContent = browserUrl
-		? `## [${escapeDiscordMarkdownLinkLabel(game.title)}](${browserUrl})`
-		: `## ${game.title}`
-	const textBlocks: Record<string, unknown>[] = [
-		{
-			type: COMPONENT_TYPES.TEXT_DISPLAY,
-			content: titleContent,
-		},
-	]
+  const priceText = getDesktopPriceText(game, settings, isCurrent);
+  const titleContent = browserUrl
+    ? `## [${escapeDiscordMarkdownLinkLabel(game.title)}](${browserUrl})`
+    : `## ${game.title}`;
+  const priceAndDateParts: string[] = [];
+  if (priceText) priceAndDateParts.push(priceText);
+  if (settings.includeFooter) {
+    priceAndDateParts.push(
+      `${isCurrent ? "until" : "Free offer starts"} ${getDiscordTimestamp(endDate)}`,
+    );
+  }
 
-	const priceAndDateParts: string[] = []
-	if (priceText) priceAndDateParts.push(priceText)
-	if (settings.includeFooter) {
-		priceAndDateParts.push(
-			`${isCurrent ? 'until' : 'Free offer starts'} ${getDiscordTimestamp(endDate)}`,
-		)
-	}
-	if (priceAndDateParts.length > 0) {
-		textBlocks.push({
-			type: COMPONENT_TYPES.TEXT_DISPLAY,
-			content: priceAndDateParts.join(' '),
-		})
-	}
+  const sectionContent =
+    priceAndDateParts.length > 0
+      ? `${titleContent}\n${priceAndDateParts.join(" ")}`
+      : titleContent;
 
-	const cardComponents: Record<string, unknown>[] = []
+  const textBlocks: Record<string, unknown>[] = [
+    {
+      type: COMPONENT_TYPES.TEXT_DISPLAY,
+      content: sectionContent,
+    },
+  ];
 
-	if (settings.includeImage && imageUrl) {
-		cardComponents.push({
-			type: COMPONENT_TYPES.MEDIA_GALLERY,
-			items: [{ media: { url: encodeURI(imageUrl) } }],
-		})
-	}
+  const cardComponents: Record<string, unknown>[] = [];
 
-	cardComponents.push({
-		type: COMPONENT_TYPES.SECTION,
-		components: textBlocks,
-		accessory: {
-			type: COMPONENT_TYPES.THUMBNAIL,
-			media: { url: EPIC_ICON },
-		},
-	})
+  if (settings.includeImage && imageUrl) {
+    cardComponents.push({
+      type: COMPONENT_TYPES.MEDIA_GALLERY,
+      items: [{ media: { url: encodeURI(imageUrl) } }],
+    });
+  }
 
-	const actionButtons: Record<string, unknown>[] = []
+  cardComponents.push({
+    type: COMPONENT_TYPES.SECTION,
+    components: textBlocks,
+    accessory: {
+      type: COMPONENT_TYPES.THUMBNAIL,
+      media: { url: EPIC_ICON },
+    },
+  });
 
-	if (browserUrl) {
-		actionButtons.push({
-			type: COMPONENT_TYPES.BUTTON,
-			style: COMPONENT_TYPES.BUTTON_LINK,
-			label: 'Open in Browser',
-			url: browserUrl,
-		})
-	}
+  const actionButtons: Record<string, unknown>[] = [];
 
-	const claimHref = resolveClaimHref()
-	if (claimHref) {
-		actionButtons.push({
-			type: COMPONENT_TYPES.BUTTON,
-			style: COMPONENT_TYPES.BUTTON_LINK,
-			label: resolveClaimLabel(),
-			url: claimHref,
-		})
-	}
+  if (browserUrl) {
+    actionButtons.push({
+      type: COMPONENT_TYPES.BUTTON,
+      style: COMPONENT_TYPES.BUTTON_LINK,
+      label: "Open in Browser",
+      url: browserUrl,
+    });
+  }
 
-	if (actionButtons.length > 0) {
-		cardComponents.push({
-			type: COMPONENT_TYPES.ACTION_ROW,
-			components: actionButtons,
-		})
-	}
+  const claimHref = resolveClaimHref();
+  if (claimHref) {
+    actionButtons.push({
+      type: COMPONENT_TYPES.BUTTON,
+      style: COMPONENT_TYPES.BUTTON_LINK,
+      label: resolveClaimLabel(),
+      url: claimHref,
+    });
+  }
 
-	return {
-		type: COMPONENT_TYPES.CONTAINER,
-		components: cardComponents,
-	}
+  if (actionButtons.length > 0) {
+    cardComponents.push({
+      type: COMPONENT_TYPES.ACTION_ROW,
+      components: actionButtons,
+    });
+  }
+
+  return {
+    type: COMPONENT_TYPES.CONTAINER,
+    components: cardComponents,
+  };
 }
 
 function buildMobileComponentsV2Card(
-	game: MobileGame,
-	settings: EgFreeSettings,
+  game: MobileGame,
+  settings: EgFreeSettings,
 ): Record<string, unknown> {
-	const iosUrl = epicMobileProductPageUrl(game.iosOffer?.pageSlug)
-	const androidUrl = epicMobileProductPageUrl(game.androidOffer?.pageSlug)
-	const isCombined = Boolean(game.iosOffer && game.androidOffer)
-	const checkoutUrl = getMobileCheckoutUrl(game)
-	const endDate = game.promoEndDate ? new Date(game.promoEndDate) : null
-	const priceFormatted = formatMobileGamePrice(game)
+  const iosUrl = epicMobileProductPageUrl(game.iosOffer?.pageSlug);
+  const androidUrl = epicMobileProductPageUrl(game.androidOffer?.pageSlug);
+  const isCombined = Boolean(game.iosOffer && game.androidOffer);
+  const checkoutUrl = getMobileCheckoutUrl(game);
+  const endDate = game.promoEndDate ? new Date(game.promoEndDate) : null;
+  const priceFormatted = formatMobileGamePrice(game);
 
-	const textBlocks: Record<string, unknown>[] = [
-		{
-			type: COMPONENT_TYPES.TEXT_DISPLAY,
-			content: `## ${game.title}`,
-		},
-	]
+  const mobilePriceParts: string[] = [];
+  if (settings.includePrice) {
+    if (game.originalPrice > 0) {
+      mobilePriceParts.push(`~~${priceFormatted}~~ **Free**`);
+    } else {
+      mobilePriceParts.push(`**Free**`);
+    }
+  }
+  if (settings.includeFooter && endDate) {
+    mobilePriceParts.push(`until ${getDiscordTimestamp(endDate)}`);
+  }
 
-	const mobilePriceParts: string[] = []
-	if (settings.includePrice) {
-		if (game.originalPrice > 0) {
-			mobilePriceParts.push(`~~${priceFormatted}~~ **Free**`)
-		} else {
-			mobilePriceParts.push(`**Free**`)
-		}
-	}
-	if (settings.includeFooter && endDate) {
-		mobilePriceParts.push(`until ${getDiscordTimestamp(endDate)}`)
-	}
-	if (mobilePriceParts.length > 0) {
-		textBlocks.push({
-			type: COMPONENT_TYPES.TEXT_DISPLAY,
-			content: mobilePriceParts.join(' '),
-		})
-	}
+  const sectionContent =
+    mobilePriceParts.length > 0
+      ? `## ${game.title}\n${mobilePriceParts.join(" ")}`
+      : `## ${game.title}`;
 
-	const cardComponents: Record<string, unknown>[] = []
+  const textBlocks: Record<string, unknown>[] = [
+    {
+      type: COMPONENT_TYPES.TEXT_DISPLAY,
+      content: sectionContent,
+    },
+  ];
 
-	if (settings.includeImage && game.imageUrl) {
-		cardComponents.push({
-			type: COMPONENT_TYPES.MEDIA_GALLERY,
-			items: [{ media: { url: game.imageUrl } }],
-		})
-	}
+  const cardComponents: Record<string, unknown>[] = [];
 
-	cardComponents.push({
-		type: COMPONENT_TYPES.SECTION,
-		components: textBlocks,
-		accessory: {
-			type: COMPONENT_TYPES.THUMBNAIL,
-			media: { url: EPIC_ICON },
-		},
-	})
+  if (settings.includeImage && game.imageUrl) {
+    cardComponents.push({
+      type: COMPONENT_TYPES.MEDIA_GALLERY,
+      items: [{ media: { url: game.imageUrl } }],
+    });
+  }
 
-	const actionButtons: Record<string, unknown>[] = []
+  cardComponents.push({
+    type: COMPONENT_TYPES.SECTION,
+    components: textBlocks,
+    accessory: {
+      type: COMPONENT_TYPES.THUMBNAIL,
+      media: { url: EPIC_ICON },
+    },
+  });
 
-	if (isCombined && iosUrl) {
-		actionButtons.push({
-			type: COMPONENT_TYPES.BUTTON,
-			style: COMPONENT_TYPES.BUTTON_LINK,
-			label: 'iOS',
-			url: iosUrl,
-		})
-	}
+  const actionButtons: Record<string, unknown>[] = [];
 
-	if (isCombined && androidUrl) {
-		actionButtons.push({
-			type: COMPONENT_TYPES.BUTTON,
-			style: COMPONENT_TYPES.BUTTON_LINK,
-			label: 'Android',
-			url: androidUrl,
-		})
-	}
+  if (isCombined && iosUrl) {
+    actionButtons.push({
+      type: COMPONENT_TYPES.BUTTON,
+      style: COMPONENT_TYPES.BUTTON_LINK,
+      label: "iOS",
+      url: iosUrl,
+    });
+  }
 
-	if (checkoutUrl && settings.includeClaimGame) {
-		actionButtons.push({
-			type: COMPONENT_TYPES.BUTTON,
-			style: COMPONENT_TYPES.BUTTON_LINK,
-			label: 'Claim Game',
-			url: checkoutUrl,
-		})
-	}
+  if (isCombined && androidUrl) {
+    actionButtons.push({
+      type: COMPONENT_TYPES.BUTTON,
+      style: COMPONENT_TYPES.BUTTON_LINK,
+      label: "Android",
+      url: androidUrl,
+    });
+  }
 
-	if (actionButtons.length > 0) {
-		cardComponents.push({
-			type: COMPONENT_TYPES.ACTION_ROW,
-			components: actionButtons,
-		})
-	}
+  if (checkoutUrl && settings.includeClaimGame) {
+    actionButtons.push({
+      type: COMPONENT_TYPES.BUTTON,
+      style: COMPONENT_TYPES.BUTTON_LINK,
+      label: "Claim Game",
+      url: checkoutUrl,
+    });
+  }
 
-	return {
-		type: COMPONENT_TYPES.CONTAINER,
-		components: cardComponents,
-	}
+  if (actionButtons.length > 0) {
+    cardComponents.push({
+      type: COMPONENT_TYPES.ACTION_ROW,
+      components: actionButtons,
+    });
+  }
+
+  return {
+    type: COMPONENT_TYPES.CONTAINER,
+    components: cardComponents,
+  };
 }
 
 function getDesktopPriceText(
-	game: GameItem,
-	settings: EgFreeSettings,
-	isCurrent: boolean,
+  game: GameItem,
+  settings: EgFreeSettings,
+  isCurrent: boolean,
 ): string {
-	if (!settings.includePrice) return ''
-	if (isCurrent) {
-		if (isCurrentlyFree(game)) {
-			return isPermanentlyFree(game)
-				? 'Free'
-				: `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **Free**`
-		}
-		if (isDiscountedGame(game)) {
-			return `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **${game.price.totalPrice.fmtPrice.discountPrice}**`
-		}
-		return game.price.totalPrice.fmtPrice.originalPrice
-	}
-	if (isPermanentlyFree(game)) return 'Free'
-	if (
-		game.price.totalPrice.discountPrice !== game.price.totalPrice.originalPrice
-	) {
-		return `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **${game.price.totalPrice.fmtPrice.discountPrice}**`
-	}
-	return game.price.totalPrice.fmtPrice.originalPrice
+  if (!settings.includePrice) return "";
+  if (isCurrent) {
+    if (isCurrentlyFree(game)) {
+      return isPermanentlyFree(game)
+        ? "Free"
+        : `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **Free**`;
+    }
+    if (isDiscountedGame(game)) {
+      return `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **${game.price.totalPrice.fmtPrice.discountPrice}**`;
+    }
+    return game.price.totalPrice.fmtPrice.originalPrice;
+  }
+  if (isPermanentlyFree(game)) return "";
+  if (
+    game.price.totalPrice.discountPrice !== game.price.totalPrice.originalPrice
+  ) {
+    return `~~${game.price.totalPrice.fmtPrice.originalPrice}~~ **${game.price.totalPrice.fmtPrice.discountPrice}**`;
+  }
+  return game.price.totalPrice.fmtPrice.originalPrice;
 }
 
 export function buildComponentsV2MessagePayload(
-	games: Game,
-	settings: EgFreeSettings,
-	checkoutLink: string,
-	parsedMobileGames: MobileGame[],
+  games: Game,
+  settings: EgFreeSettings,
+  checkoutLink: string,
+  parsedMobileGames: MobileGame[],
 ): object {
-	const {
-		selectedGames,
-		selectedCurrentGames,
-		selectedMobileGames,
-		bulkCheckoutUrl,
-		normalizedCheckoutLink,
-	} = buildPayloadContext(games, settings, checkoutLink, parsedMobileGames)
+  const {
+    selectedGames,
+    selectedCurrentGames,
+    selectedMobileGames,
+    bulkCheckoutUrl,
+    normalizedCheckoutLink,
+  } = buildPayloadContext(games, settings, checkoutLink, parsedMobileGames);
 
-	const components: Record<string, unknown>[] = []
-	const messageContent = settings.embedContent || '<@&847939354978811924>'
+  const components: Record<string, unknown>[] = [];
+  const messageContent = settings.embedContent || "";
 
-	if (messageContent.trim()) {
-		components.push({
-			type: COMPONENT_TYPES.TEXT_DISPLAY,
-			content: messageContent,
-		})
-	}
+  if (messageContent.trim()) {
+    components.push({
+      type: COMPONENT_TYPES.TEXT_DISPLAY,
+      content: messageContent,
+    });
+  }
 
-	for (const game of selectedGames) {
-		components.push(
-			buildDesktopComponentsV2Card(
-				game,
-				settings,
-				normalizedCheckoutLink,
-				selectedCurrentGames,
-			),
-		)
-	}
+  for (const game of selectedGames) {
+    components.push(
+      buildDesktopComponentsV2Card(
+        game,
+        settings,
+        normalizedCheckoutLink,
+        selectedCurrentGames,
+      ),
+    );
+  }
 
-	for (const game of selectedMobileGames) {
-		components.push(buildMobileComponentsV2Card(game, settings))
-	}
+  for (const game of selectedMobileGames) {
+    components.push(buildMobileComponentsV2Card(game, settings));
+  }
 
-	const claimablePCGamesCount = selectedCurrentGames.filter(
-		g => !isMysteryGame(g) && g.namespace && g.id,
-	).length
-	const claimableMobileOffersCount = selectedMobileGames.reduce(
-		(acc, mg) => acc + (mg.iosOffer || mg.androidOffer ? 1 : 0),
-		0,
-	)
-	const totalSelectedGames =
-		selectedCurrentGames.length + selectedMobileGames.length
-	const totalClaimable = claimablePCGamesCount + claimableMobileOffersCount
-	if (
-		(totalClaimable > 0 || Boolean(normalizedCheckoutLink)) &&
-		totalSelectedGames > 1 &&
-		settings.includeCheckout
-	) {
-		if (bulkCheckoutUrl || normalizedCheckoutLink) {
-			const checkoutHref = normalizedCheckoutLink || bulkCheckoutUrl
-			if (checkoutHref) {
-				components.push({
-					type: COMPONENT_TYPES.ACTION_ROW,
-					components: [
-						{
-							type: COMPONENT_TYPES.BUTTON,
-							style: COMPONENT_TYPES.BUTTON_LINK,
-							label: '🎁 Claim All Games',
-							url: checkoutHref,
-						},
-					],
-				})
-			}
-		}
-	}
+  const claimablePCGamesCount = selectedCurrentGames.filter(
+    (g) => !isMysteryGame(g) && g.namespace && g.id,
+  ).length;
+  const claimableMobileOffersCount = selectedMobileGames.reduce(
+    (acc, mg) => acc + (mg.iosOffer || mg.androidOffer ? 1 : 0),
+    0,
+  );
+  const totalSelectedGames =
+    selectedCurrentGames.length + selectedMobileGames.length;
+  const totalClaimable = claimablePCGamesCount + claimableMobileOffersCount;
+  if (
+    (totalClaimable > 0 || Boolean(normalizedCheckoutLink)) &&
+    totalSelectedGames > 1 &&
+    settings.includeCheckout
+  ) {
+    if (bulkCheckoutUrl || normalizedCheckoutLink) {
+      const checkoutHref = normalizedCheckoutLink || bulkCheckoutUrl;
+      if (checkoutHref) {
+        components.push({
+          type: COMPONENT_TYPES.ACTION_ROW,
+          components: [
+            {
+              type: COMPONENT_TYPES.BUTTON,
+              style: COMPONENT_TYPES.BUTTON_LINK,
+              label: "🎁 Claim All Games",
+              url: checkoutHref,
+            },
+          ],
+        });
+      }
+    }
+  }
 
-	const payload: Record<string, unknown> = {
-		flags: IS_COMPONENTS_V2,
-		components,
-	}
+  const payload: Record<string, unknown> = {
+    flags: IS_COMPONENTS_V2,
+    components,
+  };
 
-	const allowedMentions = parseAllowedMentions(messageContent)
-	if (allowedMentions) {
-		payload.allowed_mentions = allowedMentions
-	}
+  const allowedMentions = parseAllowedMentions(messageContent);
+  if (allowedMentions) {
+    payload.allowed_mentions = allowedMentions;
+  }
 
-	return payload
+  return payload;
 }

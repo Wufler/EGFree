@@ -1,724 +1,950 @@
-'use client'
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { FileJson2, X, AlertTriangle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
+"use client";
 import {
-	Dialog,
-	DialogClose,
-	DialogContent,
-	DialogDescription,
-	DialogTitle,
-	DialogTrigger,
-} from '@/components/ui/dialog'
+  AlertTriangle,
+  Check,
+  ClipboardCopy,
+  FileJson2,
+  Save,
+  X,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import JsonFormContent, {
+  JsonFormActions,
+} from "@/components/Json/FormContent";
+import JsonPreviewContent from "@/components/Json/PreviewContent";
 import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { encrypt, decrypt } from '@/lib/encryption'
-import { buildDiscordMessagePayload } from '@/lib/builder/payload'
-import { getEffectiveGames, getMobileGameKey } from '@/lib/utils'
-import JsonFormContent from '@/components/Json/FormContent'
-import JsonPreviewContent, {
-	JsonPreviewButtons,
-} from '@/components/Json/PreviewContent'
-const defaultColor = '#85ce4b'
-const defaultContent = '<@&847939354978811924>'
-const defaultMobileContent = '<@&1494404105471266936>'
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import Discord from "@/components/ui/discord";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { buildDiscordMessagePayload } from "@/lib/builder/payload";
+import { decrypt, encrypt } from "@/lib/encryption";
+import { getEffectiveGames, getMobileGameKey } from "@/lib/utils";
+
+const defaultColor = "#85ce4b";
+const defaultContent = "<@&847939354978811924>";
+const defaultMobileContent = "<@&1494404105471266936>";
 
 const isValidDiscordWebhook = (url: string) => {
-	const webhookPattern =
-		/^https:\/\/(?:discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+(?:\?[^\s#]*)?\/?$/
-	return webhookPattern.test(url.trim())
-}
+  const webhookPattern =
+    /^https:\/\/(?:(?:canary\.|ptb\.)?discord\.com|discordapp\.com)\/api(?:\/v\d+)?\/webhooks\/\d+\/[a-zA-Z0-9_-]+(?:\?[^\s#]*)?\/?$/;
+  return webhookPattern.test(url.trim());
+};
 
 export default function Json({
-	games,
-	mobile,
+  games,
+  mobile,
 }: {
-	games: Game
-	mobile: MobileGameData[]
+  games: Game;
+  mobile: MobileGameData[];
 }) {
-	const [webhookUrl, setWebhookUrl] = useState('')
-	const [webhookUrlMobile, setWebhookUrlMobile] = useState('')
-	const [messageId, setMessageId] = useState('')
-	const [mobileMessageId, setMobileMessageId] = useState('')
-	const [isLoading, setIsLoading] = useState(false)
-	const [isVisible, setIsVisible] = useState(false)
-	const [isMobileWebhookVisible, setIsMobileWebhookVisible] = useState(false)
-	const [isCopied, setIsCopied] = useState(false)
-	const [showWarning, setShowWarning] = useState(false)
-	const [checkoutLink, setCheckoutLink] = useState('')
+  const [webhookUrl, setWebhookUrl] = useState("");
+  const [webhookUrlMobile, setWebhookUrlMobile] = useState("");
+  const [messageId, setMessageId] = useState("");
+  const [mobileMessageId, setMobileMessageId] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isMobileWebhookVisible, setIsMobileWebhookVisible] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+  const [checkoutLink, setCheckoutLink] = useState("");
+  const [isWebhookValid, setIsWebhookValid] = useState(false);
+  const [isWebhookLoading, setIsWebhookLoading] = useState(false);
+  const [isMobileWebhookValid, setIsMobileWebhookValid] = useState(false);
+  const [isMobileWebhookLoading, setIsMobileWebhookLoading] = useState(false);
+  const [saveWebhookTarget, setSaveWebhookTarget] = useState<
+    "desktop" | "mobile" | null
+  >(null);
 
-	const effectiveGames = useMemo(() => getEffectiveGames(games), [games])
+  const effectiveGames = useMemo(() => getEffectiveGames(games), [games]);
 
-	const [settings, setSettings] = useState<EgFreeSettings>({
-		selectedGames: {},
-		embedContent: '',
-		embedContentMobile: '',
-		splitDesktopMobile: false,
-		sendDesktop: true,
-		sendMobile: true,
-		useDesktopWebhookForMobile: false,
-		embedColor: defaultColor,
-		includeFooter: true,
-		includePrice: true,
-		includeImage: true,
-		includeCheckout: true,
-		includeClaimGame: true,
-		componentsV2: true,
-		webhookUrl: '',
-		webhookUrlMobile: '',
-		webhookName: undefined,
-		webhookAvatar: undefined,
-		webhookNameMobile: undefined,
-		webhookAvatarMobile: undefined,
-		webhookChannelName: undefined,
-		webhookChannelNameMobile: undefined,
-		showDiscordPreview: true,
-	})
-	const activeMobileGames = useMemo(
-		() =>
-			mobile.filter(
-				game => !game.promoEndDate || new Date(game.promoEndDate) > new Date(),
-			),
-		[mobile],
-	)
-	const canSplitDesktopMobile = useMemo(() => {
-		const hasSelectedDesktopGames = [
-			...effectiveGames.currentGames,
-			...effectiveGames.nextGames,
-		].some(game => settings.selectedGames[game.id])
-		const hasSelectedMobileGames = activeMobileGames.some(
-			game => settings.selectedGames[getMobileGameKey(game)],
-		)
+  const [settings, setSettings] = useState<EgFreeSettings>({
+    selectedGames: {},
+    embedContent: "",
+    embedContentMobile: "",
+    splitDesktopMobile: false,
+    sendDesktop: true,
+    sendMobile: true,
+    useDesktopWebhookForMobile: false,
+    embedColor: defaultColor,
+    includeFooter: true,
+    includePrice: true,
+    includeImage: true,
+    includeCheckout: true,
+    includeClaimGame: true,
+    componentsV2: true,
+    webhookUrl: "",
+    webhookUrlMobile: "",
+    webhookName: undefined,
+    webhookAvatar: undefined,
+    webhookNameMobile: undefined,
+    webhookAvatarMobile: undefined,
+    webhookChannelName: undefined,
+    webhookChannelNameMobile: undefined,
+    showDiscordPreview: true,
+  });
+  const activeMobileGames = useMemo(
+    () =>
+      mobile.filter(
+        (game) =>
+          !game.promoEndDate || new Date(game.promoEndDate) > new Date(),
+      ),
+    [mobile],
+  );
+  const canSplitDesktopMobile = useMemo(() => {
+    const hasSelectedDesktopGames = [
+      ...effectiveGames.currentGames,
+      ...effectiveGames.nextGames,
+    ].some((game) => settings.selectedGames[game.id]);
+    const hasSelectedMobileGames = activeMobileGames.some(
+      (game) => settings.selectedGames[getMobileGameKey(game)],
+    );
 
-		return hasSelectedDesktopGames && hasSelectedMobileGames
-	}, [activeMobileGames, effectiveGames, settings.selectedGames])
+    return hasSelectedDesktopGames && hasSelectedMobileGames;
+  }, [activeMobileGames, effectiveGames, settings.selectedGames]);
 
-	const updateSetting = useCallback(
-		<T extends keyof EgFreeSettings>(key: T, value: EgFreeSettings[T]) => {
-			setSettings(prev => {
-				if (key === 'componentsV2' && prev.componentsV2 !== value) {
-					setMessageId('')
-				}
-				return { ...prev, [key]: value }
-			})
-		},
-		[],
-	)
+  const updateSetting = useCallback(
+    <T extends keyof EgFreeSettings>(key: T, value: EgFreeSettings[T]) => {
+      setSettings((prev) => {
+        if (key === "componentsV2" && prev.componentsV2 !== value) {
+          setMessageId("");
+        }
+        return { ...prev, [key]: value };
+      });
+    },
+    [],
+  );
 
-	const fetchWebhookInfo = useCallback(
-		async (url: string, target: 'desktop' | 'mobile' = 'desktop') => {
-			try {
-				const response = await fetch('/api/webhook-info', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify({ webhookUrl: url }),
-				})
+  const fetchWebhookInfo = useCallback(
+    async (url: string, target: "desktop" | "mobile" = "desktop") => {
+      const trimmedUrl = url.trim();
+      if (!trimmedUrl || !isValidDiscordWebhook(trimmedUrl)) {
+        if (target === "mobile") {
+          setIsMobileWebhookValid(false);
+          setIsMobileWebhookLoading(false);
+          updateSetting("webhookNameMobile", undefined);
+          updateSetting("webhookAvatarMobile", undefined);
+          updateSetting("webhookChannelNameMobile", undefined);
+        } else {
+          setIsWebhookValid(false);
+          setIsWebhookLoading(false);
+          updateSetting("webhookName", undefined);
+          updateSetting("webhookAvatar", undefined);
+          updateSetting("webhookChannelName", undefined);
+        }
+        return false;
+      }
 
-				if (response.ok) {
-					const webhookInfo = await response.json()
-					if (target === 'mobile') {
-						updateSetting('webhookNameMobile', webhookInfo.name)
-						updateSetting('webhookAvatarMobile', webhookInfo.avatar)
-						updateSetting('webhookChannelNameMobile', webhookInfo.channelName)
-					} else {
-						updateSetting('webhookName', webhookInfo.name)
-						updateSetting('webhookAvatar', webhookInfo.avatar)
-						updateSetting('webhookChannelName', webhookInfo.channelName)
-					}
-				} else {
-					const errorText = await response.text()
-					console.error('Failed to fetch webhook info:', errorText)
-					if (target === 'mobile') {
-						updateSetting('webhookNameMobile', undefined)
-						updateSetting('webhookAvatarMobile', undefined)
-						updateSetting('webhookChannelNameMobile', undefined)
-					} else {
-						updateSetting('webhookName', undefined)
-						updateSetting('webhookAvatar', undefined)
-						updateSetting('webhookChannelName', undefined)
-					}
-				}
-			} catch (error) {
-				console.error('Failed to fetch webhook info:', error)
-			}
-		},
-		[updateSetting],
-	)
+      if (target === "mobile") {
+        setIsMobileWebhookLoading(true);
+      } else {
+        setIsWebhookLoading(true);
+      }
 
-	const jsonData = useMemo(() => {
-		return buildDiscordMessagePayload(
-			effectiveGames,
-			settings,
-			checkoutLink,
-			mobile,
-		)
-	}, [effectiveGames, settings, checkoutLink, mobile])
+      try {
+        const response = await fetch("/api/webhook-info", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ webhookUrl: trimmedUrl }),
+        });
 
-	// Adjust state while rendering if splitDesktopMobile is enabled but cannot be split
-	if (!canSplitDesktopMobile && settings.splitDesktopMobile) {
-		setMessageId('')
-		setMobileMessageId('')
-		setSettings(prev => ({ ...prev, splitDesktopMobile: false }))
-	}
+        if (response.ok) {
+          const webhookInfo = await response.json();
+          if (target === "mobile") {
+            updateSetting("webhookNameMobile", webhookInfo.name);
+            updateSetting("webhookAvatarMobile", webhookInfo.avatar);
+            updateSetting("webhookChannelNameMobile", webhookInfo.channelName);
+            setIsMobileWebhookValid(true);
+          } else {
+            updateSetting("webhookName", webhookInfo.name);
+            updateSetting("webhookAvatar", webhookInfo.avatar);
+            updateSetting("webhookChannelName", webhookInfo.channelName);
+            setIsWebhookValid(true);
+          }
+          return true;
+        } else {
+          const errorText = await response.text();
+          console.error("Failed to fetch webhook info:", errorText);
+          if (target === "mobile") {
+            updateSetting("webhookNameMobile", undefined);
+            updateSetting("webhookAvatarMobile", undefined);
+            updateSetting("webhookChannelNameMobile", undefined);
+            setIsMobileWebhookValid(false);
+          } else {
+            updateSetting("webhookName", undefined);
+            updateSetting("webhookAvatar", undefined);
+            updateSetting("webhookChannelName", undefined);
+            setIsWebhookValid(false);
+          }
+          return false;
+        }
+      } catch (error) {
+        console.error("Failed to fetch webhook info:", error);
+        if (target === "mobile") {
+          updateSetting("webhookNameMobile", undefined);
+          updateSetting("webhookAvatarMobile", undefined);
+          updateSetting("webhookChannelNameMobile", undefined);
+          setIsMobileWebhookValid(false);
+        } else {
+          updateSetting("webhookName", undefined);
+          updateSetting("webhookAvatar", undefined);
+          updateSetting("webhookChannelName", undefined);
+          setIsWebhookValid(false);
+        }
+        return false;
+      } finally {
+        if (target === "mobile") {
+          setIsMobileWebhookLoading(false);
+        } else {
+          setIsWebhookLoading(false);
+        }
+      }
+    },
+    [updateSetting],
+  );
 
-	useEffect(() => {
-		if (typeof window !== 'undefined') {
-			const loadSettings = async () => {
-				const savedSettings = localStorage.getItem('egFreeSettings')
-				if (savedSettings) {
-					try {
-						const parsed = JSON.parse(savedSettings) as Partial<EgFreeSettings> & {
-							openAccordions?: string[]
-							lastCurrentGameIds?: string[]
-							lastMobileGameKeys?: string[]
-						}
-						const { openAccordions, ...parsedRest } = parsed
-						void openAccordions
-						const decryptedWebhook = parsedRest.webhookUrl
-							? await decrypt(parsedRest.webhookUrl)
-							: ''
-						const decryptedMobileWebhook = parsedRest.webhookUrlMobile
-							? await decrypt(parsedRest.webhookUrlMobile)
-							: ''
+  const jsonData = useMemo(() => {
+    return buildDiscordMessagePayload(
+      effectiveGames,
+      settings,
+      checkoutLink,
+      mobile,
+    );
+  }, [effectiveGames, settings, checkoutLink, mobile]);
 
-						const savedCurrentGameIds = new Set(parsedRest.lastCurrentGameIds || [])
-						const savedMobileKeys = new Set(parsedRest.lastMobileGameKeys || [])
+  if (!canSplitDesktopMobile && settings.splitDesktopMobile) {
+    setMessageId("");
+    setMobileMessageId("");
+    setSettings((prev) => ({ ...prev, splitDesktopMobile: false }));
+  }
 
-						const cleanedSelectedGames: Record<string, boolean> = {}
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const loadSettings = async () => {
+        const savedSettings = localStorage.getItem("egFreeSettings");
+        if (savedSettings) {
+          try {
+            const parsed = JSON.parse(
+              savedSettings,
+            ) as Partial<EgFreeSettings> & {
+              openAccordions?: string[];
+              lastCurrentGameIds?: string[];
+              lastMobileGameKeys?: string[];
+            };
+            const { openAccordions, ...parsedRest } = parsed;
+            void openAccordions;
+            const decryptedWebhook = parsedRest.webhookUrl
+              ? await decrypt(parsedRest.webhookUrl)
+              : "";
+            const decryptedMobileWebhook = parsedRest.webhookUrlMobile
+              ? await decrypt(parsedRest.webhookUrlMobile)
+              : "";
 
-						effectiveGames.currentGames.forEach(game => {
-							if (savedCurrentGameIds.has(game.id)) {
-								cleanedSelectedGames[game.id] =
-									parsedRest.selectedGames?.[game.id] ?? true
-							} else {
-								cleanedSelectedGames[game.id] = true
-							}
-						})
+            const savedCurrentGameIds = new Set(
+              parsedRest.lastCurrentGameIds || [],
+            );
+            const savedMobileKeys = new Set(
+              parsedRest.lastMobileGameKeys || [],
+            );
 
-						effectiveGames.nextGames.forEach(game => {
-							cleanedSelectedGames[game.id] =
-								parsedRest.selectedGames?.[game.id] ?? false
-						})
+            const cleanedSelectedGames: Record<string, boolean> = {};
 
-						mobile.forEach(game => {
-							const key = getMobileGameKey(game)
-							if (savedMobileKeys.has(key)) {
-								cleanedSelectedGames[key] = parsedRest.selectedGames?.[key] ?? true
-							} else {
-								cleanedSelectedGames[key] = true
-							}
-						})
+            effectiveGames.currentGames.forEach((game) => {
+              if (savedCurrentGameIds.has(game.id)) {
+                cleanedSelectedGames[game.id] =
+                  parsedRest.selectedGames?.[game.id] ?? true;
+              } else {
+                cleanedSelectedGames[game.id] = true;
+              }
+            });
 
-						setSettings(prev => ({
-							...prev,
-							...parsedRest,
-							selectedGames: cleanedSelectedGames,
-							embedColor: parsedRest.embedColor ?? defaultColor,
-							webhookUrl: decryptedWebhook,
-							webhookUrlMobile: decryptedMobileWebhook,
-							webhookName: parsedRest.webhookName,
-							webhookAvatar: parsedRest.webhookAvatar,
-							webhookNameMobile: parsedRest.webhookNameMobile,
-							webhookAvatarMobile: parsedRest.webhookAvatarMobile,
-							webhookChannelName: parsedRest.webhookChannelName,
-							webhookChannelNameMobile: parsedRest.webhookChannelNameMobile,
-							componentsV2: parsedRest.componentsV2 ?? true,
-						}))
-						setWebhookUrl(decryptedWebhook)
-						setWebhookUrlMobile(decryptedMobileWebhook)
-						setMessageId('')
-						if (decryptedWebhook && isValidDiscordWebhook(decryptedWebhook)) {
-							await fetchWebhookInfo(decryptedWebhook)
-						}
-						if (
-							decryptedMobileWebhook &&
-							isValidDiscordWebhook(decryptedMobileWebhook)
-						) {
-							await fetchWebhookInfo(decryptedMobileWebhook, 'mobile')
-						}
-					} catch (error) {
-						console.error('Failed to load settings:', error)
-					}
-				} else {
-					const initialSelectedGames: Record<string, boolean> = {}
-					effectiveGames.currentGames.forEach(game => {
-						initialSelectedGames[game.id] = true
-					})
-					effectiveGames.nextGames.forEach(game => {
-						initialSelectedGames[game.id] = false
-					})
-					mobile.forEach(game => {
-						initialSelectedGames[getMobileGameKey(game)] = true
-					})
-					setSettings(prev => ({
-						...prev,
-						selectedGames: initialSelectedGames,
-					}))
-				}
-			}
-			loadSettings()
-		}
-	}, [games, mobile, effectiveGames, fetchWebhookInfo])
+            effectiveGames.nextGames.forEach((game) => {
+              cleanedSelectedGames[game.id] =
+                parsedRest.selectedGames?.[game.id] ?? false;
+            });
 
-	useEffect(() => {
-		const saveSettings = async () => {
-			if (typeof window !== 'undefined') {
-				try {
-					const encryptedWebhook = settings.webhookUrl
-						? await encrypt(settings.webhookUrl)
-						: ''
-					const encryptedMobileWebhook = settings.webhookUrlMobile
-						? await encrypt(settings.webhookUrlMobile)
-						: ''
-					const settingsToSave = {
-						...settings,
-						webhookUrl: encryptedWebhook,
-						webhookUrlMobile: encryptedMobileWebhook,
-						checkoutLink,
-						lastCurrentGameIds: effectiveGames.currentGames.map(g => g.id),
-						lastMobileGameKeys: mobile.map(g => getMobileGameKey(g)),
-					}
-					localStorage.setItem('egFreeSettings', JSON.stringify(settingsToSave))
-				} catch (error) {
-					console.error('Failed to save settings:', error)
-				}
-			}
-		}
-		saveSettings()
-	}, [settings, checkoutLink, effectiveGames, mobile])
+            mobile.forEach((game) => {
+              const key = getMobileGameKey(game);
+              if (savedMobileKeys.has(key)) {
+                cleanedSelectedGames[key] =
+                  parsedRest.selectedGames?.[key] ?? true;
+              } else {
+                cleanedSelectedGames[key] = true;
+              }
+            });
 
-	const handleColorChange = (color: string) => {
-		updateSetting('embedColor', color === defaultColor ? defaultColor : color)
-	}
+            setSettings((prev) => ({
+              ...prev,
+              ...parsedRest,
+              selectedGames: cleanedSelectedGames,
+              embedColor: parsedRest.embedColor ?? defaultColor,
+              webhookUrl: decryptedWebhook,
+              webhookUrlMobile: decryptedMobileWebhook,
+              webhookName: parsedRest.webhookName,
+              webhookAvatar: parsedRest.webhookAvatar,
+              webhookNameMobile: parsedRest.webhookNameMobile,
+              webhookAvatarMobile: parsedRest.webhookAvatarMobile,
+              webhookChannelName: parsedRest.webhookChannelName,
+              webhookChannelNameMobile: parsedRest.webhookChannelNameMobile,
+              componentsV2: parsedRest.componentsV2 ?? true,
+            }));
+            setWebhookUrl(decryptedWebhook);
+            setWebhookUrlMobile(decryptedMobileWebhook);
+            setMessageId("");
+            if (decryptedWebhook && isValidDiscordWebhook(decryptedWebhook)) {
+              await fetchWebhookInfo(decryptedWebhook);
+            }
+            if (
+              decryptedMobileWebhook &&
+              isValidDiscordWebhook(decryptedMobileWebhook)
+            ) {
+              await fetchWebhookInfo(decryptedMobileWebhook, "mobile");
+            }
+          } catch (error) {
+            console.error("Failed to load settings:", error);
+          }
+        } else {
+          const initialSelectedGames: Record<string, boolean> = {};
+          effectiveGames.currentGames.forEach((game) => {
+            initialSelectedGames[game.id] = true;
+          });
+          effectiveGames.nextGames.forEach((game) => {
+            initialSelectedGames[game.id] = false;
+          });
+          mobile.forEach((game) => {
+            initialSelectedGames[getMobileGameKey(game)] = true;
+          });
+          setSettings((prev) => ({
+            ...prev,
+            selectedGames: initialSelectedGames,
+          }));
+        }
+      };
+      loadSettings();
+    }
+  }, [mobile, effectiveGames, fetchWebhookInfo]);
 
-	const copyToClipboard = async () => {
-		try {
-			await navigator.clipboard.writeText(JSON.stringify(jsonData, null, 2))
-			setIsCopied(true)
-			setTimeout(() => setIsCopied(false), 1000)
-		} catch (err) {
-			console.error('Failed to copy text: ', err)
-			toast.error('Failed to copy JSON Data.')
-		}
-	}
+  useEffect(() => {
+    const saveSettings = async () => {
+      if (typeof window !== "undefined") {
+        try {
+          const encryptedWebhook = settings.webhookUrl
+            ? await encrypt(settings.webhookUrl)
+            : "";
+          const encryptedMobileWebhook = settings.webhookUrlMobile
+            ? await encrypt(settings.webhookUrlMobile)
+            : "";
+          const settingsToSave = {
+            ...settings,
+            webhookUrl: encryptedWebhook,
+            webhookUrlMobile: encryptedMobileWebhook,
+            checkoutLink,
+            lastCurrentGameIds: effectiveGames.currentGames.map((g) => g.id),
+            lastMobileGameKeys: mobile.map((g) => getMobileGameKey(g)),
+          };
+          localStorage.setItem(
+            "egFreeSettings",
+            JSON.stringify(settingsToSave),
+          );
+        } catch (error) {
+          console.error("Failed to save settings:", error);
+        }
+      }
+    };
+    saveSettings();
+  }, [settings, checkoutLink, effectiveGames, mobile]);
 
-	const canSendWebhook =
-		settings.splitDesktopMobile && canSplitDesktopMobile
-			? (!settings.sendDesktop || isValidDiscordWebhook(webhookUrl)) &&
-				(!settings.sendMobile ||
-					isValidDiscordWebhook(
-						settings.useDesktopWebhookForMobile ? webhookUrl : webhookUrlMobile,
-					))
-			: isValidDiscordWebhook(webhookUrl)
+  const handleColorChange = (color: string) => {
+    updateSetting("embedColor", color === defaultColor ? defaultColor : color);
+  };
 
-	const [noOffers, setNoOffers] = useState(false)
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(jsonData, null, 2));
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 1000);
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+      toast.error("Failed to copy JSON Data.");
+    }
+  };
 
-	const hasSelectedGames = useMemo(() => {
-		const hasSelectedDesktop = [
-			...effectiveGames.currentGames,
-			...effectiveGames.nextGames,
-		].some(game => settings.selectedGames[game.id])
+  const canSendWebhook =
+    settings.splitDesktopMobile && canSplitDesktopMobile
+      ? (!settings.sendDesktop ||
+          (isValidDiscordWebhook(webhookUrl) && isWebhookValid)) &&
+        (!settings.sendMobile ||
+          (settings.useDesktopWebhookForMobile
+            ? isValidDiscordWebhook(webhookUrl) && isWebhookValid
+            : isValidDiscordWebhook(webhookUrlMobile) && isMobileWebhookValid))
+      : isValidDiscordWebhook(webhookUrl) && isWebhookValid;
 
-		const hasSelectedMobile = activeMobileGames.some(
-			game => settings.selectedGames[getMobileGameKey(game)],
-		)
+  const [noOffers, setNoOffers] = useState(false);
 
-		if (settings.splitDesktopMobile && canSplitDesktopMobile) {
-			if (settings.sendDesktop && !hasSelectedDesktop) return false
-			if (settings.sendMobile && !hasSelectedMobile) return false
-			return true
-		}
+  const hasSelectedGames = useMemo(() => {
+    const hasSelectedDesktop = [
+      ...effectiveGames.currentGames,
+      ...effectiveGames.nextGames,
+    ].some((game) => settings.selectedGames[game.id]);
 
-		return hasSelectedDesktop || hasSelectedMobile
-	}, [
-		effectiveGames,
-		activeMobileGames,
-		settings.selectedGames,
-		settings.splitDesktopMobile,
-		canSplitDesktopMobile,
-		settings.sendDesktop,
-		settings.sendMobile,
-	])
+    const hasSelectedMobile = activeMobileGames.some(
+      (game) => settings.selectedGames[getMobileGameKey(game)],
+    );
 
-	const executeSendWebhook = async () => {
-		const desktopWebhookUrl = webhookUrl.trim()
-		const mobileWebhookTargetUrl = (
-			settings.useDesktopWebhookForMobile ? webhookUrl : webhookUrlMobile
-		).trim()
+    if (settings.splitDesktopMobile && canSplitDesktopMobile) {
+      if (settings.sendDesktop && !hasSelectedDesktop) return false;
+      if (settings.sendMobile && !hasSelectedMobile) return false;
+      return true;
+    }
 
-		try {
-			setIsLoading(true)
-			setShowWarning(false)
+    return hasSelectedDesktop || hasSelectedMobile;
+  }, [
+    effectiveGames,
+    activeMobileGames,
+    settings.selectedGames,
+    settings.splitDesktopMobile,
+    canSplitDesktopMobile,
+    settings.sendDesktop,
+    settings.sendMobile,
+  ]);
 
-			if (settings.splitDesktopMobile && canSplitDesktopMobile) {
-				const desktopPayload = buildDiscordMessagePayload(
-					effectiveGames,
-					settings,
-					checkoutLink,
-					[],
-				)
-				const mobilePayload = buildDiscordMessagePayload(
-					{ currentGames: [], nextGames: [] },
-					{
-						...settings,
-						embedContent: settings.embedContentMobile || defaultMobileContent,
-					},
-					checkoutLink,
-					mobile,
-				)
+  const executeSendWebhook = async () => {
+    const desktopWebhookUrl = webhookUrl.trim();
+    const mobileWebhookTargetUrl = (
+      settings.useDesktopWebhookForMobile ? webhookUrl : webhookUrlMobile
+    ).trim();
 
-				const sendOne = async (
-					payload: object,
-					targetWebhookUrl: string,
-					msgId: string,
-					label: string,
-				): Promise<{ ok: boolean; messageId?: string; label: string }> => {
-					const res = await fetch('/api/webhook', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({
-							webhookUrl: targetWebhookUrl,
-							jsonData: payload,
-							messageId: msgId,
-						}),
-					})
-					if (!res.ok) {
-						return { ok: false, label }
-					}
-					const data = await res.json()
-					return { ok: true, messageId: data.messageId, label }
-				}
+    try {
+      setIsLoading(true);
+      setShowWarning(false);
 
-				if (settings.sendDesktop) {
-					const deskRes = await sendOne(
-						desktopPayload,
-						desktopWebhookUrl,
-						messageId,
-						'desktop',
-					)
-					if (deskRes.ok) {
-						if (!messageId && deskRes.messageId) setMessageId(deskRes.messageId)
-						toast.success(
-							messageId ? 'Desktop message updated.' : 'Desktop message sent.',
-						)
-					} else {
-						toast.error('Failed to send desktop message.')
-					}
-				}
+      if (settings.splitDesktopMobile && canSplitDesktopMobile) {
+        const desktopPayload = buildDiscordMessagePayload(
+          effectiveGames,
+          settings,
+          checkoutLink,
+          [],
+        );
+        const mobilePayload = buildDiscordMessagePayload(
+          { currentGames: [], nextGames: [] },
+          {
+            ...settings,
+            embedContent: settings.embedContentMobile || defaultMobileContent,
+          },
+          checkoutLink,
+          mobile,
+        );
 
-				if (settings.sendMobile) {
-					const mobRes = await sendOne(
-						mobilePayload,
-						mobileWebhookTargetUrl,
-						mobileMessageId,
-						'mobile',
-					)
-					if (mobRes.ok) {
-						if (!mobileMessageId && mobRes.messageId)
-							setMobileMessageId(mobRes.messageId)
-						toast.success(
-							mobileMessageId ? 'Mobile message updated.' : 'Mobile message sent.',
-						)
-					} else {
-						toast.error('Failed to send mobile message.')
-					}
-				}
+        const sendOne = async (
+          payload: object,
+          targetWebhookUrl: string,
+          msgId: string,
+          label: string,
+        ): Promise<{ ok: boolean; messageId?: string; label: string }> => {
+          const res = await fetch("/api/webhook", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              webhookUrl: targetWebhookUrl,
+              jsonData: payload,
+              messageId: msgId,
+            }),
+          });
+          if (!res.ok) {
+            return { ok: false, label };
+          }
+          const data = await res.json();
+          return { ok: true, messageId: data.messageId, label };
+        };
 
-				setIsLoading(false)
-				return
-			}
+        if (settings.sendDesktop) {
+          const deskRes = await sendOne(
+            desktopPayload,
+            desktopWebhookUrl,
+            messageId,
+            "desktop",
+          );
+          if (deskRes.ok) {
+            if (!messageId && deskRes.messageId)
+              setMessageId(deskRes.messageId);
+            toast.success(
+              messageId ? "Desktop message updated." : "Desktop message sent.",
+            );
+          } else {
+            toast.error("Failed to send desktop message.");
+          }
+        }
 
-			const response = await fetch('/api/webhook', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					webhookUrl: desktopWebhookUrl,
-					jsonData,
-					messageId,
-				}),
-			})
+        if (settings.sendMobile) {
+          const mobRes = await sendOne(
+            mobilePayload,
+            mobileWebhookTargetUrl,
+            mobileMessageId,
+            "mobile",
+          );
+          if (mobRes.ok) {
+            if (!mobileMessageId && mobRes.messageId)
+              setMobileMessageId(mobRes.messageId);
+            toast.success(
+              mobileMessageId
+                ? "Mobile message updated."
+                : "Mobile message sent.",
+            );
+          } else {
+            toast.error("Failed to send mobile message.");
+          }
+        }
 
-			if (response.ok) {
-				const responseData = await response.json()
-				if (messageId) {
-					toast.success('Successfully updated message.')
-				} else {
-					toast.success('Successfully sent data.')
-					if (responseData.messageId) {
-						setMessageId(responseData.messageId)
-					}
-				}
-			} else {
-				const errorData = await response.json()
-				throw new Error(errorData.message || 'Failed to send JSON Data.')
-			}
-		} catch (error) {
-			console.error('Failed to send:', error)
-			toast.error('Failed to send JSON Data.', {
-				description: 'The webhook or data might be invalid.',
-			})
-		}
-		setIsLoading(false)
-	}
+        setIsLoading(false);
+        return;
+      }
 
-	const handleWebhook = async () => {
-		const desktopWebhookUrl = webhookUrl.trim()
-		const mobileWebhookTargetUrl = (
-			settings.useDesktopWebhookForMobile ? webhookUrl : webhookUrlMobile
-		).trim()
-		if (settings.splitDesktopMobile && canSplitDesktopMobile) {
-			if (!settings.sendDesktop && !settings.sendMobile) {
-				toast.error('Select at least desktop or mobile to send.')
-				return
-			}
-			if (settings.sendDesktop && !isValidDiscordWebhook(desktopWebhookUrl)) {
-				toast.error('Insert a valid desktop webhook URL.')
-				return
-			}
-			if (settings.sendMobile && !isValidDiscordWebhook(mobileWebhookTargetUrl)) {
-				toast.error('Insert a valid mobile webhook URL.')
-				return
-			}
-		} else {
-			if (!desktopWebhookUrl) {
-				toast.error('Insert a webhook.')
-				return
-			}
-			if (!isValidDiscordWebhook(desktopWebhookUrl)) {
-				toast.error('Invalid Discord webhook URL format.')
-				return
-			}
-		}
+      const response = await fetch("/api/webhook", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          webhookUrl: desktopWebhookUrl,
+          jsonData,
+          messageId,
+        }),
+      });
 
-		if (!showWarning) {
-			setShowWarning(true)
-			setTimeout(() => setShowWarning(false), 3000)
-			return
-		}
+      if (response.ok) {
+        const responseData = await response.json();
+        if (messageId) {
+          toast.success("Successfully updated message.");
+        } else {
+          toast.success("Successfully sent data.");
+          if (responseData.messageId) {
+            setMessageId(responseData.messageId);
+          }
+        }
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to send JSON Data.");
+      }
+    } catch (error) {
+      console.error("Failed to send:", error);
+      toast.error("Failed to send JSON Data.", {
+        description: "The webhook or data might be invalid.",
+      });
+    }
+    setIsLoading(false);
+  };
 
-		if (!hasSelectedGames) {
-			setShowWarning(false)
-			setNoOffers(true)
-			return
-		}
+  const handleWebhook = async () => {
+    const desktopWebhookUrl = webhookUrl.trim();
+    const mobileWebhookTargetUrl = (
+      settings.useDesktopWebhookForMobile ? webhookUrl : webhookUrlMobile
+    ).trim();
+    if (settings.splitDesktopMobile && canSplitDesktopMobile) {
+      if (!settings.sendDesktop && !settings.sendMobile) {
+        toast.error("Select at least desktop or mobile to send.");
+        return;
+      }
+      if (
+        settings.sendDesktop &&
+        (!isValidDiscordWebhook(desktopWebhookUrl) || !isWebhookValid)
+      ) {
+        toast.error("Insert a valid desktop webhook URL.");
+        return;
+      }
+      if (
+        settings.sendMobile &&
+        (!isValidDiscordWebhook(mobileWebhookTargetUrl) ||
+          (settings.useDesktopWebhookForMobile
+            ? !isWebhookValid
+            : !isMobileWebhookValid))
+      ) {
+        toast.error("Insert a valid mobile webhook URL.");
+        return;
+      }
+    } else {
+      if (!desktopWebhookUrl) {
+        toast.error("Insert a webhook.");
+        return;
+      }
+      if (!isValidDiscordWebhook(desktopWebhookUrl) || !isWebhookValid) {
+        toast.error("Invalid Discord webhook URL.");
+        return;
+      }
+    }
 
-		await executeSendWebhook()
-	}
+    if (!showWarning) {
+      setShowWarning(true);
+      setTimeout(() => setShowWarning(false), 3000);
+      return;
+    }
 
-	const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-	const debouncedFetchWebhookInfo = (url: string) => {
-		if (timeoutRef.current) {
-			clearTimeout(timeoutRef.current)
-		}
-		timeoutRef.current = setTimeout(() => {
-			fetchWebhookInfo(url)
-		}, 500)
-	}
+    if (!hasSelectedGames) {
+      setShowWarning(false);
+      setNoOffers(true);
+      return;
+    }
 
-	const handlePaste = async () => {
-		try {
-			const text = await navigator.clipboard.readText()
-			setWebhookUrl(text)
-			debouncedFetchWebhookInfo(text)
-		} catch {
-			console.error('Failed to paste text')
-		}
-	}
-	const handlePasteMobile = async () => {
-		try {
-			const text = await navigator.clipboard.readText()
-			setWebhookUrlMobile(text)
-			if (isValidDiscordWebhook(text)) {
-				await fetchWebhookInfo(text, 'mobile')
-			}
-		} catch {
-			console.error('Failed to paste mobile webhook text')
-		}
-	}
+    await executeSendWebhook();
+  };
 
-	const formProps = {
-		games: effectiveGames,
-		settings,
-		parsedMobileGames: mobile,
-		canSplitDesktopMobile,
-		webhookUrl,
-		setWebhookUrl,
-		webhookUrlMobile,
-		setWebhookUrlMobile,
-		messageId,
-		setMessageId,
-		mobileMessageId,
-		setMobileMessageId,
-		checkoutLink,
-		setCheckoutLink,
-		isVisible,
-		setIsVisible,
-		isMobileWebhookVisible,
-		setIsMobileWebhookVisible,
-		isLoading,
-		showWarning,
-		updateSetting,
-		handleColorChange,
-		handleWebhook,
-		handlePaste,
-		handlePasteMobile,
-		canSendWebhook,
-		isValidDiscordWebhook,
-		debouncedFetchWebhookInfo,
-		fetchWebhookInfo,
-		defaultContent,
-		defaultMobileContent,
-	}
+  const desktopTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const mobileTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const debouncedFetchWebhookInfo = useCallback(
+    (url: string, target: "desktop" | "mobile" = "desktop") => {
+      const timeoutRef =
+        target === "mobile" ? mobileTimeoutRef : desktopTimeoutRef;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      const trimmed = url.trim();
+      if (!trimmed || !isValidDiscordWebhook(trimmed)) {
+        if (target === "mobile") {
+          setIsMobileWebhookValid(false);
+          setIsMobileWebhookLoading(false);
+          updateSetting("webhookNameMobile", undefined);
+          updateSetting("webhookAvatarMobile", undefined);
+          updateSetting("webhookChannelNameMobile", undefined);
+        } else {
+          setIsWebhookValid(false);
+          setIsWebhookLoading(false);
+          updateSetting("webhookName", undefined);
+          updateSetting("webhookAvatar", undefined);
+          updateSetting("webhookChannelName", undefined);
+        }
+        return;
+      }
 
-	const previewProps = {
-		jsonData,
-		settings,
-		updateSetting,
-		copyToClipboard,
-		isCopied,
-		games: effectiveGames,
-		checkoutLink,
-		parsedMobileGames: mobile,
-	}
+      if (target === "mobile") {
+        setIsMobileWebhookLoading(true);
+      } else {
+        setIsWebhookLoading(true);
+      }
 
-	return (
-		<>
-			<Dialog>
-				<DialogTrigger asChild>
-					<Button variant="ghost" className="rounded-full">
-						<FileJson2 className="size-5!" />
-						JSON
-					</Button>
-				</DialogTrigger>
-				<DialogContent
-					onOpenAutoFocus={e => e.preventDefault()}
-					hideCloseButton
-					className="max-w-7xl! w-full max-h-[90vh] h-[90vh] overflow-hidden p-0 z-70 flex flex-col"
-				>
-					<div className="flex flex-col lg:flex-row flex-1 min-h-0">
-						<div className="w-full lg:w-2/5 lg:min-w-0 lg:max-w-130 border-b lg:border-b-0 lg:border-r flex flex-col flex-1 lg:flex-none lg:shrink-0 min-h-0">
-							<div className="px-6 py-5 lg:border-b shrink-0 bg-background flex flex-col gap-1.5 items-start justify-center relative z-10">
-								<div className="flex w-full items-center justify-between">
-									<DialogTitle className="flex items-center gap-3 text-xl font-bold tracking-tight">
-										<div className="flex items-center justify-center p-1.5 rounded-lg bg-primary/10 text-primary">
-											<FileJson2 className="size-5" />
-										</div>
-										JSON Builder
-									</DialogTitle>
-									<DialogClose className="rounded-full bg-muted/40 p-2 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-										<X className="size-4" />
-										<span className="sr-only">Close</span>
-									</DialogClose>
-								</div>
-								<DialogDescription className="text-sm font-medium">
-									Configure settings to customize your Discord embeds.
-								</DialogDescription>
-							</div>
+      timeoutRef.current = setTimeout(() => {
+        fetchWebhookInfo(trimmed, target);
+      }, 500);
+    },
+    [fetchWebhookInfo, updateSetting],
+  );
 
-							<div className="block lg:hidden flex-1 min-h-0">
-								<Tabs
-									defaultValue="settings"
-									className="flex h-full flex-col min-h-0 gap-0"
-								>
-									<TabsList className="w-full h-auto rounded-none border-b border-border bg-transparent p-0 shrink-0">
-										<TabsTrigger
-											value="settings"
-											className="flex-1 relative rounded-none py-2.5 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
-										>
-											Settings
-										</TabsTrigger>
-										<TabsTrigger
-											value="preview"
-											className="flex-1 relative rounded-none py-2.5 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
-										>
-											Preview
-										</TabsTrigger>
-									</TabsList>
-									<TabsContent
-										value="settings"
-										className="overflow-hidden mt-0 pb-0 border-0 flex-1 min-h-0"
-									>
-										<ScrollArea className="h-full">
-											<JsonFormContent idSuffix="-mobile" {...formProps} />
-										</ScrollArea>
-									</TabsContent>
-									<TabsContent
-										value="preview"
-										className="overflow-hidden mt-0 pb-0 border-0 flex-1 min-h-0"
-									>
-										<ScrollArea className="h-full">
-											<JsonPreviewContent
-												idSuffix="-mobile"
-												inlineButtons
-												{...previewProps}
-											/>
-										</ScrollArea>
-									</TabsContent>
-								</Tabs>
-							</div>
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const trimmed = text.trim();
+      setWebhookUrl(trimmed);
+      if (trimmed) {
+        await fetchWebhookInfo(trimmed, "desktop");
+      }
+    } catch (err) {
+      console.error("Failed to paste text:", err);
+      toast.error("Clipboard permission denied", {
+        description:
+          "Please allow clipboard permissions in your browser or paste directly using Ctrl+V.",
+      });
+    }
+  };
+  const handlePasteMobile = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const trimmed = text.trim();
+      setWebhookUrlMobile(trimmed);
+      if (trimmed) {
+        await fetchWebhookInfo(trimmed, "mobile");
+      }
+    } catch (err) {
+      console.error("Failed to paste mobile webhook text:", err);
+      toast.error("Clipboard permission denied", {
+        description:
+          "Please allow clipboard permissions in your browser or paste directly using Ctrl+V.",
+      });
+    }
+  };
 
-							<div className="hidden lg:block overflow-hidden flex-1 min-h-0">
-								<ScrollArea className="h-full">
-									<JsonFormContent {...formProps} />
-								</ScrollArea>
-							</div>
-						</div>
+  const handleConfirmSaveWebhook = () => {
+    if (saveWebhookTarget === "mobile") {
+      updateSetting("webhookUrlMobile", webhookUrlMobile);
+      fetchWebhookInfo(webhookUrlMobile, "mobile");
+      toast.success("Mobile webhook saved locally");
+    } else {
+      updateSetting("webhookUrl", webhookUrl);
+      fetchWebhookInfo(webhookUrl, "desktop");
+      toast.success("Webhook saved locally");
+    }
+    setSaveWebhookTarget(null);
+  };
 
-						<div className="hidden lg:flex flex-col flex-1 min-w-0 min-h-0 bg-muted/10 rounded-r-lg border-l border-border/50">
-							<div className="flex justify-end gap-3 p-2 shrink-0 border-b border-border/50 bg-background/50 backdrop-blur-sm z-10 w-full items-center">
-								<JsonPreviewButtons {...previewProps} />
-							</div>
-							<div className="overflow-hidden grow min-h-0">
-								<ScrollArea className="h-full border border-border/40 bg-background shadow-xs overflow-hidden">
-									<JsonPreviewContent inlineButtons={false} {...previewProps} />
-								</ScrollArea>
-							</div>
-						</div>
-					</div>
-				</DialogContent>
-			</Dialog>
+  const formProps = {
+    games: effectiveGames,
+    settings,
+    parsedMobileGames: mobile,
+    canSplitDesktopMobile,
+    webhookUrl,
+    setWebhookUrl,
+    webhookUrlMobile,
+    setWebhookUrlMobile,
+    messageId,
+    setMessageId,
+    mobileMessageId,
+    setMobileMessageId,
+    checkoutLink,
+    setCheckoutLink,
+    isVisible,
+    setIsVisible,
+    isMobileWebhookVisible,
+    setIsMobileWebhookVisible,
+    isWebhookValid,
+    isWebhookLoading,
+    isMobileWebhookValid,
+    isMobileWebhookLoading,
+    onSaveDesktop: () => setSaveWebhookTarget("desktop"),
+    onSaveMobile: () => setSaveWebhookTarget("mobile"),
+    isLoading,
+    showWarning,
+    updateSetting,
+    handleColorChange,
+    handleWebhook,
+    handlePaste,
+    handlePasteMobile,
+    canSendWebhook,
+    debouncedFetchWebhookInfo,
+    defaultContent,
+    defaultMobileContent,
+  };
 
-			<AlertDialog open={noOffers} onOpenChange={setNoOffers}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle className="flex items-center gap-2 text-yellow-500">
-							<AlertTriangle className="size-5" />
-							No Offers Selected
-						</AlertDialogTitle>
-						<AlertDialogDescription>
-							You haven&apos;t selected any offers to include in the webhook message.
-							Are you sure you want to send without any offers?
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction
-							onClick={() => {
-								setNoOffers(false)
-								executeSendWebhook()
-							}}
-							className="text-white dark:text-black"
-						>
-							Send Anyway
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-		</>
-	)
+  const previewProps = {
+    jsonData,
+    settings,
+    updateSetting,
+    copyToClipboard,
+    isCopied,
+    games: effectiveGames,
+    checkoutLink,
+    parsedMobileGames: mobile,
+  };
+
+  return (
+    <>
+      <Dialog>
+        <DialogTrigger
+          render={
+            <Button variant="ghost" className="rounded-full">
+              <FileJson2 className="size-5!" />
+              JSON
+            </Button>
+          }
+        />
+        <DialogContent
+          showCloseButton={false}
+          className="top-0! left-0! translate-x-0! translate-y-0! sm:top-1/2! sm:left-1/2! sm:-translate-x-1/2! sm:-translate-y-1/2! w-full max-w-none sm:max-w-5xl lg:max-w-6xl xl:max-w-7xl sm:w-[calc(100%-2rem)] h-dvh sm:h-[90vh] sm:max-h-[900px] p-0 gap-0 overflow-hidden bg-background border-0 sm:border sm:border-border rounded-none sm:rounded-xl shadow-2xl flex flex-col"
+        >
+          <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border shrink-0 bg-background relative z-10">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center justify-center p-1.5 rounded-lg bg-primary/10 text-primary shrink-0">
+                <FileJson2 className="size-5" />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg font-bold tracking-tight truncate">
+                  JSON Builder
+                </DialogTitle>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="hidden lg:flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={copyToClipboard}
+                  className="gap-1.5 text-xs font-semibold"
+                >
+                  {isCopied ? (
+                    <Check className="size-3.5 text-primary" />
+                  ) : (
+                    <ClipboardCopy className="size-3.5" />
+                  )}
+                  {isCopied ? "Copied!" : "Copy JSON"}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    updateSetting(
+                      "showDiscordPreview",
+                      !settings.showDiscordPreview,
+                    )
+                  }
+                  className={`gap-1.5 text-xs font-semibold transition-all ${
+                    settings.showDiscordPreview
+                      ? "bg-[#5865F2] hover:bg-[#4752C4] text-white border-transparent shadow-sm"
+                      : "border border-border dark:border-input dark:bg-input/30 bg-background text-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  <Discord
+                    className={`size-3.5 ${
+                      settings.showDiscordPreview
+                        ? "text-white"
+                        : "text-[#5865F2]"
+                    }`}
+                  />
+                  Discord Preview
+                </Button>
+              </div>
+              <DialogClose
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="rounded-full text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="size-4" />
+                  </Button>
+                }
+              />
+            </div>
+          </div>
+
+          <div className="flex-1 min-h-0 overflow-hidden relative">
+            <div className="lg:hidden h-full">
+              <Tabs
+                defaultValue="form"
+                className="h-full flex flex-col min-h-0 gap-0"
+              >
+                <TabsList className="w-full h-auto rounded-none border-b border-border bg-transparent p-0 shrink-0">
+                  <TabsTrigger
+                    value="form"
+                    className="flex-1 relative rounded-none py-2.5 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-active:bg-transparent data-active:shadow-none data-active:after:bg-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary font-medium text-sm"
+                  >
+                    Configure
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="preview"
+                    className="flex-1 relative rounded-none py-2.5 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-active:bg-transparent data-active:shadow-none data-active:after:bg-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary font-medium text-sm"
+                  >
+                    Preview
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent
+                  value="form"
+                  className="flex-1 min-h-0 m-0 outline-none flex flex-col overflow-hidden"
+                >
+                  <ScrollArea className="flex-1 min-h-0">
+                    <JsonFormContent idSuffix="-mobile" {...formProps} />
+                  </ScrollArea>
+                  <div className="p-4 border-t border-border bg-background shrink-0">
+                    <JsonFormActions {...formProps} />
+                  </div>
+                </TabsContent>
+                <TabsContent
+                  value="preview"
+                  className="flex-1 min-h-0 m-0 p-4 outline-none overflow-y-auto"
+                >
+                  <JsonPreviewContent inlineButtons={true} {...previewProps} />
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            <div className="hidden lg:grid h-full lg:grid-cols-[1fr_auto_1fr] xl:grid-cols-[1fr_auto_1.2fr] divide-x divide-border">
+              <div className="flex flex-col h-full min-h-0 overflow-hidden bg-background">
+                <ScrollArea className="flex-1 min-h-0">
+                  <JsonFormContent {...formProps} />
+                </ScrollArea>
+                <div className="p-4 border-t border-border bg-background shrink-0">
+                  <JsonFormActions {...formProps} />
+                </div>
+              </div>
+
+              <div className="w-px bg-border h-full shrink-0" />
+
+              <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted/10">
+                <ScrollArea className="h-full bg-background">
+                  <div className="w-full">
+                    <JsonPreviewContent
+                      inlineButtons={false}
+                      {...previewProps}
+                    />
+                  </div>
+                </ScrollArea>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        open={saveWebhookTarget !== null}
+        onOpenChange={(open) => !open && setSaveWebhookTarget(null)}
+      >
+        <AlertDialogContent className="border-primary/20 shadow-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-primary">
+              <Save className="size-5" /> Warning
+            </AlertDialogTitle>
+            <AlertDialogDescription
+              render={<div />}
+              className="space-y-2 text-base"
+            >
+              <p>
+                {saveWebhookTarget === "mobile"
+                  ? "This will encrypt and save your mobile webhook in your browser's local storage."
+                  : "This will encrypt and save your webhook in your browser's local storage and will automatically populate the URL input."}
+              </p>
+              <p className="font-semibold text-foreground text-sm mt-1">
+                Consider manually pasting the webhook as a safer alternative.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmSaveWebhook}>
+              Save Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={noOffers} onOpenChange={setNoOffers}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-yellow-500">
+              <AlertTriangle className="size-5" />
+              No Offers Selected
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              You haven&apos;t selected any offers to include in the webhook
+              message. Are you sure you want to send without any offers?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setNoOffers(false);
+                executeSendWebhook();
+              }}
+              className="text-white dark:text-black"
+            >
+              Send Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
 }
