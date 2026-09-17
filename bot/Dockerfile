@@ -2,7 +2,7 @@ FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@11.10.0
 
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* tsconfig.json ./
 
