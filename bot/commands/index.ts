@@ -38,6 +38,14 @@ export function getSlashCommands() {
               .setRequired(false)
               .setAutocomplete(true),
           )
+          .addStringOption((option) =>
+            option
+              .setName("checkout_link")
+              .setDescription(
+                "Custom Claim All / checkout link for mystery games or bundles",
+              )
+              .setRequired(false),
+          )
           .addBooleanOption((option) =>
             option
               .setName("force")
@@ -61,6 +69,29 @@ export function getSlashCommands() {
               .setName("addons")
               .setDescription(
                 "Include add-ons / DLCs (defaults to server setting)",
+              )
+              .setRequired(false),
+          ),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("edit-link")
+          .setDescription(
+            "Edit the Claim All checkout link for already-posted announcements",
+          )
+          .addStringOption((option) =>
+            option
+              .setName("link")
+              .setDescription(
+                "New Epic Games checkout link (e.g. for mystery games)",
+              )
+              .setRequired(false),
+          )
+          .addBooleanOption((option) =>
+            option
+              .setName("clear")
+              .setDescription(
+                "Clear custom checkout link and revert to default",
               )
               .setRequired(false),
           ),

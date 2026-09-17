@@ -113,6 +113,92 @@ async function testOfferPayload() {
     ),
   );
 
+  console.log("\n=== 5. Testing Mystery Games with Custom Checkout Link ===");
+  const mysteryGameMock: GameItem = {
+    id: "mystery-offer-123",
+    title: "Mystery Game",
+    description: "Unlock a mystery game every day!",
+    offerType: "BASE_GAME",
+    namespace: "mysteryns",
+    seller: { id: "test", name: "Epic Dev Test Account" },
+    productSlug: "mystery-game",
+    urlSlug: "mystery-game",
+    keyImages: [],
+    categories: [{ path: "games" }],
+    items: [],
+    customAttributes: [],
+    price: {
+      totalPrice: {
+        discountPrice: 0,
+        originalPrice: 2999,
+        voucherDiscount: 0,
+        discount: 2999,
+        currencyCode: "USD",
+        currencyInfo: { decimals: 2 },
+        fmtPrice: {
+          originalPrice: "$29.99",
+          discountPrice: "0",
+          intermediatePrice: "0",
+        },
+      },
+      lineOffers: [],
+    },
+    promotions: {
+      promotionalOffers: [
+        {
+          promotionalOffers: [
+            {
+              startDate: new Date().toISOString(),
+              endDate: new Date(Date.now() + 86400000).toISOString(),
+              discountSetting: {
+                discountType: "PERCENTAGE",
+                discountPercentage: 0,
+              },
+            },
+          ],
+        },
+      ],
+      upcomingPromotionalOffers: [],
+    },
+  };
+
+  const mockMysteryOffers: FetchedOffers = {
+    ...offers,
+    effectiveGames: {
+      currentGames: [mysteryGameMock],
+      nextGames: [],
+    },
+    currentOfferIds: [mysteryGameMock.id],
+    newDesktopIds: [mysteryGameMock.id],
+    hasNewOffers: true,
+    hasNewDesktopOffers: true,
+  };
+
+  const customTestLink =
+    "https://store.epicgames.com/purchase?offers=1-mysteryns-mystery-offer-123-";
+
+  // Test mystery game with custom link
+  const mysteryPayloadWithLink = generateOfferPayloads(
+    mockMysteryOffers,
+    state.settings,
+    { checkoutLink: customTestLink },
+  );
+  console.log(
+    "Generated mystery game payload with custom link successfully:",
+    Boolean(
+      mysteryPayloadWithLink.combinedPayload ||
+        mysteryPayloadWithLink.desktopPayload,
+    ),
+  );
+
+  const mysteryV2Prompt = buildConfirmationPayload(mockMysteryOffers, {
+    checkoutLink: customTestLink,
+  });
+  console.log(
+    "Mystery game V2 confirmation prompt with custom checkout link built successfully. Components:",
+    mysteryV2Prompt.v2Payload?.components?.length,
+  );
+
   console.log("\n✅ All tests passed successfully!");
 }
 

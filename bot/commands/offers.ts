@@ -1,5 +1,9 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
-import { COMPONENT_TYPES, IS_COMPONENTS_V2 } from "@/lib/builder/shared";
+import {
+  COMPONENT_TYPES,
+  IS_COMPONENTS_V2,
+  normalizeEpicCheckoutLink,
+} from "@/lib/builder/shared";
 import { logger } from "../logger";
 import { canManageSettings } from "../services/discordService";
 import {
@@ -9,11 +13,14 @@ import {
 import type { OfferSchedulerService } from "../services/schedulerService";
 import type { BotCredentials } from "../state";
 import {
+  getGuildLastCheckoutLink,
+  getGuildPostedMessages,
   getGuildPostedOfferIds,
   getGuildSeenUpcomingOfferIds,
   getGuildSettings,
   recordGuildPostedOffers,
   recordGuildSeenUpcomingOffers,
+  setPendingCheckoutLink,
 } from "../state";
 import { sendConfirmationPrompt } from "../ui/confirmationPrompt";
 
@@ -141,6 +148,16 @@ export async function handleOffersCommand(
         interaction.options.getBoolean("require_confirmation") ??
         guildSettings.requireConfirmation;
       const specificGame = interaction.options.getString("game")?.trim();
+      const rawCheckoutLink = interaction.options
+        .getString("checkout_link")
+        ?.trim();
+      const checkoutLink = rawCheckoutLink
+        ? normalizeEpicCheckoutLink(rawCheckoutLink)
+        : "";
+
+      if (checkoutLink) {
+        setPendingCheckoutLink(guildId, checkoutLink);
+      }
 
       const prevOfferIds = getGuildPostedOfferIds(guildId);
       const prevUpcomingIds = getGuildSeenUpcomingOfferIds(guildId);
@@ -197,6 +214,7 @@ export async function handleOffersCommand(
             guildId,
             includeAddOns,
             selectedIndices,
+            checkoutLink: checkoutLink || undefined,
           },
         );
       } else {
@@ -205,6 +223,7 @@ export async function handleOffersCommand(
           guildId,
           includeAddOns,
           selectedGameIds,
+          checkoutLink,
         });
         if (result.success) {
           const postedCurrentIds = (
@@ -216,7 +235,7 @@ export async function handleOffersCommand(
 
           recordGuildPostedOffers(guildId, postedCurrentIds, postedUpcomingIds);
           await interaction.editReply(
-            "Offers posted successfully to the announcement channel.",
+            `Offers posted successfully to the announcement channel.${checkoutLink ? `\nCheckout link: \`${checkoutLink}\`` : ""}`,
           );
         } else {
           await interaction.editReply(`Failed to post offers: ${result.error}`);
@@ -226,6 +245,65 @@ export async function handleOffersCommand(
       logger.error("Error in /offers post:", error);
       await interaction.editReply(
         `Failed to process post request: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  } else if (subcommand === "edit-link") {
+    if (!canManageSettings(interaction)) {
+      await interaction.reply({
+        content:
+          "Access Denied: You need Administrator or Manage Server permissions (or the configured Review Role) to edit checkout links.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    await interaction.deferReply();
+    try {
+      const rawLink = interaction.options.getString("link")?.trim();
+      const clear = interaction.options.getBoolean("clear") || false;
+
+      if (!rawLink && !clear) {
+        const currentLink = getGuildLastCheckoutLink(guildId);
+        const postedRefs = getGuildPostedMessages(guildId);
+        await interaction.editReply(
+          `ℹ️ **Current Broadcasted Checkout Link:** ${currentLink ? `\`${currentLink}\`` : "*None (default)*"}\n**Tracked announcement messages:** ${postedRefs.length}\n\nTo update the link on the announcement message(s), run \`/offers edit-link link:<new_url>\` or \`/offers edit-link clear:True\`.`,
+        );
+        return;
+      }
+
+      const checkoutLink = clear
+        ? ""
+        : rawLink
+          ? normalizeEpicCheckoutLink(rawLink)
+          : "";
+
+      const prevOfferIds = getGuildPostedOfferIds(guildId);
+      const s = getGuildSettings(guildId);
+
+      const offers = await fetchCurrentOffers(prevOfferIds, {
+        includeUpcoming: false,
+        includeAddOns: s.includeAddOns,
+      });
+
+      const result = await scheduler.editBroadcastedOffers(
+        offers,
+        checkoutLink,
+        guildId,
+      );
+
+      if (result.success) {
+        await interaction.editReply(
+          `✅ Successfully updated **${result.updatedCount}** announcement message(s)${checkoutLink ? ` with checkout link: \`${checkoutLink}\`` : " to remove custom checkout link"}.`,
+        );
+      } else {
+        await interaction.editReply(
+          `❌ Failed to update announcement message(s): ${result.error}`,
+        );
+      }
+    } catch (error) {
+      logger.error("Error in /offers edit-link:", error);
+      await interaction.editReply(
+        `Failed to edit checkout link: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }

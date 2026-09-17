@@ -10,7 +10,11 @@ import {
 } from "discord.js";
 import { buildClassicEmbedPayload } from "@/lib/builder/classic";
 import { buildDiscordMessagePayload } from "@/lib/builder/payload";
-import { COMPONENT_TYPES, IS_COMPONENTS_V2 } from "@/lib/builder/shared";
+import {
+  COMPONENT_TYPES,
+  IS_COMPONENTS_V2,
+  isMysteryGame,
+} from "@/lib/builder/shared";
 import { getMobileGameKey } from "@/lib/utils";
 import { dispatchDiscordPayload } from "../services/discordService";
 import {
@@ -22,6 +26,7 @@ import {
   getGuildPostedOfferIds,
   getGuildSeenUpcomingOfferIds,
   getGuildSettings,
+  getPendingCheckoutLink,
 } from "../state";
 import type { DiscordRawComponent, DiscordV2Payload } from "../types";
 
@@ -30,6 +35,7 @@ export interface ConfirmationOptions {
   guildId?: string | null;
   includeAddOns?: boolean;
   selectedIndices?: number[];
+  checkoutLink?: string;
 }
 
 export function buildConfirmationPayload(
@@ -54,6 +60,10 @@ export function buildConfirmationPayload(
       ? options.includeAddOns
       : s.includeAddOns;
   const includeUpcoming = Boolean(options.includeUpcoming);
+  const checkoutLink =
+    options.checkoutLink !== undefined
+      ? options.checkoutLink
+      : getPendingCheckoutLink(guildId);
 
   const prevOfferIds = getGuildPostedOfferIds(guildId);
   const prevUpcomingIds = getGuildSeenUpcomingOfferIds(guildId);
@@ -128,12 +138,22 @@ export function buildConfirmationPayload(
       : "*No games selected*";
 
   const selParam = selectedIndices.join(",");
+  const hasMysteryGames = offers.effectiveGames.currentGames.some(
+    (g) => selectedGameIds.includes(g.id) && isMysteryGame(g),
+  );
+
+  let linkNote = "";
+  if (checkoutLink) {
+    linkNote = `\n\n🛒 **Custom Checkout Link:** \`${checkoutLink}\``;
+  } else if (hasMysteryGames) {
+    linkNote = `\n\n⚠️ **Mystery game detected:** Click **Edit Checkout Link** to specify a custom Claim All checkout link.`;
+  }
 
   if (s.useComponentsV2) {
     const v2Payload = buildDiscordMessagePayload(
       offers.effectiveGames,
       previewSettings,
-      "",
+      checkoutLink,
       parsedMobile,
     ) as { components?: DiscordRawComponent[] };
 
@@ -151,7 +171,7 @@ export function buildConfirmationPayload(
     const reviewComponents: DiscordRawComponent[] = [
       {
         type: COMPONENT_TYPES.TEXT_DISPLAY,
-        content: `# Offer Approval & Preview\nSelect which games to publish and review the preview below before approving.${rolePing ? `\n${rolePing}` : ""}\n\n**Selected Offers (${selectedIndices.length}/${candidateGames.length}):**\n${selectedTitles}\n\n**Target Channels:**\n${channelDetails.join("\n")}`,
+        content: `# Offer Approval & Preview\nSelect which games to publish and review the preview below before approving.${rolePing ? `\n${rolePing}` : ""}\n\n**Selected Offers (${selectedIndices.length}/${candidateGames.length}):**\n${selectedTitles}\n\n**Target Channels:**\n${channelDetails.join("\n")}${linkNote}`,
       },
     ];
 
@@ -182,6 +202,12 @@ export function buildConfirmationPayload(
         },
         {
           type: COMPONENT_TYPES.BUTTON,
+          custom_id: `open_edit_checkout_modal:${includeUpcoming ? "1" : "0"}:${guildId || ""}:${includeAddOns ? "1" : "0"}:${selParam}`,
+          label: "Edit Checkout Link",
+          style: 2,
+        },
+        {
+          type: COMPONENT_TYPES.BUTTON,
           custom_id: `dismiss_post_offers:${guildId || ""}`,
           label: "Dismiss",
           style: 4,
@@ -207,7 +233,7 @@ export function buildConfirmationPayload(
   const previewEmbedPayload = buildClassicEmbedPayload(
     offers.effectiveGames,
     previewSettings,
-    "",
+    checkoutLink,
     parsedMobile,
   ) as { embeds: DiscordEmbed[] };
 
@@ -221,8 +247,7 @@ export function buildConfirmationPayload(
       icon_url: "https://up.wolfey.me/mFG3IGgV",
     },
     title: "Offer Approval & Action",
-    description:
-      "Select which games to publish from the dropdown menu, review the preview above, and click Approve to publish.",
+    description: `Select which games to publish from the dropdown menu, review the preview above, and click Approve to publish.${linkNote}`,
     fields: [
       {
         name: `Selected Offers (${selectedIndices.length}/${candidateGames.length})`,
@@ -236,7 +261,7 @@ export function buildConfirmationPayload(
       },
     ],
     footer: {
-      text: "Click Approve to publish immediately, or Dismiss to cancel.",
+      text: "Click Approve to publish immediately, Edit Checkout Link to adjust, or Dismiss to cancel.",
     },
     timestamp: new Date().toISOString(),
   };
@@ -289,6 +314,12 @@ export function buildConfirmationPayload(
       )
       .setLabel(`Approve & Post (${selectedIndices.length})`)
       .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId(
+        `open_edit_checkout_modal:${includeUpcoming ? "1" : "0"}:${guildId || ""}:${includeAddOns ? "1" : "0"}:${selParam}`,
+      )
+      .setLabel("Edit Checkout Link")
+      .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`dismiss_post_offers:${guildId || ""}`)
       .setLabel("Dismiss")

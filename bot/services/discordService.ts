@@ -114,6 +114,35 @@ export async function dispatchDiscordPayload(
   return messageData;
 }
 
+export async function editDiscordPayload(
+  token: string,
+  channelId: string,
+  messageId: string,
+  rawPayload: Record<string, unknown>,
+): Promise<boolean> {
+  const response = await fetch(
+    `https://discord.com/api/v10/channels/${channelId}/messages/${messageId}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bot ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(rawPayload),
+    },
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    logger.error(
+      `Discord API error editing message ${messageId} (${response.status}): ${errorText}`,
+    );
+    throw new Error(`Discord API error (${response.status}): ${errorText}`);
+  }
+
+  return true;
+}
+
 export async function sendInteractionResponse(
   token: string,
   interaction:
@@ -145,5 +174,31 @@ export async function sendInteractionResponse(
   if (!res.ok) {
     const err = await res.text();
     logger.error(`Interaction response failed (${res.status}):`, err);
+  }
+}
+
+export async function editInteractionResponse(
+  token: string,
+  interaction:
+    | ChatInputCommandInteraction
+    | ButtonInteraction
+    | ChannelSelectMenuInteraction
+    | RoleSelectMenuInteraction
+    | ModalSubmitInteraction,
+  payload: DiscordV2Payload,
+): Promise<void> {
+  const url = `https://discord.com/api/v10/webhooks/${interaction.applicationId}/${interaction.token}/messages/@original`;
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bot ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    logger.error(`Interaction response edit failed (${res.status}):`, err);
   }
 }

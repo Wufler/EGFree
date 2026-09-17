@@ -18,13 +18,18 @@ export interface BotCredentials {
   clientId: string;
 }
 
+export interface PostedMessageRef {
+  channelId: string;
+  messageId: string;
+  isMobile?: boolean;
+}
+
 export interface BotPersistentSettings {
   enabled: boolean;
   announcementChannelId?: string;
   mobileAnnouncementChannelId?: string;
   reviewChannelId?: string;
   requireConfirmation: boolean;
-  checkIntervalMinutes: number;
   useComponentsV2: boolean;
   mentionRoleId?: string;
   mobileMentionRoleId?: string;
@@ -40,6 +45,8 @@ export interface BotPersistentSettings {
   includeMobile: boolean;
   lastPostedOfferIds?: string[];
   seenUpcomingOfferIds?: string[];
+  lastPostedMessages?: PostedMessageRef[];
+  lastPostedCheckoutLink?: string;
 }
 
 export const DEFAULT_BOT_SETTINGS: BotPersistentSettings = {
@@ -48,7 +55,6 @@ export const DEFAULT_BOT_SETTINGS: BotPersistentSettings = {
   mobileAnnouncementChannelId: undefined,
   reviewChannelId: undefined,
   requireConfirmation: false,
-  checkIntervalMinutes: 1440,
   useComponentsV2: true,
   mentionRoleId: "",
   mobileMentionRoleId: undefined,
@@ -64,6 +70,8 @@ export const DEFAULT_BOT_SETTINGS: BotPersistentSettings = {
   includeMobile: true,
   lastPostedOfferIds: [],
   seenUpcomingOfferIds: [],
+  lastPostedMessages: [],
+  lastPostedCheckoutLink: "",
 };
 
 export function loadBotCredentials(): BotCredentials {
@@ -77,6 +85,8 @@ export interface BotState {
   lastPostedOfferIds: string[];
   seenUpcomingOfferIds?: string[];
   lastCheckTimestamp: string;
+  lastPostedMessages?: PostedMessageRef[];
+  lastPostedCheckoutLink?: string;
   settings: BotPersistentSettings;
   guildSettings?: Record<string, BotPersistentSettings>;
 }
@@ -102,6 +112,10 @@ export function loadBotState(): BotState {
           : [],
         lastCheckTimestamp:
           parsed.lastCheckTimestamp || new Date(0).toISOString(),
+        lastPostedMessages: Array.isArray(parsed.lastPostedMessages)
+          ? parsed.lastPostedMessages
+          : [],
+        lastPostedCheckoutLink: parsed.lastPostedCheckoutLink || "",
         settings: {
           ...DEFAULT_BOT_SETTINGS,
           ...(parsed.settings || {}),
@@ -117,6 +131,8 @@ export function loadBotState(): BotState {
     lastPostedOfferIds: [],
     seenUpcomingOfferIds: [],
     lastCheckTimestamp: new Date(0).toISOString(),
+    lastPostedMessages: [],
+    lastPostedCheckoutLink: "",
     settings: { ...DEFAULT_BOT_SETTINGS },
     guildSettings: {},
   };
@@ -301,4 +317,81 @@ export function updateBotSettings(
 
 export function resetBotSettings(): BotPersistentSettings {
   return resetGuildSettings(null);
+}
+
+const pendingCheckoutLinks = new Map<string, string>();
+
+export function setPendingCheckoutLink(
+  guildId: string | null | undefined,
+  link: string,
+): void {
+  const key = guildId || "global";
+  if (!link.trim()) {
+    pendingCheckoutLinks.delete(key);
+  } else {
+    pendingCheckoutLinks.set(key, link.trim());
+  }
+}
+
+export function getPendingCheckoutLink(
+  guildId: string | null | undefined,
+): string {
+  const key = guildId || "global";
+  return pendingCheckoutLinks.get(key) || "";
+}
+
+export function clearPendingCheckoutLink(
+  guildId: string | null | undefined,
+): void {
+  const key = guildId || "global";
+  pendingCheckoutLinks.delete(key);
+}
+
+export function recordGuildPostedMessages(
+  guildId: string | null | undefined,
+  messages: PostedMessageRef[],
+  checkoutLink?: string,
+): void {
+  const state = loadBotState();
+  state.lastPostedMessages = messages;
+  if (checkoutLink !== undefined) {
+    state.lastPostedCheckoutLink = checkoutLink;
+  }
+  if (guildId) {
+    if (!state.guildSettings) {
+      state.guildSettings = {};
+    }
+    const currentGuild = state.guildSettings[guildId] || {
+      ...DEFAULT_BOT_SETTINGS,
+      ...(state.settings || {}),
+    };
+    currentGuild.lastPostedMessages = messages;
+    if (checkoutLink !== undefined) {
+      currentGuild.lastPostedCheckoutLink = checkoutLink;
+    }
+    state.guildSettings[guildId] = currentGuild;
+  }
+  saveBotState(state);
+}
+
+export function getGuildPostedMessages(
+  guildId: string | null | undefined,
+): PostedMessageRef[] {
+  const s = getGuildSettings(guildId);
+  if (Array.isArray(s.lastPostedMessages) && s.lastPostedMessages.length > 0) {
+    return s.lastPostedMessages;
+  }
+  const state = loadBotState();
+  return state.lastPostedMessages || [];
+}
+
+export function getGuildLastCheckoutLink(
+  guildId: string | null | undefined,
+): string {
+  const s = getGuildSettings(guildId);
+  if (s.lastPostedCheckoutLink) {
+    return s.lastPostedCheckoutLink;
+  }
+  const state = loadBotState();
+  return state.lastPostedCheckoutLink || "";
 }

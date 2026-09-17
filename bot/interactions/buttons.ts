@@ -1,6 +1,8 @@
 import {
   ActionRowBuilder,
+  ButtonBuilder,
   type ButtonInteraction,
+  ButtonStyle,
   ChannelSelectMenuBuilder,
   ChannelType,
   MessageFlags,
@@ -12,6 +14,7 @@ import {
 import { COMPONENT_TYPES, IS_COMPONENTS_V2 } from "@/lib/builder/shared";
 import {
   canManageSettings,
+  editInteractionResponse,
   sendInteractionResponse,
 } from "../services/discordService";
 import {
@@ -21,9 +24,12 @@ import {
 import type { OfferSchedulerService } from "../services/schedulerService";
 import type { BotCredentials, BotPersistentSettings } from "../state";
 import {
+  clearPendingCheckoutLink,
+  getGuildLastCheckoutLink,
   getGuildPostedOfferIds,
   getGuildSeenUpcomingOfferIds,
   getGuildSettings,
+  getPendingCheckoutLink,
   recordGuildPostedOffers,
   updateGuildSettings,
 } from "../state";
@@ -107,13 +113,18 @@ export async function handleButtonInteraction(
       return;
     }
 
+    const pendingCheckoutLink = getPendingCheckoutLink(guildId);
+
     const result = await scheduler.broadcastOffers(offers, {
       includeUpcoming,
       guildId,
       includeAddOns,
       selectedGameIds,
+      checkoutLink: pendingCheckoutLink,
     });
     if (result.success) {
+      clearPendingCheckoutLink(guildId);
+
       const postedCurrentIds = selectedGameIds.filter((id) =>
         offers.currentOfferIds.includes(id),
       );
@@ -150,7 +161,18 @@ export async function handleButtonInteraction(
               components: [
                 {
                   type: COMPONENT_TYPES.TEXT_DISPLAY,
-                  content: `# Offers Approved & Published\nPublished by <@${interaction.user.id}> at <t:${timestamp}:T>.\n\n**Posted Offers (${selectedCandidateGames.length}):**\n${titleList}\n\n**Posted To:**\n${channelsList}`,
+                  content: `# Offers Approved & Published\nPublished by <@${interaction.user.id}> at <t:${timestamp}:T>.\n\n**Posted Offers (${selectedCandidateGames.length}):**\n${titleList}\n\n**Posted To:**\n${channelsList}${pendingCheckoutLink ? `\n\n🛒 **Checkout Link:** \`${pendingCheckoutLink}\`` : ""}`,
+                },
+                {
+                  type: COMPONENT_TYPES.ACTION_ROW,
+                  components: [
+                    {
+                      type: COMPONENT_TYPES.BUTTON,
+                      custom_id: `open_post_edit_checkout_modal:${guildId || ""}`,
+                      label: "Edit Checkout Link",
+                      style: 2,
+                    },
+                  ],
                 },
               ],
             },
@@ -186,14 +208,30 @@ export async function handleButtonInteraction(
               value: channelsList,
               inline: false,
             },
+            ...(pendingCheckoutLink
+              ? [
+                  {
+                    name: "Checkout Link",
+                    value: `\`${pendingCheckoutLink}\``,
+                    inline: false,
+                  },
+                ]
+              : []),
           ],
           timestamp: new Date().toISOString(),
         };
 
+        const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`open_post_edit_checkout_modal:${guildId || ""}`)
+            .setLabel("Edit Checkout Link")
+            .setStyle(ButtonStyle.Secondary),
+        );
+
         await interaction.editReply({
           content: "",
           embeds: [successEmbed],
-          components: [],
+          components: [buttonRow],
         });
       }
     } else {
@@ -209,6 +247,79 @@ export async function handleButtonInteraction(
         flags: MessageFlags.Ephemeral,
       });
     }
+  } else if (interaction.customId.startsWith("open_edit_checkout_modal")) {
+    if (!canManageSettings(interaction)) {
+      await interaction.reply({
+        content:
+          "Access Denied: You need Administrator or Manage Server permissions (or the configured Review Role) to edit checkout links.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    const parts = interaction.customId.split(":");
+    const includeUpcoming = parts[1] || "0";
+    const guildId = parts[2] || interaction.guildId || "";
+    const includeAddOns = parts[3] || "0";
+    const selParam = parts[4] || "";
+
+    const currentLink =
+      getPendingCheckoutLink(guildId) || getGuildLastCheckoutLink(guildId);
+
+    const modal = new ModalBuilder()
+      .setCustomId(
+        `confirm_modal_edit_checkout:${includeUpcoming}:${guildId}:${includeAddOns}:${selParam}`,
+      )
+      .setTitle("Edit Checkout Link");
+
+    const input = new TextInputBuilder()
+      .setCustomId("input_checkout_url")
+      .setLabel("Epic Games Checkout Link (Offers URL)")
+      .setStyle(TextInputStyle.Paragraph)
+      .setValue(currentLink)
+      .setPlaceholder(
+        "https://store.epicgames.com/purchase?offers=1-namespace-offerId-",
+      )
+      .setRequired(false);
+
+    modal.addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(input),
+    );
+    await interaction.showModal(modal);
+    return;
+  } else if (interaction.customId.startsWith("open_post_edit_checkout_modal")) {
+    if (!canManageSettings(interaction)) {
+      await interaction.reply({
+        content:
+          "Access Denied: You need Administrator or Manage Server permissions (or the configured Review Role) to edit checkout links.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    const parts = interaction.customId.split(":");
+    const guildId = parts[1] || interaction.guildId || "";
+    const currentLink = getGuildLastCheckoutLink(guildId);
+
+    const modal = new ModalBuilder()
+      .setCustomId(`post_modal_edit_checkout:${guildId}`)
+      .setTitle("Edit Broadcasted Checkout Link");
+
+    const input = new TextInputBuilder()
+      .setCustomId("input_post_checkout_url")
+      .setLabel("Epic Games Checkout Link (Offers URL)")
+      .setStyle(TextInputStyle.Paragraph)
+      .setValue(currentLink)
+      .setPlaceholder(
+        "https://store.epicgames.com/purchase?offers=1-namespace-offerId-",
+      )
+      .setRequired(false);
+
+    modal.addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(input),
+    );
+    await interaction.showModal(modal);
+    return;
   } else if (interaction.customId.startsWith("dismiss_post_offers")) {
     if (!canManageSettings(interaction)) {
       await interaction.reply({
@@ -496,12 +607,12 @@ export async function handleButtonInteraction(
       );
       await interaction.showModal(modal);
     } else if (interaction.customId === "trigger_check_now") {
+      await interaction.deferUpdate();
       await scheduler.runOfferCheck();
-      await sendInteractionResponse(
+      await editInteractionResponse(
         token,
         interaction,
         getSettingsPayload("scheduler", interaction.guildId),
-        true,
       );
     } else if (interaction.customId.startsWith("toggle_")) {
       const toggleKey = interaction.customId.replace("toggle_", "");

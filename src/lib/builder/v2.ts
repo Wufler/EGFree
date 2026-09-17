@@ -43,7 +43,16 @@ function buildDesktopComponentsV2Card(
 
   const resolveClaimHref = (): string | null => {
     if (!settings.includeClaimGame) return null;
-    if (isMysteryGame(game)) return null;
+    if (isMysteryGame(game)) {
+      if (
+        normalizedCheckoutLink &&
+        selectedCurrentGames.length === 1 &&
+        selectedCurrentGames[0].id === game.id
+      ) {
+        return normalizedCheckoutLink;
+      }
+      return null;
+    }
     if (isCurrent) {
       if (isCurrentlyFree(game)) {
         const checkoutUrl = getCheckoutUrl(game);
@@ -321,26 +330,31 @@ export function buildComponentsV2MessagePayload(
   const totalSelectedGames =
     selectedCurrentGames.length + selectedMobileGames.length;
   const totalClaimable = claimablePCGamesCount + claimableMobileOffersCount;
-  if (
-    (totalClaimable > 0 || Boolean(normalizedCheckoutLink)) &&
-    totalSelectedGames > 1 &&
-    settings.includeCheckout
-  ) {
-    if (bulkCheckoutUrl || normalizedCheckoutLink) {
-      const checkoutHref = normalizedCheckoutLink || bulkCheckoutUrl;
-      if (checkoutHref) {
-        components.push({
-          type: COMPONENT_TYPES.ACTION_ROW,
-          components: [
-            {
-              type: COMPONENT_TYPES.BUTTON,
-              style: COMPONENT_TYPES.BUTTON_LINK,
-              label: "🎁 Claim All Games",
-              url: checkoutHref,
-            },
-          ],
-        });
-      }
+  const hasMysteryPC = selectedCurrentGames.some(isMysteryGame);
+  const shouldShowCheckoutButton =
+    settings.includeCheckout &&
+    (bulkCheckoutUrl || normalizedCheckoutLink) &&
+    (((totalClaimable > 0 || Boolean(normalizedCheckoutLink)) &&
+      totalSelectedGames > 1) ||
+      (totalSelectedGames === 1 &&
+        Boolean(normalizedCheckoutLink) &&
+        (hasMysteryPC || !settings.includeClaimGame)));
+
+  if (shouldShowCheckoutButton) {
+    const checkoutHref = normalizedCheckoutLink || bulkCheckoutUrl;
+    if (checkoutHref) {
+      components.push({
+        type: COMPONENT_TYPES.ACTION_ROW,
+        components: [
+          {
+            type: COMPONENT_TYPES.BUTTON,
+            style: COMPONENT_TYPES.BUTTON_LINK,
+            label:
+              totalSelectedGames > 1 ? "🎁 Claim All Games" : "🎁 Claim Game",
+            url: checkoutHref,
+          },
+        ],
+      });
     }
   }
 

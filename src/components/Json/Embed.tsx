@@ -250,7 +250,16 @@ export default function DiscordPreview({
             const checkoutUrlForGame = getCheckoutUrl(game);
             let claimHrefV2: string | null = null;
             let claimLabelV2 = "Claim Game";
-            if (settings.includeClaimGame && isCurrent && !isMystery) {
+            if (isMystery && settings.includeClaimGame && isCurrent) {
+              if (
+                settings.includeCheckout &&
+                normalizedCheckoutLink &&
+                selectedCurrentGamesCount === 1
+              ) {
+                claimHrefV2 = normalizedCheckoutLink;
+                claimLabelV2 = "Claim Game";
+              }
+            } else if (settings.includeClaimGame && isCurrent && !isMystery) {
               if (isCurrentlyFree(game)) {
                 if (isPermanentlyFree(game)) {
                   claimHrefV2 = isValidPageSlug
@@ -529,8 +538,26 @@ export default function DiscordPreview({
                     {isCurrent &&
                       isCurrentlyFree(game) &&
                       settings.includeClaimGame &&
-                      !isMystery &&
                       (() => {
+                        if (isMystery) {
+                          if (
+                            settings.includeCheckout &&
+                            normalizedCheckoutLink &&
+                            selectedCurrentGamesCount === 1
+                          ) {
+                            return (
+                              <a
+                                href={normalizedCheckoutLink}
+                                className="text-[#4e80eb] dark:text-[#00A8FC] hover:underline self-start"
+                                target="_blank"
+                                rel="noopener"
+                              >
+                                Claim Game
+                              </a>
+                            );
+                          }
+                          return null;
+                        }
                         const checkoutUrl = getCheckoutUrl(game);
                         const manualCheckoutUrl =
                           settings.includeCheckout &&

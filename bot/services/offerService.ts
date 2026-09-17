@@ -208,12 +208,14 @@ export function generateOfferPayloads(
     includeUpcoming?: boolean;
     onlyNew?: boolean;
     selectedGameIds?: string[];
+    checkoutLink?: string;
   } = {},
 ): {
   desktopPayload?: Record<string, unknown>;
   mobilePayload?: Record<string, unknown>;
   combinedPayload?: Record<string, unknown>;
 } {
+  const checkoutLink = options.checkoutLink || "";
   const isMobileEnabled = settings.includeMobile !== false;
   const parsedMobile = isMobileEnabled
     ? offers.activeMobileGames.map(toMobileGame)
@@ -298,13 +300,13 @@ export function generateOfferPayloads(
       desktopPayload: buildDiscordMessagePayload(
         offers.effectiveGames,
         desktopSettings,
-        "",
+        checkoutLink,
         parsedMobile,
       ) as Record<string, unknown>,
       mobilePayload: buildDiscordMessagePayload(
         offers.effectiveGames,
         mobileSettings,
-        "",
+        checkoutLink,
         parsedMobile,
       ) as Record<string, unknown>,
     };
@@ -314,7 +316,7 @@ export function generateOfferPayloads(
     combinedPayload: buildDiscordMessagePayload(
       offers.effectiveGames,
       baseSettings,
-      "",
+      checkoutLink,
       parsedMobile,
     ) as Record<string, unknown>,
   };

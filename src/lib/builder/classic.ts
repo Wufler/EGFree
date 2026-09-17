@@ -93,8 +93,16 @@ export function buildClassicEmbedPayload(
     };
 
     const isMystery = isMysteryGame(game);
+    const mysteryClaimLink =
+      isMystery &&
+      settings.includeClaimGame &&
+      normalizedCheckoutLink &&
+      selectedCurrentGames.length === 1 &&
+      selectedCurrentGames[0].id === game.id
+        ? `[${getClaimText()}](${normalizedCheckoutLink})`
+        : "";
     const description = isMystery
-      ? ""
+      ? mysteryClaimLink
       : [getPriceText(), getClaimLink()].filter(Boolean).join("\n");
 
     const imageUrl = getPreferredGameImageUrl(game);
@@ -173,22 +181,26 @@ export function buildClassicEmbedPayload(
   const totalSelectedGames =
     selectedCurrentGames.length + selectedMobileGames.length;
   const totalClaimable = claimablePCGamesCount + claimableMobileOffersCount;
-  if (
-    totalClaimable > 0 &&
-    totalSelectedGames > 1 &&
-    settings.includeCheckout
-  ) {
-    if (bulkCheckoutUrl || normalizedCheckoutLink) {
-      embeds.push({
-        color: parseInt(settings.embedColor.replace("#", ""), 16),
-        title: "🛒 Checkout Link",
-        description: normalizedCheckoutLink
-          ? `[Claim All Games](${normalizedCheckoutLink})`
-          : bulkCheckoutUrl
-            ? `[Claim All Games](${bulkCheckoutUrl})`
-            : "No claimable games available",
-      });
-    }
+  const hasMysteryPC = selectedCurrentGames.some(isMysteryGame);
+  const shouldShowCheckoutEmbed =
+    settings.includeCheckout &&
+    (bulkCheckoutUrl || normalizedCheckoutLink) &&
+    (((totalClaimable > 0 || Boolean(normalizedCheckoutLink)) &&
+      totalSelectedGames > 1) ||
+      (totalSelectedGames === 1 &&
+        Boolean(normalizedCheckoutLink) &&
+        (hasMysteryPC || !settings.includeClaimGame)));
+
+  if (shouldShowCheckoutEmbed) {
+    embeds.push({
+      color: parseInt(settings.embedColor.replace("#", ""), 16),
+      title: "🛒 Checkout Link",
+      description: normalizedCheckoutLink
+        ? `[${totalSelectedGames > 1 ? "Claim All Games" : "Claim Game"}](${normalizedCheckoutLink})`
+        : bulkCheckoutUrl
+          ? `[Claim All Games](${bulkCheckoutUrl})`
+          : "No claimable games available",
+    });
   }
 
   return {

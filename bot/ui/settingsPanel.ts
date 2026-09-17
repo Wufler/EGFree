@@ -468,7 +468,7 @@ export function getSettingsPayload(
       components: [
         {
           type: COMPONENT_TYPES.TEXT_DISPLAY,
-          content: `**Status:** ${windowInfo.description}\n\n**Primary Offer Check**: Thursday 15:00 UTC\n**Active Window**: Thursday 14:58-15:10 UTC (every 1m)\n**Regular Checks**: Every 24 hours`,
+          content: `**Status:** ${windowInfo.description}\n\n**Desktop Drop**: Thursday 15:00 UTC\n**Mobile Drop**: Usually Thursday 16:10 UTC\n**Active Window**: Thursday 14:58-16:20 UTC (every 1m)\n**Regular Checks**: Every 24 hours`,
         },
       ],
       accessory: {

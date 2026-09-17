@@ -1,17 +1,19 @@
 import type { Client, TextChannel } from "discord.js";
 import { getMobileGameKey } from "@/lib/utils";
 import { logger } from "../logger";
-import type { BotCredentials } from "../state";
+import type { BotCredentials, PostedMessageRef } from "../state";
 import {
+  getGuildPostedMessages,
   getGuildPostedOfferIds,
   getGuildSeenUpcomingOfferIds,
   getGuildSettings,
   loadBotState,
+  recordGuildPostedMessages,
   recordGuildPostedOffers,
   saveBotState,
 } from "../state";
 import { sendConfirmationPrompt } from "../ui/confirmationPrompt";
-import { dispatchDiscordPayload } from "./discordService";
+import { dispatchDiscordPayload, editDiscordPayload } from "./discordService";
 import {
   type FetchedOffers,
   fetchCurrentOffers,
@@ -29,17 +31,19 @@ export function getDropWindow(now: Date = new Date()): {
   const currentMinute = now.getUTCMinutes();
 
   const isThursday = dayOfWeek === 4;
-  // Thursday from 14:58 UTC to 15:10 UTC covers the 15:00 UTC drop plus a 10-minute buffer with 1-minute checks
+  // Thursday from 14:58 UTC to 16:20 UTC covers the 15:00 UTC desktop
+  // drop and the usual 16:10 UTC mobile drop.
   const inWindow =
     isThursday &&
     ((currentHour === 14 && currentMinute >= 58) ||
-      (currentHour === 15 && currentMinute <= 10));
+      currentHour === 15 ||
+      (currentHour === 16 && currentMinute <= 20));
 
   const nextDrop = new Date(now);
   let daysUntilThursday = (4 - dayOfWeek + 7) % 7;
   if (
     daysUntilThursday === 0 &&
-    (currentHour > 15 || (currentHour === 15 && currentMinute > 10))
+    (currentHour > 16 || (currentHour === 16 && currentMinute > 20))
   ) {
     daysUntilThursday = 7;
   }
@@ -67,7 +71,7 @@ export class OfferSchedulerService {
     }
 
     logger.info(
-      `Offer scheduler started. Active on Thursdays 14:58-15:10 UTC (1m checks) + 24h idle checks.`,
+      `Offer scheduler started. Active on Thursdays 14:58-16:20 UTC (1m checks) + 24h idle checks.`,
     );
 
     setTimeout(() => this.runOfferCheck(), 5000);
@@ -82,8 +86,7 @@ export class OfferSchedulerService {
       const timeSinceLastCheckMinutes =
         (Date.now() - lastCheckMs) / (60 * 1000);
 
-      const checkInterval = state.settings.checkIntervalMinutes || 1440;
-      const thresholdMinutes = inWindow ? 1 : checkInterval;
+      const thresholdMinutes = inWindow ? 1 : 1440;
 
       if (timeSinceLastCheckMinutes >= thresholdMinutes) {
         this.runOfferCheck();
@@ -99,8 +102,13 @@ export class OfferSchedulerService {
       guildId?: string | null;
       includeAddOns?: boolean;
       selectedGameIds?: string[];
+      checkoutLink?: string;
     } = {},
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<{
+    success: boolean;
+    error?: string;
+    postedMessages?: PostedMessageRef[];
+  }> {
     const s = getGuildSettings(options.guildId);
     if (s.enabled === false) {
       return {
@@ -129,6 +137,7 @@ export class OfferSchedulerService {
         );
 
       let sentCount = 0;
+      const postedRefs: PostedMessageRef[] = [];
 
       if (shouldSplit) {
         let shouldSendDesktop = options.onlyNew
@@ -159,11 +168,18 @@ export class OfferSchedulerService {
             s.announcementChannelId,
           );
           if (desktopChannel?.isTextBased()) {
-            await dispatchDiscordPayload(
+            const msg = await dispatchDiscordPayload(
               this.credentials.discordToken,
               desktopChannel as TextChannel,
               desktopPayload,
             );
+            if (msg?.id) {
+              postedRefs.push({
+                channelId: desktopChannel.id,
+                messageId: msg.id,
+                isMobile: false,
+              });
+            }
             sentCount++;
           }
         }
@@ -179,22 +195,35 @@ export class OfferSchedulerService {
           const mobileChannel =
             await this.client.channels.fetch(mobileTargetId);
           if (mobileChannel?.isTextBased()) {
-            await dispatchDiscordPayload(
+            const msg = await dispatchDiscordPayload(
               this.credentials.discordToken,
               mobileChannel as TextChannel,
               mobilePayload,
             );
+            if (msg?.id) {
+              postedRefs.push({
+                channelId: mobileChannel.id,
+                messageId: msg.id,
+                isMobile: true,
+              });
+            }
             sentCount++;
           }
         }
       } else if (combinedPayload && mainChannelId) {
         const targetChannel = await this.client.channels.fetch(mainChannelId);
         if (targetChannel?.isTextBased()) {
-          await dispatchDiscordPayload(
+          const msg = await dispatchDiscordPayload(
             this.credentials.discordToken,
             targetChannel as TextChannel,
             combinedPayload,
           );
+          if (msg?.id) {
+            postedRefs.push({
+              channelId: targetChannel.id,
+              messageId: msg.id,
+            });
+          }
           sentCount++;
         }
       }
@@ -206,11 +235,97 @@ export class OfferSchedulerService {
         };
       }
 
-      return { success: true };
+      if (postedRefs.length > 0) {
+        recordGuildPostedMessages(
+          options.guildId,
+          postedRefs,
+          options.checkoutLink || "",
+        );
+      }
+
+      return { success: true, postedMessages: postedRefs };
     } catch (error) {
       logger.error("Posting failed:", error);
       return {
         success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  public async editBroadcastedOffers(
+    offers: FetchedOffers,
+    checkoutLink: string,
+    guildId?: string | null,
+  ): Promise<{ success: boolean; updatedCount: number; error?: string }> {
+    const s = getGuildSettings(guildId);
+    const postedRefs = getGuildPostedMessages(guildId);
+
+    if (postedRefs.length === 0) {
+      return {
+        success: false,
+        updatedCount: 0,
+        error:
+          "No recently posted announcement messages found to edit. Broadcast offers first or check channel settings.",
+      };
+    }
+
+    try {
+      const shouldSplit =
+        s.splitDesktopMobile || Boolean(s.mobileAnnouncementChannelId);
+      const { desktopPayload, mobilePayload, combinedPayload } =
+        generateOfferPayloads(
+          offers,
+          { ...s, splitDesktopMobile: shouldSplit },
+          { checkoutLink },
+        );
+
+      let updatedCount = 0;
+      const validRefs: PostedMessageRef[] = [];
+
+      for (const ref of postedRefs) {
+        let payloadToUse: Record<string, unknown> | undefined;
+        if (shouldSplit) {
+          payloadToUse = ref.isMobile ? mobilePayload : desktopPayload;
+        } else {
+          payloadToUse = combinedPayload;
+        }
+
+        if (payloadToUse) {
+          try {
+            await editDiscordPayload(
+              this.credentials.discordToken,
+              ref.channelId,
+              ref.messageId,
+              payloadToUse,
+            );
+            updatedCount++;
+            validRefs.push(ref);
+          } catch (err) {
+            logger.warn(
+              `Failed to edit message ${ref.messageId} in channel ${ref.channelId}:`,
+              err,
+            );
+          }
+        }
+      }
+
+      if (updatedCount === 0) {
+        return {
+          success: false,
+          updatedCount: 0,
+          error:
+            "Failed to edit announcement messages (messages may have been deleted or bot lacks permission).",
+        };
+      }
+
+      recordGuildPostedMessages(guildId, validRefs, checkoutLink);
+      return { success: true, updatedCount };
+    } catch (error) {
+      logger.error("Failed to edit broadcasted offers:", error);
+      return {
+        success: false,
+        updatedCount: 0,
         error: error instanceof Error ? error.message : String(error),
       };
     }
