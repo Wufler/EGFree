@@ -35,6 +35,17 @@ export function toMobileGame(m: MobileGameData): MobileGame {
   };
 }
 
+function wasMobileGamePosted(
+  game: MobileGameData,
+  previousIds: string[],
+): boolean {
+  const key = getMobileGameKey(toMobileGame(game));
+  // Older bot versions appended a platform when only one store was available.
+  return previousIds.some(
+    (id) => id === key || id === `${key}-ios` || id === `${key}-android`,
+  );
+}
+
 export function getCandidateGames(
   offers: FetchedOffers,
   options: {
@@ -77,7 +88,7 @@ export function getCandidateGames(
       type: "mobile",
       platformLabel: `Mobile (${plat})`,
       emoji: "📱",
-      isNew: !prevIds.includes(key),
+      isNew: !wasMobileGamePosted(m, prevIds),
       rawMobileGame: m,
     });
   }
@@ -131,6 +142,8 @@ export async function fetchCurrentOffers(
 
   const activeMobileGames = isMobileEnabled
     ? (rawMobile || []).filter((g) => {
+        // Wait for both store links before announcing a mobile offers.
+        if (!g.iosOffer || !g.androidOffer) return false;
         if (!g.promoEndDate) return true;
         const time = new Date(g.promoEndDate).getTime();
         return Number.isFinite(time) ? time > now.getTime() : true;
@@ -148,9 +161,9 @@ export async function fetchCurrentOffers(
   const newDesktopIds = currentPCIds.filter(
     (id) => !previousOfferIds.includes(id),
   );
-  const newMobileIds = currentMobileIds.filter(
-    (id) => !previousOfferIds.includes(id),
-  );
+  const newMobileIds = activeMobileGames
+    .filter((g) => !wasMobileGamePosted(g, previousOfferIds))
+    .map((g) => getMobileGameKey(toMobileGame(g)));
 
   const hasNewDesktopOffers = newDesktopIds.length > 0;
   const hasNewMobileOffers = newMobileIds.length > 0;
@@ -165,8 +178,7 @@ export async function fetchCurrentOffers(
   }
 
   for (const g of activeMobileGames) {
-    const key = getMobileGameKey(toMobileGame(g));
-    const isNew = !previousOfferIds.includes(key);
+    const isNew = !wasMobileGamePosted(g, previousOfferIds);
     const plat =
       g.iosOffer && g.androidOffer
         ? "iOS & Android"

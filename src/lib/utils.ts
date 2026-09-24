@@ -6,10 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function getMobileGameKey(game: MobileGame): string {
-  const hasBoth = Boolean(game.iosOffer && game.androidOffer);
-  if (hasBoth) return `mobile-${game.namespace}-${game.title}`;
-  const platform = game.iosOffer ? "ios" : "android";
-  return `mobile-${game.namespace}-${game.title}-${platform}`;
+  return `mobile-${game.namespace}-${game.title}`;
 }
 
 function parseDate(value: string | undefined): Date | null {

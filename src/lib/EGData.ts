@@ -181,9 +181,17 @@ export async function getMobileGames(): Promise<MobileGameData[]> {
       const current = byNamespace.get(result.gameData.namespace);
       const currentEndTime = current ? getEndTime(current.promoEndDate) : 0;
       const nextEndTime = getEndTime(result.gameData.promoEndDate);
-      if (!current || nextEndTime > currentEndTime) {
-        byNamespace.set(result.gameData.namespace, result.gameData);
-      }
+      const preferred =
+        !current || nextEndTime > currentEndTime ? result.gameData : current;
+      byNamespace.set(result.gameData.namespace, {
+        ...preferred,
+        iosOffer:
+          preferred.iosOffer || current?.iosOffer || result.gameData.iosOffer,
+        androidOffer:
+          preferred.androidOffer ||
+          current?.androidOffer ||
+          result.gameData.androidOffer,
+      });
     }
 
     return [...byNamespace.values()];
