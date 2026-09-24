@@ -2,6 +2,7 @@ import {
   fetchCurrentOffers,
   generateOfferPayloads,
   getCandidateGames,
+  type FetchedOffers,
 } from "./services/offerService";
 import { loadBotState } from "./state";
 import { buildConfirmationPayload } from "./ui/confirmationPrompt";
@@ -141,7 +142,6 @@ async function testOfferPayload() {
           intermediatePrice: "0",
         },
       },
-      lineOffers: [],
     },
     promotions: {
       promotionalOffers: [
