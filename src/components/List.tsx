@@ -23,6 +23,7 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -352,6 +353,14 @@ export default function List({
   const router = useRouter();
   const hasToastShown = useRef(false);
   const [activeTab, setActiveTab] = useState("home");
+  const mobileTabScrollPositions = useRef<Record<string, number>>({});
+  const restoreMobileTabScroll = useRef(false);
+
+  useLayoutEffect(() => {
+    if (!restoreMobileTabScroll.current) return;
+    restoreMobileTabScroll.current = false;
+    window.scrollTo(0, mobileTabScrollPositions.current[activeTab] ?? 0);
+  }, [activeTab]);
 
   const mobileGames = mobile;
   const effectiveGames = useMemo(() => getEffectiveGames(games), [games]);
@@ -893,6 +902,11 @@ export default function List({
         defaultValue="home"
         value={activeTab}
         onValueChange={(value) => {
+          if (value === activeTab) return;
+          if (window.innerWidth < 1024) {
+            mobileTabScrollPositions.current[activeTab] = window.scrollY;
+            restoreMobileTabScroll.current = true;
+          }
           setActiveTab(value);
           if (typeof window !== "undefined") {
             localStorage.setItem("tabState", value);

@@ -754,7 +754,7 @@ export default function Json({
         />
         <DialogContent
           showCloseButton={false}
-          className="top-0! left-0! translate-x-0! translate-y-0! sm:top-1/2! sm:left-1/2! sm:-translate-x-1/2! sm:-translate-y-1/2! w-full max-w-none sm:max-w-5xl lg:max-w-6xl xl:max-w-7xl sm:w-[calc(100%-2rem)] h-dvh sm:h-[90vh] sm:max-h-[900px] p-0 gap-0 overflow-hidden bg-background border-0 sm:border sm:border-border rounded-none sm:rounded-xl shadow-2xl flex flex-col"
+          className="top-0! left-0! translate-x-0! translate-y-0! sm:top-1/2! sm:left-1/2! sm:-translate-x-1/2! sm:-translate-y-1/2! w-full max-w-none sm:max-w-5xl lg:max-w-6xl xl:max-w-7xl sm:w-[calc(100%-2rem)] h-dvh sm:h-[90vh] sm:max-h-225 p-0 gap-0 overflow-hidden bg-background border-0 sm:border sm:border-border rounded-none sm:rounded-xl shadow-2xl flex flex-col"
         >
           <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border shrink-0 bg-background relative z-10">
             <div className="flex items-center gap-3 min-w-0">
@@ -842,6 +842,7 @@ export default function Json({
                 </TabsList>
                 <TabsContent
                   value="form"
+                  keepMounted
                   className="flex-1 min-h-0 m-0 outline-none flex flex-col overflow-hidden"
                 >
                   <ScrollArea className="flex-1 min-h-0">
@@ -853,6 +854,7 @@ export default function Json({
                 </TabsContent>
                 <TabsContent
                   value="preview"
+                  keepMounted
                   className="flex-1 min-h-0 m-0 p-4 outline-none overflow-y-auto"
                 >
                   <JsonPreviewContent inlineButtons={true} {...previewProps} />

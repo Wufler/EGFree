@@ -454,10 +454,10 @@ export default function DiscordPreview({
             return (
               <div
                 key={game.id}
-                className="flex mt-1 rounded-sm overflow-hidden w-full"
+                className="flex mt-1 w-full max-w-md rounded-sm overflow-hidden"
                 style={{ borderLeft: `4px solid ${settings.embedColor}` }}
               >
-                <div className="w-full bg-[#ffffff] dark:bg-[#2B2D31] border border-[#d4d7dc] dark:border-[#4e5058] rounded-r-sm p-3.5 pr-4">
+                <div className="min-w-0 w-full bg-[#ffffff] dark:bg-[#2B2D31] border border-[#d4d7dc] dark:border-[#4e5058] rounded-r-sm p-3.5 pr-4">
                   <div className="flex items-center mb-2">
                     <Image
                       width={1280}
@@ -721,12 +721,12 @@ export default function DiscordPreview({
               return (
                 <div
                   key={getMobileGameKey(game)}
-                  className="flex mt-1 rounded-sm overflow-hidden"
+                  className="flex mt-1 w-full max-w-md rounded-sm overflow-hidden"
                   style={{
                     borderLeft: `4px solid ${settings.embedColor}`,
                   }}
                 >
-                  <div className="max-w-md bg-[#ffffff] dark:bg-[#2B2D31] border border-[#d4d7dc] dark:border-[#4e5058] rounded-r-sm p-3.5 pr-4">
+                  <div className="min-w-0 w-full bg-[#ffffff] dark:bg-[#2B2D31] border border-[#d4d7dc] dark:border-[#4e5058] rounded-r-sm p-3.5 pr-4">
                     <div className="flex items-center mb-2">
                       <Image
                         width={1280}
@@ -827,10 +827,10 @@ export default function DiscordPreview({
             selectedCurrentGames.length + selectedMobileGames.length > 1 &&
             settings.includeCheckout && (
               <div
-                className="flex mt-1 rounded-sm overflow-hidden w-full"
+                className="flex mt-1 rounded-sm overflow-hidden"
                 style={{ borderLeft: `4px solid ${settings.embedColor}` }}
               >
-                <div className="w-full bg-[#ffffff] dark:bg-[#2B2D31] border border-[#d4d7dc] dark:border-[#4e5058] rounded-r-sm p-3.5 pr-4">
+                <div className="bg-[#ffffff] dark:bg-[#2B2D31] border border-[#d4d7dc] dark:border-[#4e5058] rounded-r-sm p-3.5 pr-4">
                   <div className="flex flex-col text-sm gap-0.5">
                     <h1 className="font-semibold">🛒 Checkout Link</h1>
                     {normalizedCheckoutLink ? (
