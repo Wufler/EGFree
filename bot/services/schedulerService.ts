@@ -29,26 +29,25 @@ export function getDropWindow(now: Date = new Date()): {
   const dayOfWeek = now.getUTCDay();
   const currentHour = now.getUTCHours();
   const currentMinute = now.getUTCMinutes();
-
+  const currentMinutes = currentHour * 60 + currentMinute;
   const isThursday = dayOfWeek === 4;
-  // Thursday from 14:58 UTC to 16:20 UTC covers the 15:00 UTC desktop
-  // drop and the usual 16:10 UTC mobile drop.
+
+  // Thursday from 14:58 UTC to 17:20 UTC covers the one-off DST-transition
+  // and the one-off drops at 15:00 UTC (desktop) and approximately 16:10 UTC (mobile)
+  // the regular drops at 16:00 UTC (desktop) and approximately 17:10 UTC (mobile)
   const inWindow =
-    isThursday &&
-    ((currentHour === 14 && currentMinute >= 58) ||
-      currentHour === 15 ||
-      (currentHour === 16 && currentMinute <= 20));
+    isThursday && currentMinutes >= 14 * 60 + 58 && currentMinutes <= 17 * 60 + 20;
 
   const nextDrop = new Date(now);
   let daysUntilThursday = (4 - dayOfWeek + 7) % 7;
   if (
     daysUntilThursday === 0 &&
-    (currentHour > 16 || (currentHour === 16 && currentMinute > 20))
+    currentMinutes > 17 * 60 + 20
   ) {
     daysUntilThursday = 7;
   }
   nextDrop.setUTCDate(now.getUTCDate() + daysUntilThursday);
-  nextDrop.setUTCHours(15, 0, 0, 0);
+  nextDrop.setUTCHours(16, 0, 0, 0);
 
   const description = inWindow
     ? "**Active Offer Window** (Checking every minute for new offers)"
@@ -63,7 +62,7 @@ export class OfferSchedulerService {
   constructor(
     private client: Client,
     private credentials: BotCredentials,
-  ) {}
+  ) { }
 
   public start(): void {
     if (this.pollIntervalHandle) {
@@ -71,7 +70,7 @@ export class OfferSchedulerService {
     }
 
     logger.info(
-      `Offer scheduler started. Active on Thursdays 14:58-16:20 UTC (1m checks) + 24h idle checks.`,
+      `Offer scheduler started. Active on Thursdays 14:58-17:20 UTC (1m checks) + 24h idle checks.`,
     );
 
     setTimeout(() => this.runOfferCheck(), 5000);
