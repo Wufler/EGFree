@@ -33,8 +33,8 @@ export function getDropWindow(now: Date = new Date()): {
   const isThursday = dayOfWeek === 4;
 
   // Thursday from 14:58 UTC to 17:20 UTC covers the one-off DST-transition
-  // and the one-off drops at 15:00 UTC (desktop) and approximately 16:10 UTC (mobile)
-  // the regular drops at 16:00 UTC (desktop) and approximately 17:10 UTC (mobile)
+  // and the one-off drops at 15:00 UTC (desktop) and approximately 16:01 UTC (mobile)
+  // the regular drops at 16:00 UTC (desktop) and approximately 17:01 UTC (mobile)
   const inWindow =
     isThursday && currentMinutes >= 14 * 60 + 58 && currentMinutes <= 17 * 60 + 20;
 
